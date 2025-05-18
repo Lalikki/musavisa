@@ -109,17 +109,22 @@ const MyQuizzes = () => {
                             <th>Number of Songs</th>
                             <th>Created At</th>
                             <th>View Answers</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {quizzes.map(quiz => (
                             <React.Fragment key={quiz.id}>
                                 <tr>
-                                    <td><Link to={`/my-quizzes/${quiz.id}`}>{quiz.title}</Link></td>
+                                    <td>{quiz.title}</td>
                                     <td>{quiz.amount}</td>
                                     <td>{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
                                     <td onClick={() => toggleAnswersVisibility(quiz.id)} className="expand-arrow-cell">
                                         {expandedQuizId === quiz.id ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                    </td>
+                                    <td>
+                                        <Link to={`/my-quizzes/${quiz.id}`} className="view-details-button action-button-spacing">Details</Link>
+                                        <Link to={`/edit-quiz/${quiz.id}`} className="edit-button">Edit</Link>
                                     </td>
                                 </tr>
                                 {expandedQuizId === quiz.id && (

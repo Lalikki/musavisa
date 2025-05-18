@@ -1,0 +1,55 @@
+/* Navbar Styles */
+.navbar-appbar {
+    background-color: #1a1a1a !important;
+    /* Dark black/grey */
+    color: #f0f0f0 !important;
+    /* Light grey for default text */
+}
+
+.navbar-toolbar {
+    padding-left: 50px;
+    /* Adds space to the left of the nav items */
+}
+
+.navbar-button {
+    color: #f0f0f0 !important;
+    /* Light grey/white for nav links */
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+    text-transform: none !important;
+    /* MUI Buttons are uppercase by default, this makes them normal case */
+    padding: 6px 12px !important;
+    /* Adjust padding for a nicer look */
+    border-radius: 4px !important;
+    /* Slightly rounded corners */
+}
+
+/* Styling the icons within the buttons */
+.navbar-button .MuiButton-startIcon svg {
+    color: #f0f0f0 !important;
+    /* Match button text color */
+}
+
+.navbar-button:hover {
+    background-color: #cc0000 !important;
+    /* Red background on hover */
+    color: #ffffff !important;
+    /* White text on hover */
+}
+
+.navbar-button:hover .MuiButton-startIcon svg {
+    color: #ffffff !important;
+    /* Match button text color on hover */
+}
+
+.navbar-button.active {
+    background-color: #ff6600 !important;
+    /* Orange background for active link */
+    color: #1a1a1a !important;
+    /* Dark text for active link for contrast */
+}
+
+.navbar-button.active .MuiButton-startIcon svg {
+    color: #1a1a1a !important;
+    /* Match button text color for active link */
+}

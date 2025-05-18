@@ -13,6 +13,30 @@
   }
 }
 
+body {
+  margin: 0;
+  /* Remove default browser margin */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image: url('./images/background2.jpg');
+  /* Path relative to App.css in src folder */
+  background-size: cover;
+  /* Cover the entire viewport */
+  background-position: center center;
+  /* Center the image */
+  background-repeat: no-repeat;
+  /* Do not repeat the image */
+  image-rendering: -webkit-optimize-contrast;
+  /* Try this for sharpness in WebKit browsers */
+  background-attachment: fixed;
+  /* Keep the background fixed during scroll */
+  min-height: 100vh;
+  /* Ensure body takes at least full viewport height */
+}
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -44,11 +68,77 @@
   margin-top: 50px;
 }
 
+.home-navigation-buttons {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  /* Stack buttons vertically */
+  align-items: center;
+  /* Center buttons horizontally */
+  gap: 15px;
+  /* Space between buttons */
+}
+
+.home-nav-button {
+  background-color: #ff6600 !important;
+  /* Orange background */
+  color: #1a1a1a !important;
+  /* Dark text for contrast */
+  min-width: 220px !important;
+  /* Give buttons a decent width */
+  padding: 10px 20px !important;
+  /* Comfortable padding */
+}
+
+.home-nav-button:hover {
+  background-color: #cc0000 !important;
+  /* Red background on hover */
+  color: #ffffff !important;
+  /* White text on hover */
+}
+
 /* Quiz page container */
 .quiz-container {
-  text-align: center;
-  margin-top: 50px;
+  max-width: 700px;
+  /* Adjusted for a form layout */
+  margin: 30px auto;
+  padding: 25px;
+  background-color: rgba(26, 26, 26, 0.85);
+  /* Semi-transparent dark background */
+  border-radius: 8px;
+  color: #f0f0f0;
+  /* Light text for contrast */
+  text-align: left;
+  /* Default text align for content within */
 }
+
+/* The form itself can be transparent if .quiz-container has the background */
+
+
+.quiz-container h1,
+.quiz-creation-form h2 {
+  color: #ff6600;
+  /* Orange heading */
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.quiz-creation-form h3,
+.quiz-creation-form h4 {
+  color: #ff8c00;
+  /* Lighter orange for sub-headings */
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.quiz-creation-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #f0f0f0;
+  /* Light label text */
+}
+
 
 /* Login page container */
 .login-container {
@@ -58,9 +148,22 @@
 
 /* Styles for MyQuizzes.js */
 .my-quizzes-container {
-  padding: 20px;
+  max-width: 950px;
+  /* Consistent with .quizzes-container */
+  margin: 30px auto;
+  padding: 25px;
+  background-color: rgba(26, 26, 26, 0.85);
+  /* Semi-transparent dark background */
+  border-radius: 8px;
+  color: #f0f0f0;
+  /* Light text for contrast */
+}
+
+.my-quizzes-container h1 {
+  color: #ff6600;
+  /* Orange heading */
   text-align: center;
-  /* Center the h1 */
+  margin-bottom: 25px;
 }
 
 .my-quizzes-table {
@@ -69,6 +172,15 @@
   margin: 20px auto;
   /* Center the table */
   border-collapse: collapse;
+  /* Remove border: 1px solid #ddd; as cell borders will handle it */
+}
+
+.my-quizzes-table td a {
+  /* For Edit and Details links */
+  color: #ff8c00;
+  /* Lighter orange for links */
+  text-decoration: none;
+  font-weight: bold;
 }
 
 /* Styles for EditAnswer.js */
@@ -86,7 +198,204 @@
   margin-bottom: 20px;
 }
 
+.action-button-spacing {
+  margin-right: 8px;
+}
+
+.success-text {
+  color: green;
+}
+
+/* Styles for Quiz.js form */
+.quiz-creation-form {
+  max-width: 400px;
+  margin: 30px auto;
+  text-align: left;
+}
+
+.form-input-full-width {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  /* To include padding and border in the element's total width and height */
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: #333;
+  color: #f0f0f0;
+}
+
+.form-input-full-width:focus {
+  border-color: #ff6600;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 102, 0, 0.3);
+}
+
+.question-entry-box {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  background-color: #2a2a2a;
+  /* Slightly different dark shade */
+  border-color: #444;
+}
+
+.form-input-question {
+  width: 100%;
+  padding: 6px;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: #333;
+  color: #f0f0f0;
+}
+
+.input-loading {
+  opacity: 0.7;
+  /* Make input slightly transparent while loading */
+}
+
+.metadata-loading-indicator {
+  font-style: italic;
+  color: #ff8c00;
+  /* Lighter orange */
+  margin-left: 5px;
+}
+
+.form-input-question:focus {
+  border-color: #ff6600;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 102, 0, 0.3);
+}
+
+.button-remove-question {
+  margin-top: 6px;
+  background-color: #cc0000;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.is-ready-checkbox-container {
+  margin-top: 20px;
+  margin-bottom: 15px;
+  display: flex;
+  /* Align label and checkbox nicely */
+  align-items: center;
+}
+
+.is-ready-checkbox-label {
+  margin-right: 8px;
+  color: #f0f0f0;
+  /* Light label text */
+  font-weight: normal;
+  /* Override potential bold from general label style */
+}
+
+/* Styling for the checkbox itself */
+.is-ready-checkbox-container input[type="checkbox"] {
+  accent-color: #ff6600;
+  /* Orange accent for the checkbox */
+  width: 18px;
+  /* Make checkbox slightly larger */
+  height: 18px;
+}
+
+.button-submit-quiz {
+  margin-top: 20px;
+  padding: 10px 15px;
+  background-color: #ff6600;
+  /* Orange */
+  color: #1a1a1a;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  width: 100%;
+  /* Make submit button full width of its container */
+}
+
+.button-submit-quiz:hover {
+  background-color: #cc0000;
+  /* Red on hover */
+  color: white;
+}
+
+/* Styles for Quizzes.js (All Quizzes page) */
+.quizzes-container {
+  max-width: 950px;
+  margin: 30px auto;
+  padding: 25px;
+  background-color: rgba(26, 26, 26, 0.85);
+  /* Semi-transparent dark background */
+  border-radius: 8px;
+  color: #f0f0f0;
+  /* Light text for contrast */
+}
+
+.quizzes-container h1 {
+  color: #ff6600;
+  /* Orange heading */
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+/* Styles for Quizzes.js table */
+.quizzes-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.quizzes-table th,
+.quizzes-table td {
+  border: 1px solid #ddd;
+  /* Apply border to cells as well */
+  padding: 8px;
+  padding: 12px 15px;
+  /* Increased padding */
+  text-align: left;
+  /* Default alignment, adjust as needed */
+  border-color: #444;
+  /* Darker border for cells */
+}
+
+.quizzes-table th {
+  background-color: #ff6600;
+  /* Orange background for headers */
+  color: #1a1a1a;
+  /* Dark text for header */
+  font-weight: bold;
+}
+
+.quizzes-table tbody tr:hover {
+  background-color: #333;
+  /* Darker grey on row hover */
+}
+
+.quizzes-table td a {
+  color: #ff8c00;
+  /* Lighter orange for links in table cells */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.quizzes-table td a:hover {
+  color: #cc0000;
+  /* Red on hover for links */
+  text-decoration: underline;
+}
+
 /* Or define specific ones if needed */
+.view-details-button {
+  padding: 5px 10px;
+  cursor: pointer;
+  text-decoration: none;
+  /* If you want it to look more like a button */
+}
 
 .button-ready-review {
   margin-left: 10px;
@@ -112,13 +421,24 @@
 /* Or define specific ones if needed */
 .my-quizzes-table th,
 .my-quizzes-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
+  border: 1px solid #444;
+  /* Darker border for cells */
+  padding: 12px 15px;
+  /* Consistent padding */
   text-align: left;
 }
 
 .my-quizzes-table th {
-  background-color: #f2f2f2;
+  background-color: #ff6600;
+  /* Orange background for headers */
+  color: #1a1a1a;
+  /* Dark text for header */
+  font-weight: bold;
+}
+
+.my-quizzes-table tbody tr:hover {
+  background-color: #333;
+  /* Darker grey on row hover */
 }
 
 .expand-arrow-cell {
@@ -126,11 +446,17 @@
   text-align: center;
 }
 
+.expand-arrow-cell svg {
+  /* Style the arrow icon color */
+  color: #ff8c00;
+  /* Orange arrow */
+}
+
 .collapsible-content {
   padding: 15px;
-  background-color: #fdfdfd;
-  /* Slightly different background for the expanded area */
-  border-top: 2px solid #007bff;
+  background-color: #2a2a2a;
+  /* Darker background for the expanded area */
+  border-top: 2px solid #ff6600;
   /* A separator line */
 }
 
@@ -138,18 +464,26 @@
   width: 100%;
   margin-top: 10px;
   border-collapse: collapse;
-  background-color: #fff;
+  background-color: #333;
+  /* Background for sub-table */
 }
 
 .quiz-answers-subtable th,
 .quiz-answers-subtable td {
-  border: 1px solid #e0e0e0;
-  padding: 8px;
+  border: 1px solid #555;
+  /* Borders for sub-table cells */
+  padding: 10px 12px;
   text-align: left;
+  color: #e0e0e0;
+  /* Lighter text for sub-table content */
 }
 
 .quiz-answers-subtable th {
-  background-color: #e9ecef;
+  background-color: #cc0000;
+  /* Red background for sub-table headers */
+  color: #f0f0f0;
+  /* Light text for sub-table headers */
+  font-weight: bold;
 }
 
 /* Styles for QuizDetails.js */
@@ -195,9 +529,22 @@
 
 /* Styles for MyAnswers.js */
 .my-answers-container {
-  padding: 20px;
+  max-width: 950px;
+  /* Consistent with other list pages */
+  margin: 30px auto;
+  padding: 25px;
+  background-color: rgba(26, 26, 26, 0.85);
+  /* Semi-transparent dark background */
+  border-radius: 8px;
+  color: #f0f0f0;
+  /* Light text for contrast */
+}
+
+.my-answers-container h1 {
+  color: #ff6600;
+  /* Orange heading */
   text-align: center;
-  /* Center the h1 */
+  margin-bottom: 25px;
 }
 
 .my-answers-table {
@@ -206,17 +553,43 @@
   margin: 20px auto;
   /* Center the table */
   border-collapse: collapse;
+  /* Remove border: 1px solid #ddd; as cell borders will handle it */
 }
 
 .my-answers-table th,
 .my-answers-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
+  border: 1px solid #444;
+  /* Darker border for cells */
+  padding: 12px 15px;
+  /* Consistent padding */
   text-align: left;
 }
 
 .my-answers-table th {
-  background-color: #f2f2f2;
+  background-color: #ff6600;
+  /* Orange background for headers */
+  color: #1a1a1a;
+  /* Dark text for header */
+  font-weight: bold;
+}
+
+.my-answers-table tbody tr:hover {
+  background-color: #333;
+  /* Darker grey on row hover */
+}
+
+.my-answers-table .edit-button {
+  /* Styling for the Edit link/button */
+  color: #ff8c00;
+  /* Lighter orange for links */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.my-answers-table .edit-button:hover {
+  color: #cc0000;
+  /* Red on hover for links */
+  text-decoration: underline;
 }
 
 /* Styles for AnswerQuiz.js */

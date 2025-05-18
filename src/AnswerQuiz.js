@@ -135,8 +135,8 @@ const AnswerQuiz = () => {
                 <button type="submit" disabled={submitting}>
                     {submitting ? 'Submitting...' : 'Submit Answers'}
                 </button>
-                {submitSuccess && <p style={{ color: 'green', marginTop: '10px' }}>{submitSuccess}</p>}
-                {submitError && <p style={{ color: 'red', marginTop: '10px' }}>{submitError}</p>}
+                {submitSuccess && <p className="success-text form-message">{submitSuccess}</p>}
+                {submitError && <p className="error-text form-message">{submitError}</p>}
             </form>
         </div>
     );

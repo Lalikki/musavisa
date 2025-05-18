@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "./firebase"; // Import your Firestore instance
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { format } from 'date-fns'; // Import date-fns for formatting dates
 import { Link } from "react-router-dom"; // Optional: if you want to link to individual quizzes later
 
@@ -15,8 +15,11 @@ const Quizzes = () => {
                 setLoading(true);
                 setError(null);
                 const quizzesCollectionRef = collection(db, "quizzes");
-                // Optionally, order by creation date or title
-                const q = query(quizzesCollectionRef, orderBy("createdAt", "desc"));
+                // Filter for ready quizzes and order by creation date
+                const q = query(
+                    quizzesCollectionRef,
+                    where("isReady", "==", true), // Only fetch quizzes where isReady is true
+                    orderBy("createdAt", "desc"));
                 const querySnapshot = await getDocs(q);
                 const quizzesData = querySnapshot.docs.map(doc => ({
                     id: doc.id,
@@ -27,7 +30,7 @@ const Quizzes = () => {
                 setQuizzes(quizzesData);
             } catch (err) {
                 console.error("Error fetching quizzes:", err);
-                setError("Failed to load quizzes. Please try again later.");
+                setError("Failed to load quizzes. Please try again later. You might need to create a Firestore index for 'isReady' and 'createdAt'.");
             } finally {
                 setLoading(false);
             }
@@ -40,10 +43,10 @@ const Quizzes = () => {
         <div className="quizzes-container">
             <h1>All Quizzes</h1>
             {loading && <p>Loading quizzes...</p>}
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            {!loading && !error && quizzes.length === 0 && <p>No quizzes found.</p>}
+            {error && <p className="error-text">{error}</p>} {/* Changed to use class from App.css */}
+            {!loading && !error && quizzes.length === 0 && <p>No ready quizzes found.</p>} {/* Updated message for clarity */}
             {!loading && !error && quizzes.length > 0 && (
-                <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
+                <table className="quizzes-table">
                     <thead>
                         <tr>
                             <th>Title</th>
