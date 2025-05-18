@@ -4,6 +4,10 @@ import Home from "./Home";
 import Login from "./Login";
 import Quizzes from "./Quizzes"; // Import the new Quizzes component
 import AnswerQuiz from "./AnswerQuiz"; // Import the new AnswerQuiz component
+import MyAnswers from "./MyAnswers"; // Import the MyAnswers component
+import MyQuizzes from "./MyQuizzes"; // Import the MyQuizzes component
+import QuizDetails from "./QuizDetails"; // Import the QuizDetails component
+import EditAnswer from "./EditAnswer"; // Import the EditAnswer component
 import Quiz from "./Quiz";
 import Navbar from "./Navbar";
 import './App.css';
@@ -17,7 +21,11 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/quizzes" element={<Quizzes />} /> {/* Add route for All Quizzes */}
+          <Route path="/my-answers" element={<MyAnswers />} /> {/* Route for My Answers */}
+          <Route path="/my-quizzes/:quizId" element={<QuizDetails />} /> {/* Route for specific Quiz Details */}
           <Route path="/answer-quiz/:quizId" element={<AnswerQuiz />} /> {/* Route for answering a specific quiz */}
+          <Route path="/edit-answer/:answerId" element={<EditAnswer />} /> {/* Route for editing an answer */}
+          <Route path="/my-quizzes" element={<MyQuizzes />} /> {/* Route for My Quizzes */}
           <Route path="/quiz" element={<Quiz />} />
         </Routes>
       </div>

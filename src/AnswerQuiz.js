@@ -81,13 +81,15 @@ const AnswerQuiz = () => {
                 answers: answers, // The array of { artist: '', songName: '' }
                 answerCreatorId: user.uid,
                 answerCreatorName: user.displayName || "Anonymous",
-                submittedAt: serverTimestamp()
+                submittedAt: serverTimestamp(),
+                score: 0, // Initialize score to 0 for now
+                isChecked: false // Initialize isChecked to false
             };
 
             await addDoc(collection(db, "quizAnswers"), answerData);
             setSubmitSuccess("Your answers have been submitted successfully!");
             // Optionally, redirect or clear form
-            // navigate('/quizzes'); // Example redirect
+            navigate('/quizzes'); // Example redirect
         } catch (err) {
             console.error("Error submitting answers:", err);
             setSubmitError("Failed to submit answers. Please try again. " + err.message);

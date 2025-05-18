@@ -56,6 +56,169 @@
   margin-top: 50px;
 }
 
+/* Styles for MyQuizzes.js */
+.my-quizzes-container {
+  padding: 20px;
+  text-align: center;
+  /* Center the h1 */
+}
+
+.my-quizzes-table {
+  width: 80%;
+  /* Or some other appropriate width */
+  margin: 20px auto;
+  /* Center the table */
+  border-collapse: collapse;
+}
+
+/* Styles for EditAnswer.js */
+.edit-answer-container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.edit-answer-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Or define specific ones if needed */
+
+.button-ready-review {
+  margin-left: 10px;
+  background-color: #28a745;
+  /* Green color */
+  color: white;
+  border: none;
+  /* Optional: remove default border */
+  padding: 8px 12px;
+  /* Optional: adjust padding */
+  cursor: pointer;
+}
+
+.button-cancel-edit {
+  margin-left: 10px;
+}
+
+.form-message {
+  margin-top: 10px;
+}
+
+/* .song-guess-item, .artist-input, .songname-input can be reused from AnswerQuiz.js styles if they are general enough */
+/* Or define specific ones if needed */
+.my-quizzes-table th,
+.my-quizzes-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.my-quizzes-table th {
+  background-color: #f2f2f2;
+}
+
+.expand-arrow-cell {
+  cursor: pointer;
+  text-align: center;
+}
+
+.collapsible-content {
+  padding: 15px;
+  background-color: #fdfdfd;
+  /* Slightly different background for the expanded area */
+  border-top: 2px solid #007bff;
+  /* A separator line */
+}
+
+.quiz-answers-subtable {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  background-color: #fff;
+}
+
+.quiz-answers-subtable th,
+.quiz-answers-subtable td {
+  border: 1px solid #e0e0e0;
+  padding: 8px;
+  text-align: left;
+}
+
+.quiz-answers-subtable th {
+  background-color: #e9ecef;
+}
+
+/* Styles for QuizDetails.js */
+.quiz-details-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 20px auto;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.quiz-details-container h1,
+.quiz-details-container h2 {
+  text-align: center;
+  color: #333;
+}
+
+.quiz-questions-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.quiz-question-item {
+  background-color: #fff;
+  border: 1px solid #eee;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.back-link {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+  text-decoration: none;
+  color: #007bff;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* Styles for MyAnswers.js */
+.my-answers-container {
+  padding: 20px;
+  text-align: center;
+  /* Center the h1 */
+}
+
+.my-answers-table {
+  width: 80%;
+  /* Or some other appropriate width */
+  margin: 20px auto;
+  /* Center the table */
+  border-collapse: collapse;
+}
+
+.my-answers-table th,
+.my-answers-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.my-answers-table th {
+  background-color: #f2f2f2;
+}
+
 /* Styles for AnswerQuiz.js */
 .error-text {
   color: red;
