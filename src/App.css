@@ -56,6 +56,38 @@
   margin-top: 50px;
 }
 
+/* Styles for AnswerQuiz.js */
+.error-text {
+  color: red;
+}
+
+.song-guess-item {
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+  padding: 10px;
+}
+
+.artist-input {
+  display: block;
+  margin-bottom: 5px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+  /* Consider adjusting for responsiveness */
+  padding: 8px;
+  /* Added for better appearance */
+}
+
+.songname-input {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+  /* Consider adjusting for responsiveness */
+  padding: 8px;
+  /* Added for better appearance */
+}
+
 .user-avatar {
   border-radius: 50%;
   width: 80px;
