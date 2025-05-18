@@ -10,6 +10,10 @@ const Quiz = () => {
     const [amount, setAmount] = useState("");
     const [success, setSuccess] = useState("");
     const [error, setError] = useState("");
+    const [questions, setQuestions] = useState([
+        { question: "", answer: "" }
+    ]);
+
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -17,6 +21,22 @@ const Quiz = () => {
         });
         return () => unsubscribe();
     }, []);
+
+    const handleQuestionChange = (index, field, value) => {
+        const updated = [...questions];
+        updated[index][field] = value;
+        setQuestions(updated);
+    };
+
+
+    const addQuestion = () => {
+        setQuestions([...questions, { question: "", answer: "" }]);
+    };
+
+    const removeQuestion = (index) => {
+        const updated = questions.filter((_, i) => i !== index);
+        setQuestions(updated);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -37,7 +57,7 @@ const Quiz = () => {
                 amount: Number(amount),
                 createdBy: user.uid,
                 createdAt: serverTimestamp(),
-                questions: []
+                questions
             });
             setSuccess("Quiz created successfully!");
             setTitle("");
@@ -82,6 +102,36 @@ const Quiz = () => {
                             style={{ width: "100%", padding: 8, marginBottom: 10 }}
                         />
                     </div>
+                    <h3>Questions</h3>
+                    {questions.map((q, index) => (
+                        <div key={index} style={{ border: "1px solid #ccc", padding: 10, marginBottom: 15 }}>
+                            <label>Question {index + 1}:</label>
+                            <input
+                                type="text"
+                                value={q.question}
+                                onChange={e => handleQuestionChange(index, "question", e.target.value)}
+                                style={{ width: "100%", padding: 6, marginBottom: 6 }}
+                            />
+
+                            <label>Answer:</label>
+                            <input
+                                type="text"
+                                value={q.answer}
+                                onChange={e => handleQuestionChange(index, "answer", e.target.value)}
+                                style={{ width: "100%", padding: 6, marginBottom: 6 }}
+                            />
+
+                            {questions.length > 1 && (
+                                <button type="button" onClick={() => removeQuestion(index)} style={{ marginTop: 6 }}>
+                                    Remove Question
+                                </button>
+                            )}
+                        </div>
+                    ))}
+
+                    <button type="button" onClick={addQuestion}>Add Question</button>
+
+
                     <button type="submit">Create Quiz</button>
                     {success && <div style={{ color: "green", marginTop: 10 }}>{success}</div>}
                     {error && <div style={{ color: "red", marginTop: 10 }}>{error}</div>}
