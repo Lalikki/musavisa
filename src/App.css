@@ -32,7 +32,36 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Home page container */
+.home-container {
+  text-align: center;
+  margin-top: 50px;
+}
+
+/* Quiz page container */
+.quiz-container {
+  text-align: center;
+  margin-top: 50px;
+}
+
+/* Login page container */
+.login-container {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.user-avatar {
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+}
+
+.logout-button {
+  margin-top: 20px;
 }
