@@ -252,6 +252,108 @@ body {
   color: #f0f0f0;
 }
 
+/* Styles for AnswerDetails.js */
+.answer-details-container {
+  max-width: 700px;
+  /* Similar width to quiz details */
+  margin: 30px auto;
+  padding: 25px;
+  background-color: rgba(26, 26, 26, 0.85);
+  /* Semi-transparent dark background */
+  border-radius: 8px;
+  color: #f0f0f0;
+  /* Light text for contrast */
+}
+
+.answer-summary p {
+  /* More spacing for summary items */
+  margin-bottom: 8px;
+}
+
+.answer-details-container h1,
+.answer-details-container h2 {
+  color: #ff6600;
+  /* Orange heading */
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.answer-details-container p {
+  margin-bottom: 10px;
+}
+
+.answer-guesses-list {
+  list-style: none;
+  padding: 0;
+}
+
+.detailed-guess-item h4 {
+  color: #ff8c00;
+  /* Lighter orange for song number */
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.correct-answer-text {
+  color: #a0e8a0;
+  /* Light green for correct answers */
+  font-style: italic;
+}
+
+.song-link-details {
+  color: #77ccff;
+  /* Light blue for song links */
+  margin-left: 5px;
+  text-decoration: none;
+}
+
+.song-link-details:hover {
+  text-decoration: underline;
+}
+
+.manual-score-input {
+  margin-top: 10px;
+}
+
+.manual-score-input label {
+  margin-right: 5px;
+}
+
+.manual-score-input select {
+  padding: 5px;
+  background-color: #444;
+  color: #f0f0f0;
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+.answer-guess-item {
+  background-color: #333;
+  /* Darker background for list items */
+  border: 1px solid #444;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.save-assessment-section {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.button-save-assessment {
+  background-color: #ff6600;
+  /* Orange */
+  color: #1a1a1a;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Re-use .back-link style from QuizDetails.js */
+/* Re-use .error-text style from other components */
 .input-loading {
   opacity: 0.7;
   /* Make input slightly transparent while loading */

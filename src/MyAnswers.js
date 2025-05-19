@@ -79,6 +79,7 @@ const MyAnswers = () => {
                                 <td>{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
                                 <td>{answer.isChecked ? 'Checked' : 'Pending'}</td>
                                 <td>
+                                    <Link to={`/my-answers/${answer.id}`} className="view-details-button action-button-spacing">Details</Link>
                                     {/* Show edit link only if not checked and user is the creator */}
                                     {!answer.isChecked && user && answer.answerCreatorId === user.uid && (
                                         <Link to={`/edit-answer/${answer.id}`} className="edit-button">Edit</Link>
