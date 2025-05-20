@@ -119,34 +119,34 @@ const EditAnswer = () => {
         setMarkingReady(true);
         setMarkReadyError(null);
 
-        const similarityThreshold = 0.8; // Adjust this value (0.0 to 1.0) as needed
-        // Calculate score
-        let calculatedScore = 0;
-        if (correctQuizData && correctQuizData.questions && editedAnswers) {
-            editedAnswers.forEach((submittedAnswer, index) => {
-                const correctAnswer = correctQuizData.questions[index];
-                if (correctAnswer) {
-                    const submittedArtist = submittedAnswer.artist.toLowerCase().trim();
-                    const correctArtist = correctAnswer.artist.toLowerCase().trim();
-                    const submittedSongName = submittedAnswer.songName.toLowerCase().trim();
-                    // Assuming the correct song title is stored in 'song' field in quiz.questions
-                    const correctSongName = correctAnswer.song.toLowerCase().trim();
+        // const similarityThreshold = 0.8; // Adjust this value (0.0 to 1.0) as needed
+        // // Calculate score
+        // let calculatedScore = 0;
+        // if (correctQuizData && correctQuizData.questions && editedAnswers) {
+        //     editedAnswers.forEach((submittedAnswer, index) => {
+        //         const correctAnswer = correctQuizData.questions[index];
+        //         if (correctAnswer) {
+        //             const submittedArtist = submittedAnswer.artist.toLowerCase().trim();
+        //             const correctArtist = correctAnswer.artist.toLowerCase().trim();
+        //             const submittedSongName = submittedAnswer.songName.toLowerCase().trim();
+        //             // Assuming the correct song title is stored in 'song' field in quiz.questions
+        //             const correctSongName = correctAnswer.song.toLowerCase().trim();
 
-                    if (compareTwoStrings(submittedArtist, correctArtist) >= similarityThreshold) {
-                        calculatedScore += 0.5;
-                    }
-                    if (compareTwoStrings(submittedSongName, correctSongName) >= similarityThreshold) {
-                        calculatedScore += 0.5;
-                    }
-                }
-            });
-        }
+        //             if (compareTwoStrings(submittedArtist, correctArtist) >= similarityThreshold) {
+        //                 calculatedScore += 0.5;
+        //             }
+        //             if (compareTwoStrings(submittedSongName, correctSongName) >= similarityThreshold) {
+        //                 calculatedScore += 0.5;
+        //             }
+        //         }
+        //     });
+        // }
 
         try {
             const answerDocRef = doc(db, 'quizAnswers', answerId);
             await updateDoc(answerDocRef, {
                 isChecked: true,
-                score: calculatedScore,
+                // score: calculatedScore,
                 // Optionally, add a 'markedReadyAt': serverTimestamp() field
             });
             // Navigate back or show success, and disable further editing

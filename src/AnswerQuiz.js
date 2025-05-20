@@ -14,6 +14,7 @@ const AnswerQuiz = () => {
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState('');
+    const [isReadyForReview, setIsReadyForReview] = useState(false); // New state for the checkbox
     const [submitError, setSubmitError] = useState('');
 
     useEffect(() => {
@@ -83,13 +84,20 @@ const AnswerQuiz = () => {
                 answerCreatorName: user.displayName || "Anonymous",
                 submittedAt: serverTimestamp(),
                 score: 0, // Initialize score to 0 for now
-                isChecked: false // Initialize isChecked to false
+                isChecked: isReadyForReview // Set isChecked based on the checkbox state
             };
 
-            await addDoc(collection(db, "quizAnswers"), answerData);
+            const docRef = await addDoc(collection(db, "quizAnswers"), answerData); // Capture the DocumentReference
             setSubmitSuccess("Your answers have been submitted successfully!");
-            // Optionally, redirect or clear form
-            navigate('/quizzes'); // Example redirect
+
+            if (isReadyForReview) {
+                navigate(`/my-answers/${docRef.id}`); // Redirect to Answer Details page
+            } else {
+                // Stay on the page, maybe clear the form or show a message
+                // For now, just show success message and clear form state
+                setAnswers(Array(quiz.amount).fill({ artist: '', songName: '' })); // Clear form
+                setIsReadyForReview(false); // Reset checkbox
+            }
         } catch (err) {
             console.error("Error submitting answers:", err);
             setSubmitError("Failed to submit answers. Please try again. " + err.message);
@@ -117,7 +125,6 @@ const AnswerQuiz = () => {
                             value={answer.artist}
                             onChange={(e) => handleAnswerChange(index, 'artist', e.target.value)}
                             placeholder="Artist Name"
-                            required
                             className="artist-input"
                         />
                         <label htmlFor={`songName-${index + 1}`}>Song Name: </label>
@@ -127,11 +134,21 @@ const AnswerQuiz = () => {
                             value={answer.songName}
                             onChange={(e) => handleAnswerChange(index, 'songName', e.target.value)}
                             placeholder="Song Name"
-                            required
                             className="songname-input"
                         />
                     </div>
                 ))}
+                <div className="is-ready-checkbox-container" style={{ marginBottom: '20px' }}> {/* Re-using the class from Quiz.js */}
+                    <label htmlFor="readyForReviewCheckbox" className="is-ready-checkbox-label">
+                        Mark as Ready for Review:
+                    </label>
+                    <input
+                        type="checkbox"
+                        id="readyForReviewCheckbox"
+                        checked={isReadyForReview}
+                        onChange={e => setIsReadyForReview(e.target.checked)}
+                    />
+                </div>
                 <button type="submit" disabled={submitting}>
                     {submitting ? 'Submitting...' : 'Submit Answers'}
                 </button>

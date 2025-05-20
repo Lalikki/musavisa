@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { db, auth } from './firebase'; // Import auth
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import { compareTwoStrings } from 'string-similarity'; // Import for fuzzy matching
 import { format } from 'date-fns';
 
 const AnswerDetails = () => {
@@ -17,6 +18,10 @@ const AnswerDetails = () => {
     const [isSavingAssessment, setIsSavingAssessment] = useState(false);
     const [saveAssessmentError, setSaveAssessmentError] = useState(null);
     const [saveAssessmentSuccess, setSaveAssessmentSuccess] = useState('');
+    const [isCompleting, setIsCompleting] = useState(false);
+    const [completeError, setCompleteError] = useState(null);
+    const [isAutoCalculating, setIsAutoCalculating] = useState(false);
+    const [scoreMode, setScoreMode] = useState('manual'); // 'manual' or 'auto'
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -83,7 +88,7 @@ const AnswerDetails = () => {
     const totalSelfAssessedScore = selfAssessedSongScores.reduce((sum, score) => sum + score, 0);
 
     const handleSaveAssessment = async () => {
-        if (!currentUser || currentUser.uid !== quizAnswer?.answerCreatorId || quizAnswer?.isChecked) {
+        if (!canSelfAssess) {
             setSaveAssessmentError("You cannot save this assessment at this time.");
             return;
         }
@@ -108,11 +113,73 @@ const AnswerDetails = () => {
         }
     };
 
-    const canSelfAssess = currentUser && quizAnswer && currentUser.uid === quizAnswer.answerCreatorId && !quizAnswer.isChecked;
+    const handleSaveAndCompleteAssessment = async () => {
+        if (!canSelfAssess) {
+            setCompleteError("You cannot complete this assessment at this time.");
+            return;
+        }
+        setIsCompleting(true);
+        setCompleteError(null);
+        setSaveAssessmentSuccess(''); // Clear success message from regular save
+        try {
+            const answerDocRef = doc(db, 'quizAnswers', answerId);
+            await updateDoc(answerDocRef, {
+                selfAssessedSongScores: selfAssessedSongScores,
+                selfAssessedTotalScore: totalSelfAssessedScore,
+                lastSelfAssessedAt: serverTimestamp(),
+                isCompleted: true, // Mark as completed
+                // isChecked might remain true, or you could set it to false if needed
+            });
+            setSaveAssessmentSuccess("Your assessment has been saved and marked as completed!");
+            // Redirect to My Answers page
+            navigate('/my-answers');
+        } catch (err) {
+            console.error("Error saving and completing assessment:", err);
+            setCompleteError("Failed to save and complete your assessment. Please try again.");
+        } finally {
+            setIsCompleting(false);
+        }
+    };
+
+    const handleAutoCalculateScore = () => {
+        if (!correctQuizData || !quizAnswer || !quizAnswer.answers) return;
+
+        setIsAutoCalculating(true);
+        const similarityThreshold = 0.8; // Or make this configurable
+        const newScores = quizAnswer.answers.map((submittedAnswer, index) => {
+            const correctAnswer = correctQuizData.questions?.[index];
+            let songScore = 0;
+            if (correctAnswer) {
+                const submittedArtist = (submittedAnswer.artist || "").toLowerCase().trim();
+                const correctArtist = (correctAnswer.artist || "").toLowerCase().trim();
+                const submittedSongName = (submittedAnswer.songName || "").toLowerCase().trim();
+                const correctSongName = (correctAnswer.song || "").toLowerCase().trim();
+
+                if (compareTwoStrings(submittedArtist, correctArtist) >= similarityThreshold) {
+                    songScore += 0.5;
+                }
+                if (compareTwoStrings(submittedSongName, correctSongName) >= similarityThreshold) {
+                    songScore += 0.5;
+                }
+            }
+            return songScore;
+        });
+        setSelfAssessedSongScores(newScores);
+        setIsAutoCalculating(false);
+        setSaveAssessmentSuccess("Scores auto-calculated. Review and save if you're happy."); // Give feedback
+        setSaveAssessmentError(null);
+    };
+
 
     if (loading) return <p>Loading answer details...</p>;
     if (error) return <p className="error-text">{error} <button onClick={() => navigate('/my-answers')}>Go to My Answers</button></p>;
     if (!quizAnswer) return <p>Answer submission not found. <button onClick={() => navigate('/my-answers')}>Go to My Answers</button></p>;
+
+
+    // User can self-assess if they are the creator of the answer.
+    // The "isChecked" status (Ready for Review) is the state in which they perform this self-assessment.
+    // If a host later "officially checks" it, we might add another flag to disable this.
+    const canSelfAssess = currentUser && quizAnswer && currentUser.uid === quizAnswer.answerCreatorId && !quizAnswer.isCompleted;
 
     return (
         <div className="answer-details-container">
@@ -120,10 +187,32 @@ const AnswerDetails = () => {
             <div className="answer-summary">
                 <p><strong>Submitted By:</strong> {quizAnswer.answerCreatorName || 'Anonymous'}</p>
                 <p><strong>Submitted At:</strong> {quizAnswer.submittedAt ? format(quizAnswer.submittedAt.toDate(), 'yyyy-MM-dd HH:mm') : 'N/A'}</p>
-                <p><strong>Automatically calculated Score:</strong> {quizAnswer.score} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</p>
-                <p><strong>Status:</strong> {quizAnswer.isChecked ? 'Checked' : 'Pending'}</p>
-                <p><strong>Manual score:</strong> {totalSelfAssessedScore} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</p>
+                <p><strong>Status:</strong>
+                    {quizAnswer.isCompleted ? 'Completed' :
+                        quizAnswer.isChecked ? 'Ready for Review' :
+                            'In Progress'}
+                </p>
+                {scoreMode === 'auto' &&
+                    <p><strong>Automatically calculated score:</strong> {quizAnswer.score} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</p>
+                }
+                {scoreMode === 'manual' &&
+                    <p><strong>Manually calculated score:</strong> {totalSelfAssessedScore} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</p>
+                }
             </div>
+
+            {canSelfAssess && (
+                <div className="score-mode-selector">
+                    <label htmlFor="scoreModeCheckbox">
+                        Calculate Score Automatically:
+                    </label>
+                    <input
+                        type="checkbox"
+                        id="scoreModeCheckbox"
+                        checked={scoreMode === 'auto'}
+                        onChange={(e) => setScoreMode(e.target.checked ? 'auto' : 'manual')}
+                    />
+                </div>
+            )}
 
             <h2>Your Guesses</h2>
             {quizAnswer.answers && quizAnswer.answers.length > 0 ? (
@@ -146,7 +235,7 @@ const AnswerDetails = () => {
                                         id={`manual-score-${index}`}
                                         value={selfAssessedSongScores[index] !== undefined ? selfAssessedSongScores[index] : 0}
                                         onChange={(e) => handleSelfAssessedScoreChange(index, e.target.value)}
-                                        disabled={!canSelfAssess}
+                                        disabled={!canSelfAssess || scoreMode === 'auto'}
                                     >
                                         <option value="0">0</option>
                                         <option value="0.5">0.5</option>
@@ -160,11 +249,20 @@ const AnswerDetails = () => {
             ) : (
                 <p>No guesses recorded for this submission.</p>
             )}
-            {canSelfAssess && (
+            {canSelfAssess && scoreMode === 'auto' && !quizAnswer.isCompleted && (
+                <button onClick={handleSaveAssessment} disabled={isSavingAssessment || isCompleting} className="button-save-assessment">
+                    {isAutoCalculating ? 'Calculating...' : 'Automatically Calculate My Score'}
+                </button>
+            )}
+            {canSelfAssess && !quizAnswer.isCompleted && (
                 <div className="save-assessment-section">
                     <button onClick={handleSaveAssessment} disabled={isSavingAssessment} className="button-save-assessment">
                         {isSavingAssessment ? 'Saving...' : 'Save My Assessment'}
                     </button>
+                    <button onClick={handleSaveAndCompleteAssessment} disabled={isCompleting || isSavingAssessment} className="button-save-complete-assessment">
+                        {isCompleting ? 'Completing...' : 'Save and Mark as Completed'}
+                    </button>
+                    {completeError && <p className="error-text form-message">{completeError}</p>}
                     {saveAssessmentError && <p className="error-text form-message">{saveAssessmentError}</p>}
                     {saveAssessmentSuccess && <p className="success-text form-message">{saveAssessmentSuccess}</p>}
                 </div>

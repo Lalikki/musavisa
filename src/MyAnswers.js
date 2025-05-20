@@ -77,9 +77,15 @@ const MyAnswers = () => {
                                 {/* Assuming max score is 1 point per song (0.5 artist + 0.5 song) */}
                                 <td>{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</td>
                                 <td>{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
-                                <td>{answer.isChecked ? 'Checked' : 'Pending'}</td>
                                 <td>
-                                    <Link to={`/my-answers/${answer.id}`} className="view-details-button action-button-spacing">Details</Link>
+                                    {answer.isCompleted ? 'Completed' :
+                                        answer.isChecked ? 'Ready for Review' :
+                                            'In Progress'}
+                                </td>
+                                <td>
+                                    {answer.isChecked && (
+                                        <Link to={`/my-answers/${answer.id}`} className="view-details-button action-button-spacing">Details</Link>
+                                    )}
                                     {/* Show edit link only if not checked and user is the creator */}
                                     {!answer.isChecked && user && answer.answerCreatorId === user.uid && (
                                         <Link to={`/edit-answer/${answer.id}`} className="edit-button">Edit</Link>
