@@ -97,6 +97,8 @@ const AnswerQuiz = () => {
                 // For now, just show success message and clear form state
                 setAnswers(Array(quiz.amount).fill({ artist: '', songName: '' })); // Clear form
                 setIsReadyForReview(false); // Reset checkbox
+                // Redirect to My Answers page after successful submission
+                navigate('/my-answers');
             }
         } catch (err) {
             console.error("Error submitting answers:", err);

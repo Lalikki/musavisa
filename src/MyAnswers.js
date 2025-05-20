@@ -56,45 +56,47 @@ const MyAnswers = () => {
     if (error) return <p className="error-text">{error}</p>;
 
     return (
-        <div className="my-answers-container">
+        <div className="my-quizzes-container">
             <h1>My Submitted Answers</h1>
             {answers.length === 0 && !loading && <p>You haven't submitted any quiz answers yet.</p>}
             {answers.length > 0 && (
-                <table className="my-answers-table">
-                    <thead>
-                        <tr>
-                            <th>Quiz Title</th>
-                            <th>Your Score</th>
-                            <th>Submitted At</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {answers.map(answer => (
-                            <tr key={answer.id}>
-                                <td>{answer.quizTitle}</td>
-                                {/* Assuming max score is 1 point per song (0.5 artist + 0.5 song) */}
-                                <td>{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</td>
-                                <td>{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
-                                <td>
-                                    {answer.isCompleted ? 'Completed' :
-                                        answer.isChecked ? 'Ready for Review' :
-                                            'In Progress'}
-                                </td>
-                                <td>
-                                    {answer.isChecked && (
-                                        <Link to={`/my-answers/${answer.id}`} className="view-details-button action-button-spacing">Details</Link>
-                                    )}
-                                    {/* Show edit link only if not checked and user is the creator */}
-                                    {!answer.isChecked && user && answer.answerCreatorId === user.uid && (
-                                        <Link to={`/edit-answer/${answer.id}`} className="edit-button">Edit</Link>
-                                    )}
-                                </td>
+                <div className="table-responsive-wrapper">
+                    <table className="quizzes-table">
+                        <thead>
+                            <tr>
+                                <th>Quiz Title</th>
+                                <th>Your Score</th>
+                                <th>Submitted At</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {answers.map(answer => (
+                                <tr key={answer.id}>
+                                    <td data-label="Title">{answer.quizTitle}</td>
+                                    {/* Assuming max score is 1 point per song (0.5 artist + 0.5 song) */}
+                                    <td data-label="Score">{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</td>
+                                    <td data-label="Submitted">{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
+                                    <td data-label="Status">
+                                        {answer.isCompleted ? 'Completed' :
+                                            answer.isChecked ? 'Ready for Review' :
+                                                'In Progress'}
+                                    </td>
+                                    <td data-label="Actions">
+                                        {answer.isChecked && (
+                                            <Link to={`/my-answers/${answer.id}`} className="view-details-button action-button-spacing">Details</Link>
+                                        )}
+                                        {/* Show edit link only if not checked and user is the creator */}
+                                        {!answer.isChecked && user && answer.answerCreatorId === user.uid && (
+                                            <Link to={`/edit-answer/${answer.id}`} className="edit-button">Edit</Link>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );

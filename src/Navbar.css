@@ -1,5 +1,6 @@
 /* Navbar Styles */
 .navbar-appbar {
+    /* Ensure AppBar itself doesn't have excessive padding that conflicts with Toolbar */
     background-color: #1a1a1a !important;
     /* Dark black/grey */
     color: #f0f0f0 !important;
@@ -7,8 +8,12 @@
 }
 
 .navbar-toolbar {
-    padding-left: 50px;
+    padding-left: 16px !important;
+    /* Default padding, adjust as needed */
     /* Adds space to the left of the nav items */
+    display: flex !important;
+    justify-content: space-between !important;
+    /* Push hamburger to left, desktop items to right (if any) */
 }
 
 .navbar-button {
@@ -52,4 +57,82 @@
 .navbar-button.active .MuiButton-startIcon svg {
     color: #1a1a1a !important;
     /* Match button text color for active link */
+}
+
+/* Styles for the hamburger menu button */
+.menu-button {
+    margin-right: 16px !important;
+    /* Some spacing for the hamburger icon */
+    display: none !important;
+    /* Hidden by default, shown via media query */
+    color: #ff6600 !important;
+    /* Orange hamburger icon */
+}
+
+/* Styles for the container of desktop navigation items */
+.desktop-nav-items {
+    display: flex !important;
+    /* Default for desktop */
+}
+
+/* Styles for the mobile drawer */
+.mobile-drawer {
+    width: 250px;
+    /* Width of the drawer */
+    background-color: #1a1a1a;
+    /* Dark background for the drawer */
+    height: 100%;
+    color: #f0f0f0;
+    /* Light text for drawer items */
+}
+
+.mobile-drawer .MuiListItemButton-root {
+    color: #f0f0f0 !important;
+}
+
+.mobile-drawer .MuiListItemButton-root:hover {
+    background-color: #cc0000 !important;
+    /* Red background on hover */
+    color: #ffffff !important;
+}
+
+.mobile-drawer .MuiListItemButton-root:hover .mobile-drawer-icon svg,
+.mobile-drawer .MuiListItemButton-root:hover .mobile-drawer-text span {
+    color: #ffffff !important;
+}
+
+.mobile-drawer .MuiListItemButton-root.Mui-selected {
+    background-color: #ff6600 !important;
+    /* Orange background for active link */
+}
+
+.mobile-drawer .MuiListItemButton-root.Mui-selected .mobile-drawer-icon svg,
+.mobile-drawer .MuiListItemButton-root.Mui-selected .mobile-drawer-text span {
+    color: #1a1a1a !important;
+    /* Dark text for active link */
+}
+
+.mobile-drawer-icon svg {
+    color: #f0f0f0 !important;
+    /* Ensure icons are visible */
+}
+
+/* Media Query for responsiveness */
+@media (max-width: 768px) {
+
+    /* Adjust breakpoint as needed */
+    .desktop-nav-items {
+        display: none !important;
+        /* Hide desktop nav items */
+    }
+
+    .menu-button {
+        display: inline-flex !important;
+        /* Show hamburger menu button */
+    }
+
+    .navbar-toolbar {
+        padding-left: 16px !important;
+        /* Reset padding for mobile if needed */
+    }
 }

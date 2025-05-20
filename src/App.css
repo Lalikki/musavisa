@@ -183,19 +183,174 @@ body {
   font-weight: bold;
 }
 
+/* Responsive adjustments for tables and containers */
+.table-responsive-wrapper {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+
+  .quizzes-container,
+  /* All Quizzes */
+  .my-quizzes-container,
+  /* My Quizzes */
+  .my-answers-container,
+  /* My Answers */
+  .quiz-details-container,
+  /* Quiz Details */
+  .answer-details-container,
+  /* Answer Details */
+  .edit-answer-container,
+  /* Edit Answer */
+  .quiz-container {
+    /* Create/Edit Quiz form container */
+    margin-left: 15px;
+    margin-right: 15px;
+    padding: 15px;
+  }
+
+  .quizzes-table td,
+  /* Apply general mobile TD styles first */
+  .my-quizzes-table td,
+  .my-answers-table td {
+    padding: 8px 10px;
+  }
+
+  /* Card-like layout for .quizzes-table on mobile */
+  .quizzes-table {
+    border: none;
+    /* Remove overall table border, each row will be a card */
+  }
+
+  .quizzes-table thead {
+    display: none;
+    /* Hide traditional table headers */
+  }
+
+  .quizzes-table tr {
+    display: block;
+    /* Make each row a block element (card) */
+    margin-bottom: 15px;
+    /* Space between cards */
+    border: 1px solid #444;
+    /* Border for the card */
+    border-radius: 4px;
+    background-color: #2a2a2a;
+    /* Background for the card */
+    padding: 10px;
+  }
+
+  .quizzes-table td,
+  .my-quizzes-table td,
+  .my-answers-table td {
+    display: flex;
+    /* Use flexbox for label and data alignment */
+    justify-content: space-between;
+    /* Pushes label to left, data to right */
+    align-items: center;
+    /* Vertically align if content heights differ */
+    text-align: left;
+    /* Ensure text within both label and data is left-aligned */
+    border-bottom: 1px dotted #555;
+    padding-left: 10px;
+    /* Reset padding-left, flexbox will handle spacing */
+    padding-right: 10px;
+    /* Add some padding on the right */
+    /* Separator line between data points in a card */
+  }
+
+  .quizzes-table td:last-child,
+  .my-quizzes-table td:last-child,
+  .my-answers-table td:last-child {
+    border-bottom: none;
+    /* No separator for the last item in a card */
+  }
+
+  .quizzes-table td::before,
+  .my-quizzes-table td::before,
+  .my-answers-table td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #ff8c00;
+    /* Lighter orange for labels */
+    margin-right: 10px;
+    /* Space between label and data */
+    white-space: normal;
+    flex-basis: 40%;
+    /* Give label a flexible width, adjust as needed */
+    flex-shrink: 0;
+    /* Prevent label from shrinking if data is long */
+  }
+
+  /* To make the actual data take the remaining space */
+  .quizzes-table td>*:not(::before),
+  .my-quizzes-table td>*:not(::before),
+  .my-answers-table td>*:not(::before) {
+    flex-grow: 1;
+    text-align: left;
+    /* Ensure data itself is left-aligned */
+  }
+
+  .my-quizzes-table,
+  .my-answers-table {
+    /* Ensure these tables also benefit from the wrapper if they need it */
+    width: 100%;
+    /* Make sure table itself doesn't try to shrink too much */
+  }
+}
+
 /* Styles for EditAnswer.js */
 .edit-answer-container {
-  max-width: 600px;
+  max-width: 700px;
   margin: 20px auto;
   padding: 20px;
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: rgba(26, 26, 26, 0.85);
+  /* Semi-transparent dark background */
+  color: #f0f0f0;
+  /* Light text for contrast */
 }
 
 .edit-answer-container h1 {
   text-align: center;
   margin-bottom: 20px;
+  color: #ff6600;
+  /* Orange heading */
+}
+
+.artist-input,
+/* Also applies to EditAnswer.js if these classes are used */
+.songname-input {
+  /* ... existing styles like display, width, margin ... */
+  padding: 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background-color: #333;
+  color: #f0f0f0;
+  box-sizing: border-box;
+}
+
+.artist-input:focus,
+.songname-input:focus {
+  border-color: #ff6600;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 102, 0, 0.3);
+}
+
+.edit-answer-container form .song-guess-item h4 {
+  /* Assuming .song-guess-item is used */
+  color: #ff8c00;
+  /* Lighter orange for song number heading */
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.edit-answer-container form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
 }
 
 .action-button-spacing {
@@ -589,31 +744,48 @@ body {
   /* Darker grey on row hover */
 }
 
-.expand-arrow-cell {
-  cursor: pointer;
-  text-align: center;
-}
-
-.expand-arrow-cell svg {
-  /* Style the arrow icon color */
-  color: #ff8c00;
-  /* Orange arrow */
-}
-
-.collapsible-content {
-  padding: 15px;
-  background-color: #2a2a2a;
-  /* Darker background for the expanded area */
-  border-top: 2px solid #ff6600;
-  /* A separator line */
-}
-
-.quiz-answers-subtable {
+/* Styles for the Submitted Answers table on QuizDetails.js */
+.quiz-answers-table {
   width: 100%;
-  margin-top: 10px;
   border-collapse: collapse;
+  margin-top: 20px;
+  /* Add space above the table */
+}
+
+.quiz-answers-table th,
+.quiz-answers-table td {
+  border: 1px solid #444;
+  /* Darker border for cells */
+  padding: 12px 15px;
+  /* Consistent padding */
+  text-align: left;
+}
+
+.quiz-answers-table th {
+  background-color: #cc0000;
+  /* Red background for headers */
+  color: #f0f0f0;
+  /* Light text for header */
+  font-weight: bold;
+}
+
+.quiz-answers-table tbody tr:hover {
   background-color: #333;
-  /* Background for sub-table */
+  /* Darker grey on row hover */
+}
+
+.quiz-answers-table td a {
+  /* Styling for links like "View Answer" */
+  color: #ff8c00;
+  /* Lighter orange for links */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.quiz-answers-table td a:hover {
+  color: #ff6600;
+  /* Orange on hover */
+  text-decoration: underline;
 }
 
 .quiz-answers-subtable th,
@@ -634,33 +806,29 @@ body {
   font-weight: bold;
 }
 
-/* Styles for QuizDetails.js */
-.quiz-details-container {
-  padding: 20px;
-  max-width: 800px;
-  margin: 20px auto;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.quiz-details-container h1,
-.quiz-details-container h2 {
-  text-align: center;
-  color: #333;
-}
-
 .quiz-questions-list {
   list-style-type: none;
   padding: 0;
 }
 
 .quiz-question-item {
-  background-color: #fff;
-  border: 1px solid #eee;
+  background-color: #2a2a2a;
+  /* Darker item background */
+  border: 1px solid #444;
+  /* Darker border */
   padding: 10px;
   margin-bottom: 10px;
   border-radius: 4px;
+}
+
+.quiz-question-item p {
+  /* For the song link paragraph */
+  margin-top: 5px;
+}
+
+.quiz-question-item p:last-child {
+  margin-bottom: 0;
+  /* Remove bottom margin for the last paragraph */
 }
 
 .back-link {
@@ -740,7 +908,52 @@ body {
   text-decoration: underline;
 }
 
-/* Styles for AnswerQuiz.js */
+/* Styles for AnswerQuiz.js (and can be shared with EditAnswer.js if structure is similar) */
+.answer-quiz-container {
+  max-width: 700px;
+  /* Or a suitable width for the form */
+  margin: 30px auto;
+  padding: 25px;
+  background-color: rgba(26, 26, 26, 0.85);
+  /* Semi-transparent dark background */
+  border-radius: 8px;
+  color: #f0f0f0;
+  /* Light text for contrast */
+}
+
+.answer-quiz-container h1 {
+  color: #ff6600;
+  /* Orange heading */
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.answer-quiz-container p:not([class]) {
+  /* Target general paragraphs if not specifically classed */
+  text-align: center;
+  margin-bottom: 25px;
+  color: #ccc;
+  /* Lighter grey for descriptive text */
+}
+
+.answer-quiz-container form .song-guess-item h4 {
+  color: #ff8c00;
+  /* Lighter orange for song number heading */
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.answer-quiz-container form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+/* Re-use .is-ready-checkbox-container and .is-ready-checkbox-label if applicable */
+/* Re-use .button-submit-quiz or create a specific one */
+/* Re-use .form-message, .success-text, .error-text */
+
+/* Styles for EditAnswer.js */
 .error-text {
   color: red;
 }

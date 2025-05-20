@@ -20,7 +20,7 @@ const AnswerDetails = () => {
     const [saveAssessmentSuccess, setSaveAssessmentSuccess] = useState('');
     const [isCompleting, setIsCompleting] = useState(false);
     const [completeError, setCompleteError] = useState(null);
-    const [isAutoCalculating, setIsAutoCalculating] = useState(false);
+    const [isAutoCalculating, setIsAutoCalculating] = useState(false); // Keep this for button text
     const [scoreMode, setScoreMode] = useState('manual'); // 'manual' or 'auto'
 
     useEffect(() => {
@@ -99,12 +99,16 @@ const AnswerDetails = () => {
             const answerDocRef = doc(db, 'quizAnswers', answerId);
             await updateDoc(answerDocRef, {
                 selfAssessedSongScores: selfAssessedSongScores,
-                selfAssessedTotalScore: totalSelfAssessedScore,
+                score: totalSelfAssessedScore, // Save total self-assessed score to the main 'score' field
                 lastSelfAssessedAt: serverTimestamp()
             });
             setSaveAssessmentSuccess("Your assessment has been saved!");
-            // Optionally update local quizAnswer state if needed, or rely on re-fetch if user navigates away and back
-            setQuizAnswer(prev => ({ ...prev, selfAssessedSongScores, selfAssessedTotalScore: totalSelfAssessedScore }));
+            // Update local quizAnswer state to reflect the saved score
+            setQuizAnswer(prev => ({
+                ...prev,
+                selfAssessedSongScores: [...selfAssessedSongScores], // Ensure new array for re-render
+                score: totalSelfAssessedScore
+            }));
         } catch (err) {
             console.error("Error saving self-assessment:", err);
             setSaveAssessmentError("Failed to save your assessment. Please try again.");
@@ -125,7 +129,7 @@ const AnswerDetails = () => {
             const answerDocRef = doc(db, 'quizAnswers', answerId);
             await updateDoc(answerDocRef, {
                 selfAssessedSongScores: selfAssessedSongScores,
-                selfAssessedTotalScore: totalSelfAssessedScore,
+                score: totalSelfAssessedScore, // Save total self-assessed score to the main 'score' field
                 lastSelfAssessedAt: serverTimestamp(),
                 isCompleted: true, // Mark as completed
                 // isChecked might remain true, or you could set it to false if needed
@@ -141,8 +145,16 @@ const AnswerDetails = () => {
         }
     };
 
-    const handleAutoCalculateScore = () => {
-        if (!correctQuizData || !quizAnswer || !quizAnswer.answers) return;
+    const handleAutoCalculateScore = async () => { // Make it async
+        if (!correctQuizData || !quizAnswer || !quizAnswer.answers || !canSelfAssess) {
+            setSaveAssessmentError("Cannot auto-calculate score at this time."); // Use a general error state
+            return;
+        }
+
+        // Use isSavingAssessment for the loading state of this combined calculate & save operation
+        setIsSavingAssessment(true);
+        setSaveAssessmentError(null);
+        setSaveAssessmentSuccess('');
 
         setIsAutoCalculating(true);
         const similarityThreshold = 0.8; // Or make this configurable
@@ -164,10 +176,27 @@ const AnswerDetails = () => {
             }
             return songScore;
         });
-        setSelfAssessedSongScores(newScores);
-        setIsAutoCalculating(false);
-        setSaveAssessmentSuccess("Scores auto-calculated. Review and save if you're happy."); // Give feedback
-        setSaveAssessmentError(null);
+        const calculatedTotalScore = newScores.reduce((sum, score) => sum + score, 0);
+
+        try {
+            const answerDocRef = doc(db, 'quizAnswers', answerId);
+            await updateDoc(answerDocRef, {
+                selfAssessedSongScores: newScores,
+                score: calculatedTotalScore, // Save total auto-calculated score to the main 'score' field
+                lastSelfAssessedAt: serverTimestamp()
+            });
+            setSelfAssessedSongScores(newScores); // Update local state for song scores
+            setQuizAnswer(prev => ({ ...prev, score: calculatedTotalScore, selfAssessedSongScores: [...newScores] })); // Update local state for total score
+            setSaveAssessmentSuccess("Scores auto-calculated and saved successfully!");
+        } catch (err) {
+            console.error("Error auto-calculating and saving score:", err);
+            setSaveAssessmentError("Failed to auto-calculate and save score. Please try again.");
+            setSaveAssessmentSuccess('');
+        } finally {
+            setIsAutoCalculating(false); // Reset this specific flag
+            setIsSavingAssessment(false); // Reset the general saving flag
+        }
+
     };
 
 
@@ -192,12 +221,11 @@ const AnswerDetails = () => {
                         quizAnswer.isChecked ? 'Ready for Review' :
                             'In Progress'}
                 </p>
-                {scoreMode === 'auto' &&
-                    <p><strong>Automatically calculated score:</strong> {quizAnswer.score} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</p>
-                }
-                {scoreMode === 'manual' &&
-                    <p><strong>Manually calculated score:</strong> {totalSelfAssessedScore} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</p>
-                }
+                <p><strong>Current Saved Score:</strong> {quizAnswer.score} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</p>
+                <p>
+                    <strong>{scoreMode === 'auto' ? 'Auto-Calculated Score (Live):' : 'Manually Assessed Score (Live):'}</strong>
+                    {' '}{totalSelfAssessedScore} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}
+                </p>
             </div>
 
             {canSelfAssess && (
@@ -250,8 +278,8 @@ const AnswerDetails = () => {
                 <p>No guesses recorded for this submission.</p>
             )}
             {canSelfAssess && scoreMode === 'auto' && !quizAnswer.isCompleted && (
-                <button onClick={handleSaveAssessment} disabled={isSavingAssessment || isCompleting} className="button-save-assessment">
-                    {isAutoCalculating ? 'Calculating...' : 'Automatically Calculate My Score'}
+                <button onClick={handleAutoCalculateScore} disabled={isSavingAssessment || isCompleting || isAutoCalculating} className="button-auto-calculate">
+                    {isAutoCalculating || isSavingAssessment ? 'Calculating & Saving...' : 'Automatically Calculate & Save Score'}
                 </button>
             )}
             {canSelfAssess && !quizAnswer.isCompleted && (

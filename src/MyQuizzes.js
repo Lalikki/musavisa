@@ -4,8 +4,6 @@ import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { format } from 'date-fns'; // For formatting dates
 import { Link } from 'react-router-dom';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 const MyQuizzes = () => {
     const [user, setUser] = useState(null);
@@ -14,8 +12,7 @@ const MyQuizzes = () => {
     const [error, setError] = useState(null);
     const [expandedQuizId, setExpandedQuizId] = useState(null);
     const [quizAnswers, setQuizAnswers] = useState([]);
-    const [answersLoading, setAnswersLoading] = useState(false);
-    const [answersError, setAnswersError] = useState(null);
+
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -57,40 +54,6 @@ const MyQuizzes = () => {
         }
     };
 
-    const fetchAnswersForQuiz = async (quizId) => {
-        setAnswersLoading(true);
-        setAnswersError(null);
-        setQuizAnswers([]);
-        try {
-            const answersCollectionRef = collection(db, "quizAnswers");
-            const q = query(
-                answersCollectionRef,
-                where("quizId", "==", quizId),
-                orderBy("submittedAt", "desc") // Or orderBy("score", "desc")
-            );
-            const querySnapshot = await getDocs(q);
-            const fetchedAnswers = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                submittedAt: doc.data().submittedAt ? doc.data().submittedAt.toDate() : null,
-            }));
-            setQuizAnswers(fetchedAnswers);
-        } catch (err) {
-            console.error("Error fetching answers for quiz:", err);
-            setAnswersError("Failed to load answers. You might need to create a Firestore index for 'quizAnswers' on 'quizId' and 'submittedAt'.");
-        } finally {
-            setAnswersLoading(false);
-        }
-    };
-
-    const toggleAnswersVisibility = (quizId) => {
-        const newExpandedQuizId = expandedQuizId === quizId ? null : quizId;
-        setExpandedQuizId(newExpandedQuizId);
-        if (newExpandedQuizId) {
-            fetchAnswersForQuiz(newExpandedQuizId);
-        }
-    };
-
     if (!user && !loading) {
         return <p>Please log in to see the quizzes you've created.</p>;
     }
@@ -102,64 +65,34 @@ const MyQuizzes = () => {
             <h1>My Created Quizzes</h1>
             {quizzes.length === 0 && !loading && <p>You haven't created any quizzes yet. <Link to="/quiz">Create one now!</Link></p>}
             {quizzes.length > 0 && (
-                <table className="my-quizzes-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Number of Songs</th>
-                            <th>Created At</th>
-                            <th>View Answers</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {quizzes.map(quiz => (
-                            <React.Fragment key={quiz.id}>
-                                <tr>
-                                    <td>{quiz.title}</td>
-                                    <td>{quiz.amount}</td>
-                                    <td>{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
-                                    <td onClick={() => toggleAnswersVisibility(quiz.id)} className="expand-arrow-cell">
-                                        {expandedQuizId === quiz.id ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                                    </td>
-                                    <td>
-                                        <Link to={`/my-quizzes/${quiz.id}`} className="view-details-button action-button-spacing">Details</Link>
-                                        <Link to={`/edit-quiz/${quiz.id}`} className="edit-button">Edit</Link>
-                                    </td>
-                                </tr>
-                                {expandedQuizId === quiz.id && (
+                <div className="table-responsive-wrapper"> {/* Added wrapper div */}
+                    <table className="quizzes-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Number of Songs</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {quizzes.map(quiz => (
+                                <React.Fragment key={quiz.id}>
                                     <tr>
-                                        <td colSpan="4" className="collapsible-content">
-                                            {answersLoading && <p>Loading answers...</p>}
-                                            {answersError && <p className="error-text">{answersError}</p>}
-                                            {!answersLoading && !answersError && quizAnswers.length === 0 && <p>No one has answered this quiz yet.</p>}
-                                            {!answersLoading && !answersError && quizAnswers.length > 0 && (
-                                                <table className="quiz-answers-subtable">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Answered By</th>
-                                                            <th>Score</th>
-                                                            <th>Submitted At</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {quizAnswers.map(answer => (
-                                                            <tr key={answer.id}>
-                                                                <td>{answer.answerCreatorName || 'Anonymous'}</td>
-                                                                <td>{answer.score} / {answer.answers.length * 1}</td>
-                                                                <td>{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            )}
+                                        <td data-label="Title">{quiz.title}</td>
+                                        <td data-label="Songs">{quiz.amount}</td>
+                                        <td data-label="Created">{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
+                                        <td data-label="Actions">
+                                            <Link to={`/my-quizzes/${quiz.id}`} className="view-details-button action-button-spacing">Details</Link>
+                                            <Link to={`/edit-quiz/${quiz.id}`} className="edit-button">Edit</Link>
                                         </td>
                                     </tr>
-                                )}
-                            </React.Fragment>
-                        ))}
-                    </tbody>
-                </table>
+
+                                </React.Fragment>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );

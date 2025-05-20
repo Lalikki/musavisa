@@ -72,18 +72,46 @@ const EditQuiz = () => {
         fetchQuiz();
     }, [quizId, user]);
 
+    // Effect to sync questions array with amount input
+    useEffect(() => {
+        const numAmount = Number(amount);
+        if (!isNaN(numAmount) && numAmount >= 0 && questions) { // Allow 0 for amount
+            const currentLength = questions.length;
+            if (numAmount > currentLength) {
+                const newQuestionsToAdd = Array(numAmount - currentLength).fill(null).map(() => ({ songLink: "", artist: "", song: "" }));
+                setQuestions(prevQuestions => [...prevQuestions, ...newQuestionsToAdd]);
+            }
+            // Decreasing 'amount' in the input field will no longer automatically remove question entries.
+            // Users must use the "Remove Song" button for that.
+        } else if (amount === "" && questions && questions.length > 0) {
+            // If amount is cleared, and questions exist, reset questions array.
+            // This is a deliberate action by the user to clear the amount.
+            if (questions.length !== 0) {
+                setQuestions([]); // Or setQuestions([{ songLink: "", artist: "", song: "" }]) if 1 is min
+            }
+        }
+    }, [amount]); // Only re-run if amount changes
+
     const handleQuestionChange = (index, field, value) => {
-        const updatedQuestions = [...questions];
-        updatedQuestions[index] = { ...updatedQuestions[index], [field]: value };
+        const updatedQuestions = questions.map((q, i) => {
+            if (i === index) {
+                return { ...q, [field]: value };
+            }
+            return q;
+        });
         setQuestions(updatedQuestions);
     };
 
     const addQuestion = () => {
-        setQuestions([...questions, { songLink: "", artist: "", song: "" }]);
+        const newQuestions = [...questions, { songLink: "", artist: "", song: "" }];
+        setQuestions(newQuestions);
+        setAmount(String(newQuestions.length));
     };
 
     const removeQuestion = (index) => {
-        setQuestions(questions.filter((_, i) => i !== index));
+        const newQuestions = questions.filter((_, i) => i !== index);
+        setQuestions(newQuestions);
+        setAmount(String(newQuestions.length));
     };
 
     const handleSubmit = async (e) => {
@@ -134,47 +162,40 @@ const EditQuiz = () => {
     return (
         <div className="quiz-container"> {/* Can reuse .quiz-container or make .edit-quiz-container */}
             <h1>Edit Quiz: {originalQuizData?.title}</h1>
-            <form onSubmit={handleSubmit} className="quiz-form"> {/* Added class for potential styling */}
+            <form onSubmit={handleSubmit} className="quiz-creation-form"> {/* Use quiz-creation-form class */}
                 <div>
                     <label>Title:</label>
                     <input type="text" value={title} onChange={e => setTitle(e.target.value)} />
                 </div>
                 <div>
                     <label>Rules:</label>
-                    <textarea value={rules} onChange={e => setRules(e.target.value)} />
+                    <textarea value={rules} onChange={e => setRules(e.target.value)} className="form-input-full-width" />
                 </div>
                 <div>
                     <label>Amount of songs:</label>
-                    <input type="number" min="1" value={amount} onChange={e => setAmount(e.target.value)} />
+                    <input type="number" min="0" value={amount} readOnly className="form-input-full-width" disabled />
                 </div>
                 <h3>Song Entries</h3>
                 {questions.map((q, index) => (
-                    <div key={index} className="quiz-question-entry"> {/* Added class */}
+                    <div key={index} className="question-entry-box"> {/* Use question-entry-box class */}
                         <h4>Song {index + 1}</h4>
-                        <label>Song Link (Optional):</label>
-                        <input type="text" placeholder="https://youtube.com/..." value={q.songLink} onChange={e => handleQuestionChange(index, "songLink", e.target.value)} />
+                        <label>Song Link:</label>
+                        <input type="text" placeholder="https://youtube.com/..." value={q.songLink} onChange={e => handleQuestionChange(index, "songLink", e.target.value)} className="form-input-question" />
                         <label>Artist:</label>
-                        <input type="text" placeholder="Artist Name" value={q.artist} onChange={e => handleQuestionChange(index, "artist", e.target.value)} required />
+                        <input type="text" placeholder="Artist Name" value={q.artist} onChange={e => handleQuestionChange(index, "artist", e.target.value)} required className="form-input-question" />
                         <label>Song Title:</label>
-                        <input type="text" placeholder="Song Title" value={q.song} onChange={e => handleQuestionChange(index, "song", e.target.value)} required />
+                        <input type="text" placeholder="Song Title" value={q.song} onChange={e => handleQuestionChange(index, "song", e.target.value)} required className="form-input-question" />
                         {questions.length > 1 && (
                             <button type="button" onClick={() => removeQuestion(index)} className="button-remove-question">Remove Song</button>
                         )}
                     </div>
                 ))}
                 <button type="button" onClick={addQuestion} className="button-add-question">Add Song Entry</button>
-                <div className="is-ready-checkbox-container"> {/* Re-use class from Quiz.js */}
-                    <label htmlFor="editIsReadyCheckbox" className="is-ready-checkbox-label">
-                        Mark as Ready:
-                    </label>
-                    <input
-                        type="checkbox"
-                        id="editIsReadyCheckbox"
-                        checked={isReady}
-                        onChange={e => setIsReady(e.target.checked)}
-                    />
+                <div className="is-ready-checkbox-container"> {/* Use is-ready-checkbox-container class */}
+                    <label htmlFor="editIsReadyCheckbox" className="is-ready-checkbox-label">Mark as Ready:</label>
+                    <input type="checkbox" id="editIsReadyCheckbox" checked={isReady} onChange={e => setIsReady(e.target.checked)} />
                 </div>
-                <button type="submit" disabled={saving} className="button-submit-quiz">{saving ? 'Saving...' : 'Save Changes'}</button> {/* Re-use class from Quiz.js */}
+                <button type="submit" disabled={saving} className="button-submit-quiz">{saving ? 'Saving...' : 'Save Changes'}</button> {/* Use button-submit-quiz class */}
                 {success && <p className="success-text form-message">{success}</p>}
                 {error && <p className="error-text form-message">{error}</p>}
             </form>

@@ -40,34 +40,36 @@ const Quizzes = () => {
     }, []);
 
     return (
-        <div className="quizzes-container">
+        <div className="my-quizzes-container">
             <h1>All Quizzes</h1>
             {loading && <p>Loading quizzes...</p>}
             {error && <p className="error-text">{error}</p>} {/* Changed to use class from App.css */}
             {!loading && !error && quizzes.length === 0 && <p>No ready quizzes found.</p>} {/* Updated message for clarity */}
             {!loading && !error && quizzes.length > 0 && (
-                <table className="quizzes-table">
-                    <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Number of Songs</th>
-                            <th>Created</th>
-                            <th>Created By</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {quizzes.map(quiz => (
-                            <tr key={quiz.id}>
-                                <td>{quiz.title}</td>
-                                <td>{quiz.amount}</td>
-                                <td>{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
-                                <td>{quiz.creatorName || 'Unknown'}</td>
-                                <td><Link to={`/answer-quiz/${quiz.id}`}>Answer Quiz</Link></td>
+                <div className="table-responsive-wrapper">
+                    <table className="quizzes-table">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Number of Songs</th>
+                                <th>Created</th>
+                                <th>Created By (Name)</th>
+                                <th>Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {quizzes.map(quiz => (
+                                <tr key={quiz.id}>
+                                    <td data-label="Title">{quiz.title}</td>
+                                    <td data-label="Songs">{quiz.amount}</td>
+                                    <td data-label="Created">{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
+                                    <td data-label="Created By">{quiz.creatorName || 'Unknown'}</td>
+                                    <td data-label="Actions"><Link to={`/answer-quiz/${quiz.id}`}>Answer Quiz</Link></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );

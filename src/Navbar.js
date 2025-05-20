@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
-import Button from "@mui/material/Button";
+import Button from "@mui/material/Button"; // Keep for desktop
+import IconButton from "@mui/material/IconButton"; // For hamburger icon
+import MenuIcon from "@mui/icons-material/Menu"; // Hamburger icon
+import Drawer from "@mui/material/Drawer"; // For the mobile menu
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import HomeIcon from '@mui/icons-material/Home';
 import ListAltIcon from '@mui/icons-material/ListAlt'; // Icon for All Quizzes
@@ -17,6 +25,7 @@ import { onAuthStateChanged, signOut, signInWithPopup } from "firebase/auth";
 const Navbar = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const [mobileOpen, setMobileOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
 
     useEffect(() => {
@@ -25,6 +34,10 @@ const Navbar = () => {
         });
         return () => unsubscribe(); // Cleanup subscription on unmount
     }, []);
+
+    const handleDrawerToggle = () => {
+        setMobileOpen(!mobileOpen);
+    };
 
     const handleLogout = async () => {
         try {
@@ -53,39 +66,84 @@ const Navbar = () => {
         { label: "New Quiz", path: "/quiz", icon: <QuizIcon /> }, // Changed "Quiz" to "New Quiz" for clarity
         // Login/Logout item will be added dynamically below or handled separately
     ];
-    return (
-        <AppBar position="static" className="navbar-appbar">
-            <Toolbar className="navbar-toolbar">
+
+    const drawer = (
+        <div onClick={handleDrawerToggle} className="mobile-drawer">
+            <List>
                 {navItems.map((item) => (
-                    <Button
-                        key={item.path}
-                        component={Link}
-                        to={item.path}
-                        className={`navbar-button ${location.pathname === item.path && item.path ? "active" : ""}`}
-                        startIcon={item.icon}
-                    >
-                        {item.label}
-                    </Button>
+                    <ListItem key={item.path} disablePadding>
+                        <ListItemButton component={Link} to={item.path} selected={location.pathname === item.path}>
+                            <ListItemIcon className="mobile-drawer-icon">
+                                {item.icon}
+                            </ListItemIcon>
+                            <ListItemText primary={item.label} className="mobile-drawer-text" />
+                        </ListItemButton>
+                    </ListItem>
                 ))}
                 {currentUser ? (
-                    <Button
-                        onClick={handleLogout}
-                        className="navbar-button"
-                        startIcon={<LogoutIcon />}
-                    >
-                        Logout
-                    </Button>
+                    <ListItem disablePadding>
+                        <ListItemButton onClick={handleLogout}>
+                            <ListItemIcon className="mobile-drawer-icon">
+                                <LogoutIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Logout" className="mobile-drawer-text" />
+                        </ListItemButton>
+                    </ListItem>
                 ) : (
-                    <Button
-                        onClick={handleLogin} // Call handleLogin directly
-                        className={`navbar-button ${location.pathname === "/login" ? "active" : ""}`}
-                        startIcon={<LoginIcon />}
-                    >
-                        Login
-                    </Button>
+                    <ListItem disablePadding>
+                        <ListItemButton onClick={handleLogin}>
+                            <ListItemIcon className="mobile-drawer-icon">
+                                <LoginIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Login" className="mobile-drawer-text" />
+                        </ListItemButton>
+                    </ListItem>
                 )}
-            </Toolbar>
-        </AppBar>
+            </List>
+        </div>
+    );
+
+    return (
+        <>
+            <AppBar position="static" className="navbar-appbar">
+                <Toolbar className="navbar-toolbar">
+                    <IconButton
+                        color="inherit"
+                        aria-label="open drawer"
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                        className="menu-button"
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <div className="desktop-nav-items">
+                        {navItems.map((item) => (
+                            <Button
+                                key={item.path}
+                                component={Link}
+                                to={item.path}
+                                className={`navbar-button ${location.pathname === item.path && item.path ? "active" : ""}`}
+                                startIcon={item.icon}
+                            >
+                                {item.label}
+                            </Button>
+                        ))}
+                        {currentUser ? (
+                            <Button onClick={handleLogout} className="navbar-button" startIcon={<LogoutIcon />}>
+                                Logout
+                            </Button>
+                        ) : (
+                            <Button onClick={handleLogin} className={`navbar-button`} startIcon={<LoginIcon />}>
+                                Login
+                            </Button>
+                        )}
+                    </div>
+                </Toolbar>
+            </AppBar>
+            <Drawer open={mobileOpen} onClose={handleDrawerToggle} ModalProps={{ keepMounted: true /* Better open performance on mobile. */ }}>
+                {drawer}
+            </Drawer>
+        </>
     );
 };
 
