@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/musavisa.git/static/css/main.3c992658.css",
+    "main.js": "/musavisa.git/static/js/main.9782ea18.js",
+    "static/js/453.b5217617.chunk.js": "/musavisa.git/static/js/453.b5217617.chunk.js",
+    "index.html": "/musavisa.git/index.html",
+    "main.3c992658.css.map": "/musavisa.git/static/css/main.3c992658.css.map",
+    "main.9782ea18.js.map": "/musavisa.git/static/js/main.9782ea18.js.map",
+    "453.b5217617.chunk.js.map": "/musavisa.git/static/js/453.b5217617.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.3c992658.css",
+    "static/js/main.9782ea18.js"
+  ]
+}
