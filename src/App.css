@@ -811,6 +811,35 @@ body {
   padding: 0;
 }
 
+/* Styles for Highscores.js */
+/* Reusing .my-quizzes-container and .quizzes-table */
+/* Specific styles for Highscores table if needed */
+.quizzes-table td[data-label="Score"] {
+  font-weight: bold;
+  /* Make score stand out */
+  color: #ff6600;
+  /* Orange color for score */
+}
+
+@media (max-width: 768px) {
+
+  /* Specific mobile styles for Highscores table if needed */
+  .quizzes-table td[data-label="Score"] {
+    /* Ensure mobile label is styled correctly */
+    color: #ff6600;
+    /* Orange color for score */
+  }
+
+  /* Adjust flex basis for labels if needed due to score length */
+  .quizzes-table td[data-label="Quiz"]::before,
+  .quizzes-table td[data-label="Score"]::before,
+  .quizzes-table td[data-label="Submitted By"]::before,
+  .quizzes-table td[data-label="Submitted At"]::before {
+    /* flex-basis: 40%; */
+    /* Adjust if needed */
+  }
+}
+
 .quiz-question-item {
   background-color: #2a2a2a;
   /* Darker item background */
