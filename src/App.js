@@ -12,11 +12,13 @@ import EditQuiz from "./EditQuiz"; // Import the EditQuiz component
 import Quiz from "./Quiz";
 import Navbar from "./Navbar";
 import './App.css';
+import './Mui.css';
+import './Navbar.css'; // Add this line
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <Router basename={`/${process.env.PUBLIC_URL.split('/').pop()}`}>
+    <Router>
       <div className="App">
         <Navbar />
         <Routes>

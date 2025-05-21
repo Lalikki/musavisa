@@ -1,0 +1,54 @@
+.quizzes-table .MuiTableCell-root,
+/* Target MUI TableCell specifically */
+.my-quizzes-table .MuiTableCell-root,
+.my-answers-table .MuiTableCell-root,
+.quiz-answers-table .MuiTableCell-root {
+    color: black !important;
+    /* Light grey/white text for all table cells */
+}
+
+/* MUI AppBar specific styling (if .navbar-appbar is applied to AppBar) */
+.navbar-appbar.MuiAppBar-root {
+    /* Be more specific if .navbar-appbar is a custom class on AppBar */
+    background-color: #1a1a1a !important;
+    color: #f0f0f0 !important;
+}
+
+/* MUI Button startIcon specific styling (if .navbar-button is applied to Button) */
+.navbar-button .MuiButton-startIcon .MuiSvgIcon-root {
+    /* Target the SvgIcon within startIcon */
+    color: #f0f0f0 !important;
+}
+
+.navbar-button:hover .MuiButton-startIcon .MuiSvgIcon-root {
+    color: #ffffff !important;
+}
+
+.navbar-button.active .MuiButton-startIcon .MuiSvgIcon-root {
+    color: #1a1a1a !important;
+}
+
+/* MUI ListItemButton specific styling within .mobile-drawer */
+.mobile-drawer .MuiListItemButton-root {
+    color: #f0f0f0 !important;
+}
+
+.mobile-drawer .MuiListItemButton-root:hover {
+    background-color: #cc0000 !important;
+    color: #ffffff !important;
+}
+
+/* Styling for custom classes within the MUI ListItemButton context */
+.mobile-drawer .MuiListItemButton-root:hover .mobile-drawer-icon .MuiSvgIcon-root,
+.mobile-drawer .MuiListItemButton-root:hover .mobile-drawer-text .MuiTypography-root {
+    color: #ffffff !important;
+}
+
+.mobile-drawer .MuiListItemButton-root.Mui-selected {
+    background-color: #ff6600 !important;
+}
+
+.mobile-drawer .MuiListItemButton-root.Mui-selected .mobile-drawer-icon .MuiSvgIcon-root,
+.mobile-drawer .MuiListItemButton-root.Mui-selected .mobile-drawer-text .MuiTypography-root {
+    color: #1a1a1a !important;
+}

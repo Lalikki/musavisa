@@ -1,7 +1,7 @@
 {
   "name": "musavisa",
   "version": "0.1.0",
-  "homepage": "https://Lalikki.github.io/musavisa.git",
+  "homepage": "https://Lalikki.github.io/musavisa",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",

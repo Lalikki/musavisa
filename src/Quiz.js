@@ -24,46 +24,46 @@ const Quiz = () => {
     }, []);
 
     // Helper function to parse YouTube video ID
-    const getYouTubeID = (url) => {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    };
+    // const getYouTubeID = (url) => {
+    //     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    //     const match = url.match(regExp);
+    //     return (match && match[2].length === 11) ? match[2] : null;
+    // };
 
     // Helper function to parse Spotify track ID
-    const getSpotifyTrackID = (url) => {
-        const regExp = /^(?:spotify:track:|https:\/\/[a-z]+\.spotify\.com\/track\/)([a-zA-Z0-9]+)/;
-        const match = url.match(regExp);
-        return match ? match[1] : null;
-    };
+    // const getSpotifyTrackID = (url) => {
+    //     const regExp = /^(?:spotify:track:|https:\/\/[a-z]+\.spotify\.com\/track\/)([a-zA-Z0-9]+)/;
+    //     const match = url.match(regExp);
+    //     return match ? match[1] : null;
+    // };
 
     // Placeholder for actual API call to your backend/cloud function
-    const fetchMetadataFromAPI = async (linkType, id) => {
-        // Simulate API call
-        return new Promise(resolve => {
-            setTimeout(() => {
-                if (linkType === "youtube") {
-                    // In a real scenario, you'd call your backend which calls YouTube API
-                    // Example: YouTube title might be "Artist Name - Song Title (Official Video)"
-                    // You'd need to parse this.
-                    if (id === "dQw4w9WgXcQ") { // Rick Astley example ID
-                        resolve({ artist: "Rick Astley", song: "Never Gonna Give You Up" });
-                    } else {
-                        resolve({ artist: "YouTube Artist (Demo)", song: "YouTube Song (Demo)" });
-                    }
-                } else if (linkType === "spotify") {
-                    // In a real scenario, you'd call your backend which calls Spotify API
-                    if (id === "0sNOj6fL7K652VvtfEenjA") { // Example Spotify ID
-                        resolve({ artist: "Daft Punk", song: "Get Lucky" });
-                    } else {
-                        resolve({ artist: "Spotify Artist (Demo)", song: "Spotify Song (Demo)" });
-                    }
-                } else {
-                    resolve({ artist: "", song: "" }); // No match
-                }
-            }, 1500); // Simulate network delay
-        });
-    };
+    // const fetchMetadataFromAPI = async (linkType, id) => {
+    //     // Simulate API call
+    //     return new Promise(resolve => {
+    //         setTimeout(() => {
+    //             if (linkType === "youtube") {
+    //                 // In a real scenario, you'd call your backend which calls YouTube API
+    //                 // Example: YouTube title might be "Artist Name - Song Title (Official Video)"
+    //                 // You'd need to parse this.
+    //                 if (id === "dQw4w9WgXcQ") { // Rick Astley example ID
+    //                     resolve({ artist: "Rick Astley", song: "Never Gonna Give You Up" });
+    //                 } else {
+    //                     resolve({ artist: "YouTube Artist (Demo)", song: "YouTube Song (Demo)" });
+    //                 }
+    //             } else if (linkType === "spotify") {
+    //                 // In a real scenario, you'd call your backend which calls Spotify API
+    //                 if (id === "0sNOj6fL7K652VvtfEenjA") { // Example Spotify ID
+    //                     resolve({ artist: "Daft Punk", song: "Get Lucky" });
+    //                 } else {
+    //                     resolve({ artist: "Spotify Artist (Demo)", song: "Spotify Song (Demo)" });
+    //                 }
+    //             } else {
+    //                 resolve({ artist: "", song: "" }); // No match
+    //             }
+    //         }, 1500); // Simulate network delay
+    //     });
+    // };
 
     const handleQuestionChange = (index, field, value) => {
         const updated = questions.map((q, i) => {
@@ -75,7 +75,7 @@ const Quiz = () => {
         setQuestions(updated);
 
         if (field === "songLink" && value.trim() !== "") {
-            fetchAndSetSongMetadata(value, index);
+            // fetchAndSetSongMetadata(value, index);
         }
     };
 
@@ -102,35 +102,35 @@ const Quiz = () => {
         }
     }, [amount]); // Rerun this effect when the 'amount' state changes
 
-    const fetchAndSetSongMetadata = async (url, index) => {
-        let linkType = null;
-        let id = null;
+    // const fetchAndSetSongMetadata = async (url, index) => {
+    //     let linkType = null;
+    //     let id = null;
 
-        const youtubeID = getYouTubeID(url);
-        if (youtubeID) {
-            linkType = "youtube";
-            id = youtubeID;
-        } else {
-            const spotifyID = getSpotifyTrackID(url);
-            if (spotifyID) {
-                linkType = "spotify";
-                id = spotifyID;
-            }
-        }
+    //     const youtubeID = getYouTubeID(url);
+    //     if (youtubeID) {
+    //         linkType = "youtube";
+    //         id = youtubeID;
+    //     } else {
+    //         const spotifyID = getSpotifyTrackID(url);
+    //         if (spotifyID) {
+    //             linkType = "spotify";
+    //             id = spotifyID;
+    //         }
+    //     }
 
-        if (linkType && id) {
-            const metadata = await fetchMetadataFromAPI(linkType, id);
-            setQuestions(prevQuestions => prevQuestions.map((q, i) => {
-                if (i === index) {
-                    return { ...q, artist: metadata.artist || q.artist, song: metadata.song || q.song, loadingMetadata: false };
-                }
-                return q;
-            }));
-        } else {
-            // If not a valid link or no ID found, just stop loading
-            setQuestions(prevQuestions => prevQuestions.map((q, i) => i === index ? { ...q, loadingMetadata: false } : q));
-        }
-    };
+    //     if (linkType && id) {
+    //         const metadata = await fetchMetadataFromAPI(linkType, id);
+    //         setQuestions(prevQuestions => prevQuestions.map((q, i) => {
+    //             if (i === index) {
+    //                 return { ...q, artist: metadata.artist || q.artist, song: metadata.song || q.song, loadingMetadata: false };
+    //             }
+    //             return q;
+    //         }));
+    //     } else {
+    //         // If not a valid link or no ID found, just stop loading
+    //         setQuestions(prevQuestions => prevQuestions.map((q, i) => i === index ? { ...q, loadingMetadata: false } : q));
+    //     }
+    // };
 
     const removeQuestion = (index) => {
         const updatedQuestions = questions.filter((_, i) => i !== index);

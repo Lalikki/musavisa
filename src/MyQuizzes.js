@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from './firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper'; // Often used with TableContainer
 import { onAuthStateChanged } from 'firebase/auth';
 import { format } from 'date-fns'; // For formatting dates
 import { Link } from 'react-router-dom';

@@ -64,7 +64,7 @@ const Navbar = () => {
         { label: "All Quizzes", path: "/quizzes", icon: <ListAltIcon /> },
         { label: "My Quizzes", path: "/my-quizzes", icon: <PlaylistAddCheckIcon /> },
         { label: "My Answers", path: "/my-answers", icon: <FactCheckIcon /> },
-        { label: "New Quiz", path: "/quiz", icon: <QuizIcon /> }, // Changed "Quiz" to "New Quiz" for clarity
+
         // Login/Logout item will be added dynamically below or handled separately
         { label: "New Quiz", path: "/quiz", icon: <QuizIcon />, requiresAuth: true }, // Requires auth
         { label: "Highscores", path: "/highscores", icon: <EmojiEventsIcon />, requiresAuth: true }, // Requires auth
