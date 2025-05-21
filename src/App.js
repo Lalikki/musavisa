@@ -1,5 +1,4 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./Home";
 import Quizzes from "./Quizzes"; // Import the new Quizzes component
 import AnswerQuiz from "./AnswerQuiz"; // Import the new AnswerQuiz component
@@ -13,10 +12,11 @@ import EditQuiz from "./EditQuiz"; // Import the EditQuiz component
 import Quiz from "./Quiz";
 import Navbar from "./Navbar";
 import './App.css';
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <Router>
+    <Router basename={`/${process.env.PUBLIC_URL.split('/').pop()}`}>
       <div className="App">
         <Navbar />
         <Routes>
