@@ -19,10 +19,29 @@ import { HashRouter as Router, Routes, Route } from "react-router-dom";
 function App() {
   return (
     <Router>
+    <Router>
       <div className="App">
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/quizzes" element={<Quizzes />} />
+          {/* Add route for All Quizzes */}
+          <Route path="/my-answers" element={<MyAnswers />} />
+          {/* Route for My Answers */}
+          <Route path="/my-quizzes/:quizId" element={<QuizDetails />} />
+          {/* Route for specific Quiz Details */}
+          <Route path="/answer-quiz/:quizId" element={<AnswerQuiz />} />
+          {/* Route for answering a specific quiz */}
+          <Route path="/highscores" element={<Highscores />} />
+          {/* Route for Highscores */}
+          <Route path="/my-answers/:answerId" element={<AnswerDetails />} />
+          {/* Route for specific Answer Details */}
+          <Route path="/edit-answer/:answerId" element={<EditAnswer />} />
+          {/* Route for editing an answer */}
+          <Route path="/edit-quiz/:quizId" element={<EditQuiz />} />
+          {/* Route for editing a quiz */}
+          <Route path="/my-quizzes" element={<MyQuizzes />} />
+          {/* Route for My Quizzes */}
           <Route path="/quizzes" element={<Quizzes />} />
           {/* Add route for All Quizzes */}
           <Route path="/my-answers" element={<MyAnswers />} />
