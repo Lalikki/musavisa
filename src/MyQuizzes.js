@@ -8,6 +8,9 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper'; // Often used with TableContainer
+import EditIcon from '@mui/icons-material/Edit';
+import Button from '@mui/material/Button';
+import MediaBluetoothOnIcon from '@mui/icons-material/MediaBluetoothOn';
 import { onAuthStateChanged } from 'firebase/auth';
 import { format } from 'date-fns'; // For formatting dates
 import { Link } from 'react-router-dom';
@@ -72,34 +75,33 @@ const MyQuizzes = () => {
             <h1>My Created Quizzes</h1>
             {quizzes.length === 0 && !loading && <p>You haven't created any quizzes yet. <Link to="/quiz">Create one now!</Link></p>}
             {quizzes.length > 0 && (
-                <div className="table-responsive-wrapper"> {/* Added wrapper div */}
-                    <table className="quizzes-table">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Number of Songs</th>
-                                <th>Created At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <TableContainer component={Paper} className="table-responsive-wrapper"> {/* Use TableContainer and Paper */}
+                    <Table className="quizzes-table" aria-label="My Quizzes Table"> {/* Use Table */}
+                        <TableHead> {/* Use TableHead */}
+                            <TableRow className="quizzes-table-header-row"> {/* Use TableRow */}
+                                <TableCell>Title</TableCell> {/* Use TableCell */}
+                                <TableCell>Number of Songs</TableCell>
+                                <TableCell>Created At</TableCell>
+                                <TableCell>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody> {/* Use TableBody */}
                             {quizzes.map(quiz => (
                                 <React.Fragment key={quiz.id}>
-                                    <tr>
-                                        <td data-label="Title">{quiz.title}</td>
-                                        <td data-label="Songs">{quiz.amount}</td>
-                                        <td data-label="Created">{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
-                                        <td data-label="Actions">
-                                            <Link to={`/my-quizzes/${quiz.id}`} className="view-details-button action-button-spacing">Details</Link>
-                                            <Link to={`/edit-quiz/${quiz.id}`} className="edit-button">Edit</Link>
-                                        </td>
-                                    </tr>
-
+                                    <TableRow className="quizzes-table-data-row" key={quiz.id}> {/* Use TableRow */}
+                                        <TableCell data-label="Title">{quiz.title}</TableCell> {/* Use TableCell and keep data-label */}
+                                        <TableCell data-label="Songs">{quiz.amount}</TableCell>
+                                        <TableCell data-label="Created">{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                        <TableCell data-label="Actions">
+                                            <Button className="view-action-button" variant="outlined" color="primary" to={`/my-quizzes/${quiz.id}`} startIcon={<MediaBluetoothOnIcon />} component={Link}>Host</Button>
+                                            <Button className="view-action-button" variant="outlined" color="primary" to={`/edit-quiz/${quiz.id}`} startIcon={<EditIcon />} component={Link}>Edit</Button>
+                                        </TableCell>
+                                    </TableRow>
                                 </React.Fragment>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             )}
         </div>
     );

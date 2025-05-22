@@ -658,8 +658,6 @@ body {
   border: 1px solid #ddd;
   /* Apply border to cells as well */
   padding: 8px;
-  padding: 12px 15px;
-  /* Increased padding */
   text-align: left;
   /* Default alignment, adjust as needed */
   border-color: #444;
@@ -675,7 +673,7 @@ body {
 }
 
 .quizzes-table tbody tr:hover {
-  background-color: #333;
+  background-color: #444;
   /* Darker grey on row hover */
 }
 
@@ -684,12 +682,14 @@ body {
   /* Lighter orange for links in table cells */
   text-decoration: none;
   font-weight: bold;
+  border: none;
 }
 
 .quizzes-table td a:hover {
-  color: #cc0000;
+  color: #f0f0f0;
   /* Red on hover for links */
   text-decoration: underline;
+  border: none;
 }
 
 /* Or define specific ones if needed */

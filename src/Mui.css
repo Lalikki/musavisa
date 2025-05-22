@@ -1,10 +1,10 @@
-.quizzes-table .MuiTableCell-root,
-/* Target MUI TableCell specifically */
-.my-quizzes-table .MuiTableCell-root,
-.my-answers-table .MuiTableCell-root,
-.quiz-answers-table .MuiTableCell-root {
-    color: black !important;
-    /* Light grey/white text for all table cells */
+.quizzes-table-data-row .MuiTableCell-root {
+    color: #f0f0f0 !important;
+
+}
+
+.quizzes-table-header-row .MuiTableCell-root {
+    color: #1a1a1a !important;
 }
 
 /* MUI AppBar specific styling (if .navbar-appbar is applied to AppBar) */
@@ -51,4 +51,20 @@
 .mobile-drawer .MuiListItemButton-root.Mui-selected .mobile-drawer-icon .MuiSvgIcon-root,
 .mobile-drawer .MuiListItemButton-root.Mui-selected .mobile-drawer-text .MuiTypography-root {
     color: #1a1a1a !important;
+}
+
+/* Remove outer "border" (box-shadow) from TableContainer (Paper) on Quizzes page */
+/* The TableContainer in Quizzes.js has className="table-responsive-wrapper" */
+.table-responsive-wrapper.MuiPaper-root {
+    box-shadow: none !important;
+    border: none !important;
+    background-color: transparent !important;
+}
+
+/* Remove top, left, and right borders from TableCell components within .quizzes-table */
+.quizzes-table .MuiTableCell-root {
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    /* The default bottom border from MUI will remain, providing row separation */
 }

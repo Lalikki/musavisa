@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
 import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper'; // Often used with TableContainer
 import { Link } from 'react-router-dom';
 
 const Highscores = () => {
@@ -49,28 +56,28 @@ const Highscores = () => {
             <h1>Highscores</h1>
             {highscores.length === 0 && !loading && <p>No highscores recorded yet.</p>}
             {highscores.length > 0 && (
-                <div className="table-responsive-wrapper">
-                    <table className="quizzes-table">
-                        <thead>
-                            <tr>
-                                <th>Quiz Title</th>
-                                <th>Score</th>
-                                <th>Submitted By</th>
-                                <th>Submitted At</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <TableContainer component={Paper} className="table-responsive-wrapper"> {/* Use TableContainer and Paper */}
+                    <Table className="quizzes-table" aria-label="Highscores Table"> {/* Use Table */}
+                        <TableHead> {/* Use TableHead */}
+                            <TableRow className="quizzes-table-header-row"> {/* Use TableRow */}
+                                <TableCell>Quiz Title</TableCell> {/* Use TableCell */}
+                                <TableCell>Score</TableCell>
+                                <TableCell>Submitted By</TableCell>
+                                <TableCell>Submitted At</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody> {/* Use TableBody */}
                             {highscores.map((scoreEntry) => (
-                                <tr key={scoreEntry.id}>
-                                    <td data-label="Quiz">{scoreEntry.quizTitle}</td>
-                                    <td data-label="Score">{scoreEntry.score} / {scoreEntry.answers ? scoreEntry.answers.length * 1 : 'N/A'}</td>
-                                    <td data-label="Submitted By">{scoreEntry.answerCreatorName || 'Anonymous'}</td>
-                                    <td data-label="Submitted At">{scoreEntry.submittedAt ? format(scoreEntry.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
-                                </tr>
+                                <TableRow className="quizzes-table-data-row" key={scoreEntry.id}> {/* Use TableRow */}
+                                    <TableCell data-label="Quiz">{scoreEntry.quizTitle}</TableCell> {/* Use TableCell and keep data-label */}
+                                    <TableCell data-label="Score">{scoreEntry.score} / {scoreEntry.answers ? scoreEntry.answers.length * 1 : 'N/A'}</TableCell>
+                                    <TableCell data-label="Submitted By">{scoreEntry.answerCreatorName || 'Anonymous'}</TableCell>
+                                    <TableCell data-label="Submitted At">{scoreEntry.submittedAt ? format(scoreEntry.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             )}
         </div>
     );
