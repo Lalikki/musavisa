@@ -1,3 +1,35 @@
+/* Mui Forms */
+.MuiPaper-root .question-entry-box {
+    background-color: #2a2a2a !important;
+    /* Dark grey background */
+    color: #f0f0f0 !important;
+    /* Light text color */
+}
+
+.css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input {
+    color: #f0f0f0 !important;
+    padding-bottom: 10px !important;
+    padding-top: 10px !important;
+}
+
+.MuiBox-root.song-guess-item {
+    margin-bottom: 0px !important;
+}
+
+.css-129kw0x-MuiTypography-root {
+
+    color: #ff6600 !important;
+    font-size: 1.8rem !important;
+}
+
+.css-1wmifpn-MuiTypography-root {
+    color: #ff6600;
+}
+
+.css-1wmifpn-MuiTypography-root {
+    color: #f0f0f0;
+}
+
 .quizzes-table-data-row .MuiTableCell-root {
     color: #f0f0f0 !important;
 

@@ -5,6 +5,19 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { compareTwoStrings } from 'string-similarity'; // Import for fuzzy matching
 import { format } from 'date-fns';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import { Link as RouterLink } from 'react-router-dom'; // For MUI Link component
 
 const AnswerDetails = () => {
     const { answerId } = useParams();
@@ -200,9 +213,9 @@ const AnswerDetails = () => {
     };
 
 
-    if (loading) return <p>Loading answer details...</p>;
-    if (error) return <p className="error-text">{error} <button onClick={() => navigate('/my-answers')}>Go to My Answers</button></p>;
-    if (!quizAnswer) return <p>Answer submission not found. <button onClick={() => navigate('/my-answers')}>Go to My Answers</button></p>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading answer details...</Typography>;
+    if (error) return <Box sx={{ textAlign: 'center', mt: 3 }}><Typography color="error" className="error-text">{error}</Typography> <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ ml: 1 }}>Go to My Answers</Button></Box>;
+    if (!quizAnswer) return <Box sx={{ textAlign: 'center', mt: 3 }}><Typography>Answer submission not found.</Typography> <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ ml: 1 }}>Go to My Answers</Button></Box>;
 
 
     // User can self-assess if they are the creator of the answer.
@@ -212,90 +225,113 @@ const AnswerDetails = () => {
 
     return (
         <div className="answer-details-container">
-            <h1>Answers for: {quizAnswer.quizTitle}</h1>
-            <div className="answer-summary">
-                <p><strong>Submitted By:</strong> {quizAnswer.answerCreatorName || 'Anonymous'}</p>
-                <p><strong>Submitted At:</strong> {quizAnswer.submittedAt ? format(quizAnswer.submittedAt.toDate(), 'yyyy-MM-dd HH:mm') : 'N/A'}</p>
-                <p><strong>Status:</strong>
-                    {quizAnswer.isCompleted ? 'Completed' :
-                        quizAnswer.isChecked ? 'Ready for Review' :
-                            'In Progress'}
-                </p>
-                <p><strong>Current Saved Score:</strong> {quizAnswer.score} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</p>
-                <p>
+            <Typography variant="h4" component="h1" gutterBottom align="center">
+                Answers for: {quizAnswer.quizTitle}
+            </Typography>
+            <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2.5 }, mb: 3, backgroundColor: '#2a2a2a' }} className="answer-summary">
+                <Typography variant="body1"><strong>Submitted By:</strong> {quizAnswer.answerCreatorName || 'Anonymous'}</Typography>
+                <Typography variant="body1"><strong>Submitted At:</strong> {quizAnswer.submittedAt ? format(quizAnswer.submittedAt.toDate(), 'yyyy-MM-dd HH:mm') : 'N/A'}</Typography>
+                <Typography variant="body1"><strong>Status:</strong>
+                    {quizAnswer.isCompleted ? ' Completed' :
+                        quizAnswer.isChecked ? ' Ready for Review' :
+                            ' In Progress'}
+                </Typography>
+                <Typography variant="body1"><strong>Current Saved Score:</strong> {quizAnswer.score} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</Typography>
+                <Typography variant="body1">
                     <strong>{scoreMode === 'auto' ? 'Auto-Calculated Score (Live):' : 'Manually Assessed Score (Live):'}</strong>
                     {' '}{totalSelfAssessedScore} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}
-                </p>
-            </div>
+                </Typography>
+            </Paper>
 
             {canSelfAssess && (
-                <div className="score-mode-selector">
-                    <label htmlFor="scoreModeCheckbox">
-                        Calculate Score Automatically:
-                    </label>
-                    <input
-                        type="checkbox"
-                        id="scoreModeCheckbox"
-                        checked={scoreMode === 'auto'}
-                        onChange={(e) => setScoreMode(e.target.checked ? 'auto' : 'manual')}
+                <Box className="score-mode-selector" sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                id="scoreModeCheckbox"
+                                checked={scoreMode === 'auto'}
+                                onChange={(e) => setScoreMode(e.target.checked ? 'auto' : 'manual')}
+                            />
+                        }
+                        label="Calculate Score Automatically"
                     />
-                </div>
+                </Box>
             )}
 
-            <h2>Your Guesses</h2>
+            <Typography variant="h5" component="h2" gutterBottom align="center">Your Guesses</Typography>
             {quizAnswer.answers && quizAnswer.answers.length > 0 ? (
-                <ul className="answer-guesses-list">
+                <List className="answer-guesses-list" sx={{ padding: 0 }}>
                     {quizAnswer.answers.map((guess, index) => {
                         const correctAnswer = correctQuizData?.questions?.[index];
                         return (
-                            <li key={index} className="answer-guess-item detailed-guess-item">
-                                <h4>Song {index + 1}</h4>
-                                <p><strong>Your Guess:</strong> Artist - "{guess.artist || 'N/A'}", Title - "{guess.songName || 'N/A'}"</p>
-                                {/* {correctAnswer && (
-                                    <p className="correct-answer-text">
-                                        <strong>Correct:</strong> Artist - "{correctAnswer.artist}", Title - "{correctAnswer.song}"
-                                        {correctAnswer.songLink && <a href={correctAnswer.songLink} target="_blank" rel="noopener noreferrer" className="song-link-details">(Link)</a>}
-                                    </p>
-                                )} */}
-                                <div className="manual-score-input">
-                                    <label htmlFor={`manual-score-${index}`}>Score: </label>
-                                    <select
-                                        id={`manual-score-${index}`}
-                                        value={selfAssessedSongScores[index] !== undefined ? selfAssessedSongScores[index] : 0}
-                                        onChange={(e) => handleSelfAssessedScoreChange(index, e.target.value)}
-                                        disabled={!canSelfAssess || scoreMode === 'auto'}
-                                    >
-                                        <option value="0">0</option>
-                                        <option value="0.5">0.5</option>
-                                        <option value="1">1</option>
-                                    </select>
-                                </div>
-                            </li>
+                            <ListItem key={index} sx={{ p: 0, mb: 2 }}>
+                                <Paper elevation={2} sx={{ p: { xs: 1, sm: 2 }, width: '100%', backgroundColor: '#2a2a2a' }} className="answer-guess-item detailed-guess-item">
+                                    <Typography variant="h6" component="h4" gutterBottom>Song {index + 1}</Typography>
+                                    <Typography variant="body2"><strong>Your Guess:</strong> Artist - "{guess.artist || 'N/A'}", Title - "{guess.songName || 'N/A'}"</Typography>
+                                    {/* Correct answer display can be added here if needed, using Typography and MUI Link */}
+                                    <FormControl fullWidth margin="dense" className="manual-score-input" sx={{ mt: 1 }}>
+                                        <InputLabel id={`manual-score-label-${index}`}>Score</InputLabel>
+                                        <Select
+                                            labelId={`manual-score-label-${index}`}
+                                            id={`manual-score-${index}`}
+                                            value={selfAssessedSongScores[index] !== undefined ? selfAssessedSongScores[index] : 0}
+                                            onChange={(e) => handleSelfAssessedScoreChange(index, e.target.value)}
+                                            disabled={!canSelfAssess || scoreMode === 'auto'}
+                                            label="Score"
+                                        >
+                                            <MenuItem value={0}>0</MenuItem>
+                                            <MenuItem value={0.5}>0.5</MenuItem>
+                                            <MenuItem value={1}>1</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Paper>
+                            </ListItem>
                         );
                     })}
-                </ul>
+                </List>
             ) : (
-                <p>No guesses recorded for this submission.</p>
+                <Typography sx={{ textAlign: 'center', mt: 2 }}>No guesses recorded for this submission.</Typography>
             )}
             {canSelfAssess && scoreMode === 'auto' && !quizAnswer.isCompleted && (
-                <button onClick={handleAutoCalculateScore} disabled={isSavingAssessment || isCompleting || isAutoCalculating} className="button-auto-calculate">
+                <Button
+                    variant="contained"
+                    onClick={handleAutoCalculateScore}
+                    disabled={isSavingAssessment || isCompleting || isAutoCalculating}
+                    className="button-auto-calculate"
+                    sx={{ mt: 2, mb: 1, display: 'block', mx: 'auto' }}
+                >
                     {isAutoCalculating || isSavingAssessment ? 'Calculating & Saving...' : 'Automatically Calculate & Save Score'}
-                </button>
+                </Button>
             )}
             {canSelfAssess && !quizAnswer.isCompleted && (
-                <div className="save-assessment-section">
-                    <button onClick={handleSaveAssessment} disabled={isSavingAssessment} className="button-save-assessment">
+                <Box className="save-assessment-section" sx={{ mt: 2, textAlign: 'center' }}>
+                    <Button
+                        variant="outlined"
+                        onClick={handleSaveAssessment}
+                        disabled={isSavingAssessment}
+                        className="button-save-assessment"
+                        sx={{ mr: 1, mb: 1 }}
+                    >
                         {isSavingAssessment ? 'Saving...' : 'Save My Assessment'}
-                    </button>
-                    <button onClick={handleSaveAndCompleteAssessment} disabled={isCompleting || isSavingAssessment} className="button-save-complete-assessment">
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSaveAndCompleteAssessment}
+                        disabled={isCompleting || isSavingAssessment}
+                        className="button-save-complete-assessment"
+                        sx={{ mb: 1 }}
+                    >
                         {isCompleting ? 'Completing...' : 'Save and Mark as Completed'}
-                    </button>
-                    {completeError && <p className="error-text form-message">{completeError}</p>}
-                    {saveAssessmentError && <p className="error-text form-message">{saveAssessmentError}</p>}
-                    {saveAssessmentSuccess && <p className="success-text form-message">{saveAssessmentSuccess}</p>}
-                </div>
+                    </Button>
+                    {completeError && <Typography color="error" sx={{ mt: 1 }} className="error-text form-message">{completeError}</Typography>}
+                    {saveAssessmentError && <Typography color="error" sx={{ mt: 1 }} className="error-text form-message">{saveAssessmentError}</Typography>}
+                    {saveAssessmentSuccess && <Typography color="success.main" sx={{ mt: 1 }} className="success-text form-message">{saveAssessmentSuccess}</Typography>}
+                </Box>
             )}
-            <Link to="/my-answers" className="back-link">Back to My Answers</Link>
+            <Button component={RouterLink} to="/my-answers" variant="text" className="back-link" sx={{ display: 'block', mx: 'auto', mt: 3 }}>
+                Back to My Answers
+            </Button>
         </div>
     );
 };

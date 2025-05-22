@@ -4,6 +4,12 @@ import { db, auth } from './firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { compareTwoStrings } from 'string-similarity'; // Import the library
 import { onAuthStateChanged } from 'firebase/auth';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress'; // For loading states in buttons
 
 const EditAnswer = () => {
     const { answerId } = useParams();
@@ -159,31 +165,75 @@ const EditAnswer = () => {
         }
     }
 
-    if (loading) return <p>Loading answer for editing...</p>;
-    if (error) return <p className="error-text">{error} <button onClick={() => navigate('/my-answers')}>Go to My Answers</button></p>;
-    if (!quizAnswer || !correctQuizData) return <p>Answer submission or original quiz data not found, or answer is not editable. <button onClick={() => navigate('/my-answers')}>Go to My Answers</button></p>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading answer for editing...</Typography>;
+    if (error) return (
+        <Box sx={{ textAlign: 'center', mt: 3 }}>
+            <Typography color="error" className="error-text">{error}</Typography>
+            <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ mt: 1 }}>
+                Go to My Answers
+            </Button>
+        </Box>
+    );
+    if (!quizAnswer || !correctQuizData) return (
+        <Box sx={{ textAlign: 'center', mt: 3 }}>
+            <Typography>Answer submission or original quiz data not found, or answer is not editable.</Typography>
+            <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ mt: 1 }}>
+                Go to My Answers
+            </Button>
+        </Box>
+    );
 
     return (
         <div className="edit-answer-container">
-            <h1>Edit Your Answers for: {quizAnswer.quizTitle}</h1>
-            <form onSubmit={handleSubmit}>
+            <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 2 }}>
+                Edit Your Answers for: {quizAnswer.quizTitle}
+            </Typography>
+            <Paper component="form" onSubmit={handleSubmit} sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }} className="edit-answer-form">
                 {editedAnswers.map((answer, index) => (
-                    <div key={index} className="song-guess-item"> {/* Re-use existing class if suitable */}
-                        <h4>Song {index + 1} Guess</h4>
-                        <label htmlFor={`edit-artist-${index}`}>Artist: </label>
-                        <input type="text" id={`edit-artist-${index}`} value={answer.artist} onChange={(e) => handleAnswerChange(index, 'artist', e.target.value)} required className="artist-input" />
-                        <label htmlFor={`edit-songName-${index}`}>Song Name: </label>
-                        <input type="text" id={`edit-songName-${index}`} value={answer.songName} onChange={(e) => handleAnswerChange(index, 'songName', e.target.value)} required className="songname-input" />
-                    </div>
+                    <Box key={index} className="song-guess-item" sx={{ mb: 2, p: { xs: 0.5, sm: 1 }, border: '1px solid #444', borderRadius: '4px' }}>
+                        <Typography variant="h6" component="h4" gutterBottom>
+                            Song {index + 1} Guess
+                        </Typography>
+                        <TextField
+                            label="Artist"
+                            variant="outlined"
+                            fullWidth
+                            margin="dense"
+                            id={`edit-artist-${index}`}
+                            value={answer.artist}
+                            onChange={(e) => handleAnswerChange(index, 'artist', e.target.value)}
+                            required
+                            className="artist-input"
+                            InputLabelProps={{ shrink: true }}
+                        />
+                        <TextField
+                            label="Song Name"
+                            variant="outlined"
+                            fullWidth
+                            margin="dense"
+                            id={`edit-songName-${index}`}
+                            value={answer.songName}
+                            onChange={(e) => handleAnswerChange(index, 'songName', e.target.value)}
+                            required
+                            className="songname-input"
+                            InputLabelProps={{ shrink: true }}
+                        />
+                    </Box>
                 ))}
-                <button type="submit" disabled={saving || markingReady}>{saving ? 'Saving...' : 'Save Changes'}</button>
-                <button type="button" onClick={handleMarkAsReady} disabled={saving || markingReady} className="button-ready-review">
-                    {markingReady ? 'Marking...' : 'Ready for Review'}
-                </button>
-                <button type="button" onClick={() => navigate('/my-answers')} className="button-cancel-edit">Cancel</button>
-                {saveError && <p className="error-text form-message">{saveError}</p>}
-                {markReadyError && <p className="error-text form-message">{markReadyError}</p>}
-            </form>
+                <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'center', gap: 1 }}>
+                    <Button type="submit" variant="contained" color="primary" disabled={saving || markingReady} startIcon={saving ? <CircularProgress size={20} color="inherit" /> : null}>
+                        {saving ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                    <Button type="button" variant="outlined" onClick={handleMarkAsReady} disabled={saving || markingReady} className="button-ready-review" startIcon={markingReady ? <CircularProgress size={20} color="inherit" /> : null}>
+                        {markingReady ? 'Marking...' : 'Ready for Review'}
+                    </Button>
+                    <Button type="button" variant="text" onClick={() => navigate('/my-answers')} className="button-cancel-edit">
+                        Cancel
+                    </Button>
+                </Box>
+                {saveError && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{saveError}</Typography>}
+                {markReadyError && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{markReadyError}</Typography>}
+            </Paper>
         </div>
     );
 };
