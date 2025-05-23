@@ -150,7 +150,15 @@ const AnswerQuiz = () => {
     if (!quiz) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Quiz not found.</Typography>;
 
     return (
-        <div className="quiz-container">
+        <Box
+            className="quiz-container" // Keep class if any global styles still apply
+            sx={{
+                maxWidth: '900px', // Consistent max-width
+                margin: '0 auto',  // Center the content
+                padding: { xs: 2, sm: 3 }, // Responsive padding
+                // Background color will come from theme.palette.background.default via CssBaseline
+            }}
+        >
             <Typography variant="h4" component="h4" gutterBottom align="center" sx={{ mb: 2 }}>
                 {quiz.title}
             </Typography>
@@ -244,7 +252,7 @@ const AnswerQuiz = () => {
                     </Typography>
                 )}
             </Paper>
-        </div>
+        </Box>
     );
 };
 

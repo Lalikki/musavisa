@@ -12,12 +12,14 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper'; // Often used with TableContainer
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTheme } from '@mui/material/styles'; // Import useTheme
 
 const Highscores = () => {
     // const [highscores, setHighscores] = useState([]); // Old state
     const [userStats, setUserStats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const theme = useTheme(); // Get the theme object
 
     useEffect(() => {
         const fetchHighscores = async () => {
@@ -86,7 +88,14 @@ const Highscores = () => {
     if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error}</Typography>;
 
     return (
-        <div className="quiz-container"> {/* Re-using quiz-container for consistent page styling */}
+        <Box
+            className="quiz-container" // Keep class if any global styles still apply
+            sx={{
+                maxWidth: '900px', // Consistent max-width
+                margin: '0 auto',  // Center the content
+                padding: { xs: 2, sm: 3 }, // Responsive padding
+            }}
+        >
             <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 3 }}>
                 User Leaderboard
             </Typography>
@@ -96,23 +105,53 @@ const Highscores = () => {
             )}
 
             {userStats.length > 0 && (
-                <TableContainer component={Paper} className="table-responsive-wrapper"> {/* Use TableContainer and Paper */}
+                <TableContainer
+                    component={Paper}
+                    className="table-responsive-wrapper"
+                    sx={{
+                        [theme.breakpoints.down('sm')]: {
+                            backgroundColor: 'transparent',
+                            boxShadow: 'none',
+                            overflowX: 'visible',
+                        },
+                    }}
+                >
                     <Table className="quizzes-table user-stats-table" aria-label="User Statistics Table"> {/* Use Table */}
-                        <TableHead> {/* Use TableHead */}
+                        <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}> {/* Hide headers on mobile */}
                             <TableRow className="quizzes-table-header-row"> {/* Use TableRow */}
                                 <TableCell>Rank</TableCell>
                                 <TableCell>Player</TableCell> {/* Use TableCell */}
-                                <TableCell >Quizzes Answered</TableCell>
-                                <TableCell >Overall Accuracy</TableCell>
+                                <TableCell align="right">Quizzes Answered</TableCell>
+                                <TableCell align="right">Overall Accuracy</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody> {/* Use TableBody */}
                             {userStats.map((stat, index) => (
-                                <TableRow className="quizzes-table-data-row" key={stat.userId}> {/* Use TableRow */}
-                                    <TableCell data-label="Rank">{index + 1}</TableCell>
-                                    <TableCell data-label="Player">{stat.userName}</TableCell> {/* Use TableCell and keep data-label */}
-                                    <TableCell data-label="Quizzes Answered" >{stat.quizzesAnsweredCount}</TableCell>
-                                    <TableCell data-label="Overall Accuracy" >
+                                <TableRow
+                                    className="quizzes-table-data-row"
+                                    key={stat.userId}
+                                    sx={{
+                                        [theme.breakpoints.down('sm')]: {
+                                            display: 'block',
+                                            marginBottom: theme.spacing(2),
+                                            border: `1px solid ${theme.palette.divider}`,
+                                            backgroundColor: theme.palette.background.paper,
+                                            borderRadius: theme.shape.borderRadius,
+                                            '&:hover': {
+                                                backgroundColor: theme.palette.background.paper,
+                                            },
+                                            '&:nth-of-type(even)': {
+                                                backgroundColor: theme.palette.background.paper,
+                                            }
+                                        },
+                                    }}
+                                >
+                                    <TableCell data-label="Rank" sx={mobileCardCellStyle(theme)}>{index + 1}</TableCell>
+                                    <TableCell data-label="Player" sx={mobileCardCellStyle(theme)}>{stat.userName}</TableCell>
+                                    <TableCell data-label="Quizzes Answered" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.up('sm')]: { textAlign: 'right' } }}>
+                                        {stat.quizzesAnsweredCount}
+                                    </TableCell>
+                                    <TableCell data-label="Overall Accuracy" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.up('sm')]: { textAlign: 'right' } }}>
                                         {stat.overallPercentage.toFixed(2)}%
                                         <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>({stat.totalCorrectAnswers}/{stat.totalPossibleAnswers} correct)</Typography>
                                     </TableCell>
@@ -122,8 +161,35 @@ const Highscores = () => {
                     </Table>
                 </TableContainer>
             )}
-        </div>
+        </Box>
     );
 };
+
+// Helper function for mobile cell styles
+const mobileCardCellStyle = (theme) => ({
+    [theme.breakpoints.down('sm')]: {
+        display: 'block',
+        textAlign: 'right', // Default for value, label will be on left
+        fontSize: '0.875rem',
+        paddingLeft: '50%', // Make space for the label
+        position: 'relative',
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        '&:last-of-type': {
+            borderBottom: 0,
+        },
+        '&::before': {
+            content: 'attr(data-label)',
+            position: 'absolute',
+            left: theme.spacing(2),
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: `calc(50% - ${theme.spacing(4)})`,
+            whiteSpace: 'nowrap',
+            textAlign: 'left',
+            fontWeight: 'bold',
+            color: theme.palette.primary.main, // Orange color for labels
+        },
+    },
+});
 
 export default Highscores;

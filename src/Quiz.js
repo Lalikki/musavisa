@@ -88,6 +88,12 @@ const Quiz = () => {
         }
     };
 
+    const addQuestion = () => {
+        const newQuestions = [...questions, { songLink: "", artist: "", song: "", loadingMetadata: false }];
+        setQuestions(newQuestions);
+        setAmount(String(newQuestions.length)); // Update the amount field to reflect the new total
+    };
+
     useEffect(() => {
         const numAmount = Number(amount);
         // Only adjust if numAmount is a positive number
@@ -197,7 +203,15 @@ const Quiz = () => {
     };
 
     return (
-        <div className="quiz-container">
+        <Box
+            className="quiz-container" // Keep class if any global styles still apply
+            sx={{
+                maxWidth: '900px', // Consistent max-width
+                margin: '0 auto',  // Center the content
+                padding: { xs: 2, sm: 3 }, // Responsive padding
+                // Background color will come from theme.palette.background.default via CssBaseline
+            }}
+        >
             {user ? (
                 <Paper component="form" onSubmit={handleSubmit} className="quiz-creation-form" sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }}> {/* Adjusted padding, transparent, no shadow */}
                     <Typography variant="h5" component="h2" gutterBottom align="center">
@@ -299,9 +313,18 @@ const Quiz = () => {
                                     )}
                                 </Paper>
                             ))}
+                            {/* "Add Song Entry" button within the Song Entries Box */}
+                            <Button
+                                variant="outlined"
+                                startIcon={<AddCircleOutlineIcon />}
+                                onClick={addQuestion}
+                                className="button-add-question"
+                                sx={{ mt: 1, mb: 2, }}
+                            >
+                                Add Song Entry
+                            </Button>
                         </Box>
                     )}
-
                     <FormControlLabel
                         control={<Checkbox checked={isReady} onChange={e => setIsReady(e.target.checked)} id="isReadyCheckbox" />}
                         label="Mark as Ready"
@@ -316,7 +339,7 @@ const Quiz = () => {
                 </Paper>) : (
                 <Typography>Please log in to create a quiz.</Typography>
             )}
-        </div>
+        </Box>
     );
 };
 

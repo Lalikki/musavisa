@@ -17,7 +17,10 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
+import { TextField } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom'; // For MUI Link component
+import { useTheme } from '@mui/material/styles';
+
 
 const AnswerDetails = () => {
     const { answerId } = useParams();
@@ -35,6 +38,7 @@ const AnswerDetails = () => {
     const [completeError, setCompleteError] = useState(null);
     const [isAutoCalculating, setIsAutoCalculating] = useState(false); // Keep this for button text
     const [scoreMode, setScoreMode] = useState('manual'); // 'manual' or 'auto'
+    const theme = useTheme();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -212,6 +216,20 @@ const AnswerDetails = () => {
 
     };
 
+    const getTeamDisplayString = (answer) => {
+        if (!answer || !answer.teamSize || answer.teamSize <= 1) {
+            return answer?.answerCreatorName || 'Solo';
+        }
+        const members = [answer.answerCreatorName]; // Logged-in user (submitter) is always first
+        if (answer.teamMembers && Array.isArray(answer.teamMembers)) {
+            answer.teamMembers.forEach(member => {
+                if (member && typeof member === 'string' && member.trim() !== '') {
+                    members.push(member.trim());
+                }
+            });
+        }
+        return members.join(', ');
+    };
 
     if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading answer details...</Typography>;
     if (error) return <Box sx={{ textAlign: 'center', mt: 3 }}><Typography color="error" className="error-text">{error}</Typography> <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ ml: 1 }}>Go to My Answers</Button></Box>;
@@ -224,12 +242,21 @@ const AnswerDetails = () => {
     const canSelfAssess = currentUser && quizAnswer && currentUser.uid === quizAnswer.answerCreatorId && !quizAnswer.isCompleted;
 
     return (
-        <div className="answer-details-container">
+        <Box
+            className="answer-details-container" // Keep class if any global styles still apply
+            sx={{
+                maxWidth: '900px', // Consistent max-width
+                margin: '0 auto',  // Center the content
+                padding: { xs: 2, sm: 3 }, // Responsive padding
+                // Background color will come from theme.palette.background.default via CssBaseline
+            }}
+        >
             <Typography variant="h4" component="h1" gutterBottom align="center">
                 Answers for: {quizAnswer.quizTitle}
             </Typography>
-            <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 2.5 }, mb: 3, backgroundColor: '#2a2a2a' }} className="answer-summary">
+            <Paper elevation={1} sx={{ p: { xs: 1.5, sm: 2.5 }, mb: 3, backgroundColor: 'background.paper' }} className="answer-summary">
                 <Typography variant="body1"><strong>Submitted By:</strong> {quizAnswer.answerCreatorName || 'Anonymous'}</Typography>
+                {quizAnswer.teamSize > 1 && <Typography variant="body1"><strong>Team:</strong> {getTeamDisplayString(quizAnswer)}</Typography>}
                 <Typography variant="body1"><strong>Submitted At:</strong> {quizAnswer.submittedAt ? format(quizAnswer.submittedAt.toDate(), 'yyyy-MM-dd HH:mm') : 'N/A'}</Typography>
                 <Typography variant="body1"><strong>Status:</strong>
                     {quizAnswer.isCompleted ? ' Completed' :
@@ -259,39 +286,116 @@ const AnswerDetails = () => {
             )}
 
             <Typography variant="h5" component="h2" gutterBottom align="center">Your Guesses</Typography>
-            {quizAnswer.answers && quizAnswer.answers.length > 0 ? (
-                <List className="answer-guesses-list" sx={{ padding: 0 }}>
-                    {quizAnswer.answers.map((guess, index) => {
-                        const correctAnswer = correctQuizData?.questions?.[index];
-                        return (
-                            <ListItem key={index} sx={{ p: 0, mb: 2 }}>
-                                <Paper elevation={2} sx={{ p: { xs: 1, sm: 2 }, width: '100%', backgroundColor: '#2a2a2a' }} className="answer-guess-item detailed-guess-item">
-                                    <Typography variant="h6" component="h4" gutterBottom>Song {index + 1}</Typography>
-                                    <Typography variant="body2"><strong>Your Guess:</strong> Artist - "{guess.artist || 'N/A'}", Title - "{guess.songName || 'N/A'}"</Typography>
-                                    {/* Correct answer display can be added here if needed, using Typography and MUI Link */}
-                                    <FormControl fullWidth margin="dense" className="manual-score-input" sx={{ mt: 1 }}>
-                                        <InputLabel id={`manual-score-label-${index}`}>Score</InputLabel>
-                                        <Select
-                                            labelId={`manual-score-label-${index}`}
-                                            id={`manual-score-${index}`}
-                                            value={selfAssessedSongScores[index] !== undefined ? selfAssessedSongScores[index] : 0}
-                                            onChange={(e) => handleSelfAssessedScoreChange(index, e.target.value)}
-                                            disabled={!canSelfAssess || scoreMode === 'auto'}
-                                            label="Score"
-                                        >
-                                            <MenuItem value={0}>0</MenuItem>
-                                            <MenuItem value={0.5}>0.5</MenuItem>
-                                            <MenuItem value={1}>1</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                </Paper>
-                            </ListItem>
-                        );
-                    })}
-                </List>
-            ) : (
-                <Typography sx={{ textAlign: 'center', mt: 2 }}>No guesses recorded for this submission.</Typography>
-            )}
+            <Paper // New Paper wrapper for the "Your Guesses" section
+                elevation={0}
+                sx={{
+                    p: { xs: 1.5, sm: 2.5 }, // Consistent padding with other main Paper sections
+                    // backgroundColor: 'transparent', // We'll use the gradient instead
+                    backgroundImage: 'var(--Paper-overlay)', // Apply the gradient as background
+                    backgroundSize: 'cover', // Ensure the gradient covers the area
+                    boxShadow: 'none',
+                    mt: 3, // Add some margin-top to separate from the section above
+                }}
+            >
+                {quizAnswer.answers && quizAnswer.answers.length > 0 ? (
+                    <List className="answer-guesses-list" sx={{ padding: 0 }}>
+                        {quizAnswer.answers.map((guess, index) => {
+                            const correctAnswer = correctQuizData?.questions?.[index];
+                            return (
+                                <ListItem key={index} sx={{ p: 0, mb: 2 }}>
+                                    <Paper // This is the Paper for each individual guess item
+                                        elevation={0}
+                                        sx={{
+                                            p: { xs: 1, sm: 2 },
+                                            width: '100%',
+                                            backgroundColor: 'transparent', // Individual guess items are also transparent
+                                            boxShadow: 'none',
+                                            // border: `1px solid ${theme.palette.divider}`, // Keep border for individual items
+                                            // borderRadius: theme.shape.borderRadius,
+                                        }}
+                                        className="answer-guess-item detailed-guess-item"
+                                    >
+                                        <Typography variant="h6" component="h4" gutterBottom>Song {index + 1}</Typography>
+                                        <TextField
+                                            label="Artist Guess"
+                                            variant="outlined"
+                                            fullWidth
+                                            margin="dense"
+                                            value={guess.artist || ''}
+                                            disabled // Keep disabled prop
+                                            InputLabelProps={{ shrink: true }}
+                                            sx={{
+                                                '& .MuiInputBase-input.Mui-disabled': {
+                                                    WebkitTextFillColor: theme.palette.text.secondary, // Ensures text color is applied correctly in WebKit browsers
+                                                    color: theme.palette.text.secondary, // More prominent disabled text color
+                                                },
+                                                '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: theme.palette.action.disabledBackground, // Slightly different border
+                                                },
+                                                '& .MuiInputBase-root.Mui-disabled': {
+                                                    backgroundColor: theme.palette.action.disabledBackground, // Subtle background change
+                                                },
+                                            }}
+                                        />
+                                        <TextField
+                                            label="Song Name Guess"
+                                            variant="outlined"
+                                            fullWidth
+                                            margin="dense"
+                                            value={guess.songName || ''}
+                                            disabled // Keep disabled prop
+                                            InputLabelProps={{ shrink: true }}
+                                            sx={{
+                                                '& .MuiInputBase-input.Mui-disabled': {
+                                                    WebkitTextFillColor: theme.palette.text.secondary,
+                                                    color: theme.palette.text.secondary,
+                                                },
+                                                '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                                                    borderColor: theme.palette.action.disabledBackground,
+                                                },
+                                                '& .MuiInputBase-root.Mui-disabled': {
+                                                    backgroundColor: theme.palette.action.disabledBackground,
+                                                }
+                                            }}
+                                        />
+                                        {/* Correct answer display can be added here if needed, using Typography and MUI Link */}
+                                        <FormControl fullWidth margin="dense" variant="outlined" className="manual-score-input" sx={{ mt: 1 }}>
+                                            <InputLabel id={`manual-score-label-${index}`}>Score</InputLabel>
+                                            <Select
+                                                labelId={`manual-score-label-${index}`}
+                                                id={`manual-score-${index}`}
+                                                value={selfAssessedSongScores[index] !== undefined ? selfAssessedSongScores[index] : 0}
+                                                onChange={(e) => handleSelfAssessedScoreChange(index, e.target.value)}
+                                                disabled={!canSelfAssess || scoreMode === 'auto' || quizAnswer.isCompleted}
+                                                IconComponent={(!canSelfAssess || scoreMode === 'auto' || quizAnswer.isCompleted) ? () => null : undefined} // Hide icon when disabled or completed
+                                                sx={quizAnswer.isCompleted ? {
+                                                    '& .MuiInputBase-input.Mui-disabled': { // Target the input part for text color
+                                                        WebkitTextFillColor: theme.palette.text.secondary,
+                                                        color: theme.palette.text.secondary,
+                                                    },
+                                                    '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: theme.palette.action.disabledBackground,
+                                                    },
+                                                    '& .MuiOutlinedInput-root.Mui-disabled': { // Target MuiOutlinedInput-root for background
+                                                        backgroundColor: theme.palette.action.disabledBackground,
+                                                    },
+                                                } : {}}
+                                                label="Score"
+                                            >
+                                                <MenuItem value={0}>0</MenuItem>
+                                                <MenuItem value={0.5}>0.5</MenuItem>
+                                                <MenuItem value={1}>1</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Paper>
+                                </ListItem>
+                            );
+                        })}
+                    </List>
+                ) : (
+                    <Typography sx={{ textAlign: 'center', mt: 2 }}>No guesses recorded for this submission.</Typography>
+                )}
+            </Paper>
             {canSelfAssess && scoreMode === 'auto' && !quizAnswer.isCompleted && (
                 <Button
                     variant="contained"
@@ -304,13 +408,24 @@ const AnswerDetails = () => {
                 </Button>
             )}
             {canSelfAssess && !quizAnswer.isCompleted && (
-                <Box className="save-assessment-section" sx={{ mt: 2, textAlign: 'center' }}>
+
+                <Box
+                    className="save-assessment-section"
+                    sx={{
+                        mt: 3,
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        justifyContent: 'center',
+                        alignItems: 'center', // Align items nicely in a row
+                        gap: 2 // Increased gap for better spacing (16px)
+                    }}
+                >
                     <Button
                         variant="outlined"
                         onClick={handleSaveAssessment}
                         disabled={isSavingAssessment}
                         className="button-save-assessment"
-                        sx={{ mr: 1, mb: 1 }}
+                    // sx prop can be removed if default gap is sufficient
                     >
                         {isSavingAssessment ? 'Saving...' : 'Save My Assessment'}
                     </Button>
@@ -320,19 +435,17 @@ const AnswerDetails = () => {
                         onClick={handleSaveAndCompleteAssessment}
                         disabled={isCompleting || isSavingAssessment}
                         className="button-save-complete-assessment"
-                        sx={{ mb: 1 }}
+                    // sx prop can be removed if default gap is sufficient
                     >
                         {isCompleting ? 'Completing...' : 'Save and Mark as Completed'}
                     </Button>
+                    <Button component={RouterLink} to="/my-answers" variant="text" className="back-link">Cancel</Button>
                     {completeError && <Typography color="error" sx={{ mt: 1 }} className="error-text form-message">{completeError}</Typography>}
                     {saveAssessmentError && <Typography color="error" sx={{ mt: 1 }} className="error-text form-message">{saveAssessmentError}</Typography>}
                     {saveAssessmentSuccess && <Typography color="success.main" sx={{ mt: 1 }} className="success-text form-message">{saveAssessmentSuccess}</Typography>}
                 </Box>
             )}
-            <Button component={RouterLink} to="/my-answers" variant="text" className="back-link" sx={{ display: 'block', mx: 'auto', mt: 3 }}>
-                Back to My Answers
-            </Button>
-        </div>
+        </Box>
     );
 };
 

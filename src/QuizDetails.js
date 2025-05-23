@@ -17,6 +17,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useTheme } from '@mui/material/styles'; // Import useTheme
 
 const QuizDetails = () => {
     const { quizId } = useParams();
@@ -26,6 +27,7 @@ const QuizDetails = () => {
     const [answers, setAnswers] = useState([]);
     const [answersLoading, setAnswersLoading] = useState(true);
     const [answersError, setAnswersError] = useState(null);
+    const theme = useTheme(); // Get the theme object
 
     useEffect(() => {
         const fetchQuizDetails = async () => {
@@ -118,7 +120,15 @@ const QuizDetails = () => {
     );
 
     return (
-        <div className="quiz-container">
+        <Box
+            className="quiz-container" // Keep class if any global styles still apply
+            sx={{
+                maxWidth: '900px', // Consistent max-width
+                margin: '0 auto',  // Center the content
+                padding: { xs: 2, sm: 3 }, // Responsive padding
+                // Background color will come from theme.palette.background.default via CssBaseline
+            }}
+        >
             <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 2 }}>
                 {quiz.title}
             </Typography>
@@ -158,25 +168,55 @@ const QuizDetails = () => {
             {answersError && <Typography color="error" sx={{ textAlign: 'center', mt: 2 }} className="error-text">{answersError}</Typography>}
             {!answersLoading && !answersError && answers.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>No one has submitted answers for this quiz yet.</Typography>}
             {!answersLoading && !answersError && answers.length > 0 && (
-                <TableContainer component={Paper} className="table-responsive-wrapper">
+                <TableContainer
+                    component={Paper}
+                    className="table-responsive-wrapper"
+                    sx={{
+                        [theme.breakpoints.down('sm')]: {
+                            backgroundColor: 'transparent',
+                            boxShadow: 'none',
+                            overflowX: 'visible',
+                        },
+                    }}
+                >
                     <Table className="quizzes-table" aria-label="Submitted Answers Table">
-                        <TableHead>
+                        <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}>
                             <TableRow className="quizzes-table-header-row">
                                 <TableCell>Answered By</TableCell>
                                 <TableCell>Team</TableCell>
                                 <TableCell>Score</TableCell>
                                 <TableCell>Status</TableCell>
-                                <TableCell>Submitted At</TableCell>
+                                <TableCell align="right">Submitted At</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {answers.map(answer => (
-                                <TableRow key={answer.id} className="quizzes-table-data-row">
-                                    <TableCell data-label="Answered By">{answer.answerCreatorName || 'Anonymous'}</TableCell> {/* This is the submitter, not necessarily the whole team */}
-                                    <TableCell data-label="Team">{getTeamDisplayString(answer)}</TableCell>
-                                    <TableCell data-label="Score">{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</TableCell>
-                                    <TableCell data-label="Status">{answer.isCompleted ? 'Completed' : answer.isChecked ? 'Ready for Review' : 'In Progress'}</TableCell>
-                                    <TableCell data-label="Submitted">{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                <TableRow
+                                    key={answer.id}
+                                    className="quizzes-table-data-row"
+                                    sx={{
+                                        [theme.breakpoints.down('sm')]: {
+                                            display: 'block',
+                                            marginBottom: theme.spacing(2),
+                                            border: `1px solid ${theme.palette.divider}`,
+                                            backgroundColor: theme.palette.background.paper,
+                                            borderRadius: theme.shape.borderRadius,
+                                            '&:hover': {
+                                                backgroundColor: theme.palette.background.paper,
+                                            },
+                                            '&:nth-of-type(even)': {
+                                                backgroundColor: theme.palette.background.paper,
+                                            }
+                                        },
+                                    }}
+                                >
+                                    <TableCell data-label="Answered By" sx={mobileCardCellStyle(theme)}>{answer.answerCreatorName || 'Anonymous'}</TableCell>
+                                    <TableCell data-label="Team" sx={mobileCardCellStyle(theme)}>{getTeamDisplayString(answer)}</TableCell>
+                                    <TableCell data-label="Score" sx={mobileCardCellStyle(theme)}>{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</TableCell>
+                                    <TableCell data-label="Status" sx={mobileCardCellStyle(theme)}>{answer.isCompleted ? 'Completed' : answer.isChecked ? 'Ready for Review' : 'In Progress'}</TableCell>
+                                    <TableCell data-label="Submitted" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.up('sm')]: { textAlign: 'right' } }}>
+                                        {answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -186,8 +226,35 @@ const QuizDetails = () => {
             <Button component={RouterLink} to="/my-quizzes" variant="outlined" className="back-link" sx={{ display: 'block', mx: 'auto', mt: 3 }}>
                 Back to My Quizzes
             </Button>
-        </div>
+        </Box>
     );
 };
+
+// Helper function for mobile cell styles
+const mobileCardCellStyle = (theme) => ({
+    [theme.breakpoints.down('sm')]: {
+        display: 'block',
+        textAlign: 'right', // Default for value, label will be on left
+        fontSize: '0.875rem',
+        paddingLeft: '50%', // Make space for the label
+        position: 'relative',
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        '&:last-of-type': {
+            borderBottom: 0,
+        },
+        '&::before': {
+            content: 'attr(data-label)',
+            position: 'absolute',
+            left: theme.spacing(2),
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: `calc(50% - ${theme.spacing(4)})`,
+            whiteSpace: 'nowrap',
+            textAlign: 'left',
+            fontWeight: 'bold',
+            color: theme.palette.primary.main, // Orange color for labels
+        },
+    },
+});
 
 export default QuizDetails;

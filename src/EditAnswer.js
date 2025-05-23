@@ -184,13 +184,21 @@ const EditAnswer = () => {
     );
 
     return (
-        <div className="edit-answer-container">
+        <Box
+            className="edit-answer-container" // Keep class if any global styles still apply
+            sx={{
+                maxWidth: '900px', // Consistent max-width
+                margin: '0 auto',  // Center the content
+                padding: { xs: 2, sm: 3 }, // Responsive padding
+                // Background color will come from theme.palette.background.default via CssBaseline
+            }}
+        >
             <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 2 }}>
                 Edit Your Answers for: {quizAnswer.quizTitle}
             </Typography>
             <Paper component="form" onSubmit={handleSubmit} sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }} className="edit-answer-form">
                 {editedAnswers.map((answer, index) => (
-                    <Box key={index} className="song-guess-item" sx={{ mb: 2, p: { xs: 0.5, sm: 1 }, border: '1px solid #444', borderRadius: '4px' }}>
+                    <Box key={index} className="song-guess-item" sx={{ mb: 2, p: { xs: 0.5, sm: 1 } }}>
                         <Typography variant="h6" component="h4" gutterBottom>
                             Song {index + 1} Guess
                         </Typography>
@@ -234,7 +242,7 @@ const EditAnswer = () => {
                 {saveError && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{saveError}</Typography>}
                 {markReadyError && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{markReadyError}</Typography>}
             </Paper>
-        </div>
+        </Box>
     );
 };
 

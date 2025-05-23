@@ -176,7 +176,15 @@ const EditQuiz = () => {
 
     // Re-using form structure from Quiz.js, but with state from EditQuiz.js
     return (
-        <div className="quiz-container"> {/* Can reuse .quiz-container or make .edit-quiz-container */}
+        <Box
+            className="quiz-container" // Keep class if any global styles still apply
+            sx={{
+                maxWidth: '900px', // Consistent max-width
+                margin: '0 auto',  // Center the content
+                padding: { xs: 2, sm: 3 }, // Responsive padding
+                // Background color will come from theme.palette.background.default via CssBaseline
+            }}
+        >
             <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 2 }}>
                 Edit Quiz: {originalQuizData?.title}
             </Typography>
@@ -293,7 +301,7 @@ const EditQuiz = () => {
                 {success && <Typography color="success.main" sx={{ mt: 2, textAlign: 'center' }} className="success-text form-message">{success}</Typography>}
                 {error && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{error}</Typography>}
             </Paper>
-        </div>
+        </Box>
     );
 };
 

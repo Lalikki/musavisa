@@ -8,8 +8,11 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper'; // Often used with TableContainer
+import Box from '@mui/material/Box'; // Import Box
+import Typography from '@mui/material/Typography'; // Import Typography
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import IconButton from '@mui/material/IconButton';
+import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { Button } from "@mui/material";
 import { format } from 'date-fns'; // Import date-fns for formatting dates
 import { Link } from "react-router-dom"; // Optional: if you want to link to individual quizzes later
@@ -18,6 +21,7 @@ const Quizzes = () => {
     const [quizzes, setQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const theme = useTheme(); // Get the theme object
 
     useEffect(() => {
         const fetchQuizzes = async () => {
@@ -50,15 +54,39 @@ const Quizzes = () => {
     }, []);
 
     return (
-        <div className="my-quizzes-container">
-            <h1>All Quizzes</h1>
-            {loading && <p>Loading quizzes...</p>}
-            {error && <p className="error-text">{error}</p>} {/* Changed to use class from App.css */}
-            {!loading && !error && quizzes.length === 0 && <p>No ready quizzes found.</p>} {/* Updated message for clarity */}
+        <Box
+            className="my-quizzes-container" // You can keep this if you have specific global styles not yet migrated
+            sx={{
+                maxWidth: '900px', // Or your preferred max-width, consistent with other pages
+                margin: '0 auto',  // Center the content
+                padding: { xs: 2, sm: 3 }, // Responsive padding (16px on xs, 24px on sm and up)
+                // The background color will come from theme.palette.background.default via CssBaseline
+            }}
+        >
+            <Typography variant="h4" component="h1" gutterBottom align="center">
+                All Quizzes
+            </Typography>
+            {loading && <Typography sx={{ textAlign: 'center', mt: 2 }}>Loading quizzes...</Typography>}
+            {error && <Typography color="error" sx={{ textAlign: 'center', mt: 2 }} className="error-text">{error}</Typography>}
+            {!loading && !error && quizzes.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>No ready quizzes found.</Typography>}
             {!loading && !error && quizzes.length > 0 && (
-                <TableContainer component={Paper} className="table-responsive-wrapper"> {/* Use TableContainer and Paper */}
+                <TableContainer
+                    component={Paper}
+                    className="table-responsive-wrapper"
+                    sx={{
+                        // On mobile, prevent the container itself from scrolling horizontally
+                        // if the table content reflows properly.
+                        [theme.breakpoints.down('sm')]: {
+                            // Make the TableContainer's Paper background transparent on mobile
+                            // so the margin between cards shows the page background.
+                            backgroundColor: 'transparent',
+                            boxShadow: 'none', // Remove shadow if Paper is transparent
+                            overflowX: 'visible',
+                        },
+                    }}
+                >
                     <Table className="quizzes-table" aria-label="All Quizzes Table"> {/* Use Table */}
-                        <TableHead> {/* Use TableHead */}
+                        <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}> {/* Hide headers on mobile */}
                             <TableRow className="quizzes-table-header-row">
                                 <TableCell>Title</TableCell>
                                 <TableCell>Number of Songs</TableCell>
@@ -69,12 +97,32 @@ const Quizzes = () => {
                         </TableHead>
                         <TableBody>
                             {quizzes.map(quiz => (
-                                <TableRow className="quizzes-table-data-row" key={quiz.id}>
-                                    <TableCell data-label="Title">{quiz.title}</TableCell>
-                                    <TableCell data-label="Songs">{quiz.amount}</TableCell>
-                                    <TableCell data-label="Created">{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
-                                    <TableCell data-label="Created By">{quiz.creatorName || 'Unknown'}</TableCell>
-                                    <TableCell data-label="Actions">
+                                <TableRow
+                                    className="quizzes-table-data-row"
+                                    key={quiz.id}
+                                    sx={{
+                                        [theme.breakpoints.down('sm')]: {
+                                            display: 'block',
+                                            marginBottom: theme.spacing(2),
+                                            border: `1px solid ${theme.palette.divider}`,
+                                            // Apply the 'paper' background to each card on mobile
+                                            backgroundColor: theme.palette.background.paper,
+                                            borderRadius: theme.shape.borderRadius,
+                                            // Override hover/even styles from App.css for mobile card view if needed
+                                            '&:hover': {
+                                                backgroundColor: 'transparent', // Or a subtle mobile hover
+                                            },
+                                            '&:nth-of-type(even)': {
+                                                backgroundColor: 'transparent', // Or consistent card background
+                                            }
+                                        },
+                                    }}
+                                >
+                                    <TableCell data-label="Title" sx={mobileCardCellStyle(theme)}>{quiz.title}</TableCell>
+                                    <TableCell data-label="Songs" sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
+                                    <TableCell data-label="Created" sx={mobileCardCellStyle(theme)}>{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                    <TableCell data-label="Created By" sx={mobileCardCellStyle(theme)}>{quiz.creatorName || 'Unknown'}</TableCell>
+                                    <TableCell data-label="Actions" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2) } }}>
                                         <Button className="view-action-button" variant="outlined" color="primary" to={`/answer-quiz/${quiz.id}`} startIcon={<AddCircleIcon />} component={Link}>Answer</Button>
                                     </TableCell>
                                 </TableRow>
@@ -83,8 +131,35 @@ const Quizzes = () => {
                     </Table>
                 </TableContainer>
             )}
-        </div>
+        </Box>
     );
 };
+
+// Helper function for mobile cell styles to keep sx prop cleaner
+const mobileCardCellStyle = (theme) => ({
+    [theme.breakpoints.down('sm')]: {
+        display: 'block',
+        textAlign: 'right',
+        fontSize: '0.875rem', // Adjust font size for mobile if needed
+        paddingLeft: '50%', // Make space for the label
+        position: 'relative',
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        '&:last-of-type': { // Changed from :last-child to :last-of-type for reliability with TableCell
+            borderBottom: 0,
+        },
+        '&::before': {
+            content: 'attr(data-label)',
+            position: 'absolute',
+            left: theme.spacing(2),
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: 'calc(50% - ${theme.spacing(4)})', // Adjust width considering padding
+            whiteSpace: 'nowrap',
+            textAlign: 'left',
+            fontWeight: 'bold',
+            color: theme.palette.text.secondary,
+        },
+    },
+});
 
 export default Quizzes;
