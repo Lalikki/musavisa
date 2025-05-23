@@ -90,6 +90,20 @@ const QuizDetails = () => {
         fetchAnswers();
     }, [quizId]);
 
+    const getTeamDisplayString = (answer) => {
+        if (!answer.teamSize || answer.teamSize <= 1) {
+            return answer.answerCreatorName || 'Solo';
+        }
+        const members = [answer.answerCreatorName]; // Logged-in user is always first
+        if (answer.teamMembers && Array.isArray(answer.teamMembers)) {
+            answer.teamMembers.forEach(member => {
+                if (member && typeof member === 'string' && member.trim() !== '') {
+                    members.push(member.trim());
+                }
+            });
+        }
+        return members.join(', ');
+    };
 
 
     if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading quiz details... <CircularProgress size={20} /></Typography>;
@@ -149,6 +163,7 @@ const QuizDetails = () => {
                         <TableHead>
                             <TableRow className="quizzes-table-header-row">
                                 <TableCell>Answered By</TableCell>
+                                <TableCell>Team</TableCell>
                                 <TableCell>Score</TableCell>
                                 <TableCell>Status</TableCell>
                                 <TableCell>Submitted At</TableCell>
@@ -157,7 +172,8 @@ const QuizDetails = () => {
                         <TableBody>
                             {answers.map(answer => (
                                 <TableRow key={answer.id} className="quizzes-table-data-row">
-                                    <TableCell data-label="Answered By">{answer.answerCreatorName || 'Anonymous'}</TableCell>
+                                    <TableCell data-label="Answered By">{answer.answerCreatorName || 'Anonymous'}</TableCell> {/* This is the submitter, not necessarily the whole team */}
+                                    <TableCell data-label="Team">{getTeamDisplayString(answer)}</TableCell>
                                     <TableCell data-label="Score">{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</TableCell>
                                     <TableCell data-label="Status">{answer.isCompleted ? 'Completed' : answer.isChecked ? 'Ready for Review' : 'In Progress'}</TableCell>
                                     <TableCell data-label="Submitted">{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>

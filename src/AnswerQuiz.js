@@ -10,6 +10,10 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
 
 const AnswerQuiz = () => {
     const { quizId } = useParams();
@@ -23,6 +27,8 @@ const AnswerQuiz = () => {
     const [submitSuccess, setSubmitSuccess] = useState('');
     const [isReadyForReview, setIsReadyForReview] = useState(false); // New state for the checkbox
     const [submitError, setSubmitError] = useState('');
+    const [teamSize, setTeamSize] = useState(1);
+    const [teamMembers, setTeamMembers] = useState([]); // Stores names of additional members
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -67,6 +73,26 @@ const AnswerQuiz = () => {
         setAnswers(newAnswers);
     };
 
+    const handleTeamSizeChange = (event) => {
+        const newSize = parseInt(event.target.value, 10);
+        setTeamSize(newSize);
+        // Adjust teamMembers array based on new size, preserving existing names if possible
+        // We need newSize - 1 input fields for additional members
+        setTeamMembers(prevMembers => {
+            const newMembersArray = Array(newSize - 1).fill('');
+            for (let i = 0; i < Math.min(prevMembers.length, newSize - 1); i++) {
+                newMembersArray[i] = prevMembers[i];
+            }
+            return newMembersArray;
+        });
+    };
+
+    const handleTeamMemberNameChange = (index, value) => {
+        const newTeamMembers = [...teamMembers];
+        newTeamMembers[index] = value;
+        setTeamMembers(newTeamMembers);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!user) {
@@ -90,7 +116,9 @@ const AnswerQuiz = () => {
                 answerCreatorId: user.uid,
                 answerCreatorName: user.displayName || "Anonymous",
                 submittedAt: serverTimestamp(),
-                score: 0, // Initialize score to 0 for now
+                score: 0,
+                teamSize: teamSize,
+                teamMembers: teamMembers.filter(name => name.trim() !== ''), // Store only non-empty names
                 isChecked: isReadyForReview // Set isChecked based on the checkbox state
             };
 
@@ -104,6 +132,8 @@ const AnswerQuiz = () => {
                 // For now, just show success message and clear form state
                 setAnswers(Array(quiz.amount).fill({ artist: '', songName: '' })); // Clear form
                 setIsReadyForReview(false); // Reset checkbox
+                setTeamSize(1); // Reset team size
+                setTeamMembers([]); // Reset team members
                 // Redirect to My Answers page after successful submission
                 navigate('/my-answers');
             }
@@ -130,6 +160,35 @@ const AnswerQuiz = () => {
                 </Typography>
             )}
             <Paper component="form" onSubmit={handleSubmit} sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }} className="answer-quiz-form">
+                <FormControl fullWidth margin="normal">
+                    <InputLabel id="team-size-label">Team Size</InputLabel>
+                    <Select
+                        labelId="team-size-label"
+                        id="team-size-select"
+                        value={teamSize}
+                        label="Team Size"
+                        onChange={handleTeamSizeChange}
+                    >
+                        <MenuItem value={1}>1 Player</MenuItem>
+                        <MenuItem value={2}>2 Players</MenuItem>
+                        <MenuItem value={3}>3 Players</MenuItem>
+                        <MenuItem value={4}>4 Players</MenuItem>
+                    </Select>
+                </FormControl>
+
+                {teamMembers.map((memberName, index) => (
+                    <TextField
+                        key={`team-member-${index}`}
+                        label={`Team Member ${index + 2} Name`} // +2 because member 1 is the logged-in user
+                        variant="outlined"
+                        fullWidth
+                        margin="dense"
+                        value={memberName}
+                        onChange={(e) => handleTeamMemberNameChange(index, e.target.value)}
+                        sx={{ mb: 1 }}
+                    />
+                ))}
+
                 {answers.map((answer, index) => (
                     <Box key={index} className="song-guess-item" elevation={4} sx={{ mb: 2, p: { xs: 0.5, sm: 1 }, backgroundColor: 'transparent', boxShadow: 'none', border: 'none' }}>
                         <Typography variant="h6" component="h4" gutterBottom>

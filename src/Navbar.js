@@ -62,10 +62,8 @@ const Navbar = () => {
     const navItems = [
         { label: "Home", path: "/", icon: <HomeIcon /> },
         { label: "All Quizzes", path: "/quizzes", icon: <ListAltIcon /> },
-        { label: "My Quizzes", path: "/my-quizzes", icon: <PlaylistAddCheckIcon /> },
-        { label: "My Answers", path: "/my-answers", icon: <FactCheckIcon /> },
-
-        // Login/Logout item will be added dynamically below or handled separately
+        { label: "My Quizzes", path: "/my-quizzes", icon: <PlaylistAddCheckIcon />, requiresAuth: true }, // Requires auth
+        { label: "My Answers", path: "/my-answers", icon: <FactCheckIcon />, requiresAuth: true }, // Requires auth
         { label: "New Quiz", path: "/quiz", icon: <QuizIcon />, requiresAuth: true }, // Requires auth
         { label: "Highscores", path: "/highscores", icon: <EmojiEventsIcon />, requiresAuth: true }, // Requires auth
     ];
@@ -74,14 +72,17 @@ const Navbar = () => {
         <div onClick={handleDrawerToggle} className="mobile-drawer">
             <List>
                 {navItems.map((item) => (
-                    <ListItem key={item.path} disablePadding>
-                        <ListItemButton component={Link} to={item.path} selected={location.pathname === item.path}>
-                            <ListItemIcon className="mobile-drawer-icon">
-                                {item.icon}
-                            </ListItemIcon>
-                            <ListItemText primary={item.label} className="mobile-drawer-text" />
-                        </ListItemButton>
-                    </ListItem>
+                    // Conditionally render based on requiresAuth for mobile drawer
+                    (!item.requiresAuth || currentUser) && (
+                        <ListItem key={item.path} disablePadding>
+                            <ListItemButton component={Link} to={item.path} selected={location.pathname === item.path}>
+                                <ListItemIcon className="mobile-drawer-icon">
+                                    {item.icon}
+                                </ListItemIcon>
+                                <ListItemText primary={item.label} className="mobile-drawer-text" />
+                            </ListItemButton>
+                        </ListItem>
+                    )
                 ))}
                 {currentUser ? (
                     <ListItem disablePadding>
