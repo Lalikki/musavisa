@@ -9,6 +9,8 @@ import {
   Modal,
   Stack,
   Slider,
+  Fab,
+  CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
@@ -18,18 +20,22 @@ import {
   Pause as PauseIcon,
   VolumeDown as VolumeDownIcon,
   VolumeUp as VolumeUpIcon,
+  Replay as ReplayIcon,
+  OpenInNew as OpenInNewIcon,
 } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import * as React from "react";
 import YouTube from "react-youtube";
+import { computeHeadingLevel } from "@testing-library/dom";
 
 export default function MusicPlayer({ artist, song, songNumber, songLink }) {
   const [play, setPlay] = useState(false);
   const [volume, setVolume] = useState(50); // Default volume level
   const [player, setPlayer] = useState(null); // Store the YouTube player instance
-  const [playerCounter, setPlayerCounter] = useState(0);
+  const [playerCounter, setPlayerCounter] = useState(0); // Counter to track player readiness
 
-  const videoId = songLink.split("v=")[1];
+  const videoId = songLink ? songLink.split("v=")[1] : ""; // Extract video ID from the link
+  const disableControls = playerCounter < 2 || !videoId; // Disable buttons if player is not ready
   const opts = {
     width: "0",
     height: "0",
@@ -39,13 +45,27 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
   };
 
   const handlePlay = () => {
-    if (play && player) {
+    if (playerCounter < 2) return; // Prevent play if player is not ready
+    if (play) {
       player.pauseVideo();
-    } else if (player) {
-      console.log("player", player);
+    } else {
       player.playVideo();
     }
     setPlay(!play);
+  };
+
+  const handleReplay = () => {
+    if (playerCounter < 2) return; // Prevent play if player is not ready
+    console.log(player);
+    player.stopVideo();
+    player.playVideo();
+    setPlay(true);
+    // if (play && player) {
+    //   player.pauseVideo();
+    // } else if (player) {
+    //   player.playVideo();
+    // }
+    // setPlay(!play);
   };
 
   const handleVolumeChange = (event, newValue) => {
@@ -59,22 +79,18 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
     // if (player) return;
     event.target.setVolume(volume);
     setPlayer(event.target);
-    setPlayerCounter(playerCounter + 1);
+    setPlayerCounter(playerCounter + 1); // Increment the player counter since YouTube component is rendered twice
   };
 
   const onPlayerStateChange = (event) => {
-    const player = event.target;
-    // if (play) {
-    //   player.playVideo();
-    // }
-    // player.playVideo();
+    // Handle player state changes
   };
 
   return (
     <Card sx={{ m: 1 }}>
       <Box id="main-box" sx={{ display: "flex", flexDirection: "row" }}>
         <CardContent sx={{ flex: "1 0 auto" }}>
-          <Typography component="div" variant="h5">
+          <Typography component="div" variant="h6">
             {songNumber} - {song}
           </Typography>
           <Typography
@@ -85,29 +101,69 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
             {artist}
           </Typography>
         </CardContent>
-        <Box sx={{ width: 200, alignContent: "center" }}>
-          <Stack spacing={2} direction="row" sx={{ alignItems: "center" }}>
-            <VolumeDownIcon />
-            <Slider
-              aria-label="Volume"
-              value={volume}
-              onChange={handleVolumeChange}
-              disabled={playerCounter < 2}
-              valueLabelDisplay="auto"
-            />
-            <VolumeUpIcon />
-          </Stack>
+        <Box
+          sx={{
+            alignContent: "center",
+            display: "flex",
+            flexDirection: "row",
+            m: 1,
+          }}
+        >
+          <VolumeUpIcon sx={{ alignSelf: "center" }} />
+          <Slider
+            aria-label="Volume"
+            orientation="vertical"
+            value={volume}
+            onChange={handleVolumeChange}
+            disabled={disableControls}
+            valueLabelDisplay="auto"
+          />
         </Box>
-        <Box sx={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
-          <IconButton
-            aria-label="play/pause"
-            size="large"
-            sx={{ justifySelf: "center" }}
-            onClick={handlePlay}
-            loading={playerCounter < 2}
+        <Box
+          sx={{
+            marginLeft: "auto",
+            display: "flex",
+            alignItems: "center",
+            mr: 1,
+          }}
+        >
+          <Fab
+            color="secondary"
+            aria-label="replay"
+            size="small"
+            sx={{ justifySelf: "center", mr: 1 }}
+            onClick={handleReplay}
+            disabled={disableControls}
           >
-            {!play ? <PlayArrowIcon /> : <PauseIcon />}
-          </IconButton>
+            {(playerCounter < 2 && (
+              <CircularProgress size="50%" color="inherit" />
+            )) || <ReplayIcon />}
+          </Fab>
+          <Fab
+            color="primary"
+            aria-label="play"
+            size="medium"
+            sx={{ justifySelf: "center", mr: 1 }}
+            onClick={handlePlay}
+            disabled={disableControls}
+          >
+            {(playerCounter < 2 && (
+              <CircularProgress size="50%" color="inherit" />
+            )) ||
+              (!play ? <PlayArrowIcon /> : <PauseIcon />)}
+          </Fab>
+          <Fab
+            color="secondary"
+            aria-label="open-tab"
+            size="small"
+            href={songLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ justifySelf: "center" }}
+            disabled={!songLink}
+          >
+            {<OpenInNewIcon />}
+          </Fab>
         </Box>
       </Box>
       <YouTube
