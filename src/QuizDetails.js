@@ -101,6 +101,21 @@ const QuizDetails = () => {
     fetchAnswers();
   }, [quizId]);
 
+  const getTeamDisplayString = (answer) => {
+    if (!answer.teamSize || answer.teamSize <= 1) {
+      return answer.answerCreatorName || "Solo";
+    }
+    const members = [answer.answerCreatorName]; // Logged-in user is always first
+    if (answer.teamMembers && Array.isArray(answer.teamMembers)) {
+      answer.teamMembers.forEach((member) => {
+        if (member && typeof member === "string" && member.trim() !== "") {
+          members.push(member.trim());
+        }
+      });
+    }
+    return members.join(", ");
+  };
+
   if (loading)
     return (
       <Typography sx={{ textAlign: "center", mt: 3 }}>
@@ -227,6 +242,7 @@ const QuizDetails = () => {
             <TableHead>
               <TableRow className="quizzes-table-header-row">
                 <TableCell>Answered By</TableCell>
+                <TableCell>Team</TableCell>
                 <TableCell>Score</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Submitted At</TableCell>
@@ -237,6 +253,10 @@ const QuizDetails = () => {
                 <TableRow key={answer.id} className="quizzes-table-data-row">
                   <TableCell data-label="Answered By">
                     {answer.answerCreatorName || "Anonymous"}
+                  </TableCell>{" "}
+                  {/* This is the submitter, not necessarily the whole team */}
+                  <TableCell data-label="Team">
+                    {getTeamDisplayString(answer)}
                   </TableCell>
                   <TableCell data-label="Score">
                     {answer.score} /{" "}

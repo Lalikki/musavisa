@@ -14,6 +14,7 @@ import GradingIcon from '@mui/icons-material/Grading';
 import Button from '@mui/material/Button';
 import { Link } from 'react-router-dom'; // Import Link
 import { format } from 'date-fns';
+import Typography from '@mui/material/Typography'; // Import Typography
 
 const MyAnswers = () => {
     const [user, setUser] = useState(null);
@@ -59,16 +60,32 @@ const MyAnswers = () => {
         }
     };
 
+    const getTeamDisplayString = (answer) => {
+        if (!answer.teamSize || answer.teamSize <= 1) {
+            return answer.answerCreatorName || 'Solo';
+        }
+        const members = [answer.answerCreatorName]; // Logged-in user is always first
+        if (answer.teamMembers && Array.isArray(answer.teamMembers)) {
+            answer.teamMembers.forEach(member => {
+                // Ensure member is a non-empty string before adding
+                if (member && typeof member === 'string' && member.trim() !== '') {
+                    members.push(member.trim());
+                }
+            });
+        }
+        return members.join(', ');
+    };
+
     if (!user && !loading) {
-        return <p>Please log in to see your answers.</p>;
+        return <Typography sx={{ textAlign: 'center', mt: 3 }}>Please log in to see your answers.</Typography>;
     }
-    if (loading) return <p>Loading your answers...</p>;
-    if (error) return <p className="error-text">{error}</p>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading your answers...</Typography>;
+    if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error}</Typography>;
 
     return (
         <div className="my-quizzes-container">
-            <h1>My Submitted Answers</h1>
-            {answers.length === 0 && !loading && <p>You haven't submitted any quiz answers yet.</p>}
+            <Typography variant="h4" component="h1" gutterBottom align="center">My Submitted Answers</Typography>
+            {answers.length === 0 && !loading && <Typography sx={{ textAlign: 'center', mt: 2 }}>You haven't submitted any quiz answers yet.</Typography>}
             {answers.length > 0 && (
                 <TableContainer component={Paper} className="table-responsive-wrapper"> {/* Use TableContainer and Paper */}
                     <Table className="quizzes-table" aria-label="My Submitted Answers Table"> {/* Use Table */}
@@ -77,6 +94,7 @@ const MyAnswers = () => {
                                 <TableCell>Quiz Title</TableCell> {/* Use TableCell */}
                                 <TableCell>Your Score</TableCell>
                                 <TableCell>Submitted At</TableCell>
+                                <TableCell>Team</TableCell>
                                 <TableCell>Status</TableCell>
                                 <TableCell>Actions</TableCell>
                             </TableRow>
@@ -88,6 +106,7 @@ const MyAnswers = () => {
                                     {/* Assuming max score is 1 point per song (0.5 artist + 0.5 song) */}
                                     <TableCell data-label="Score">{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</TableCell>
                                     <TableCell data-label="Submitted">{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                    <TableCell data-label="Team">{getTeamDisplayString(answer)}</TableCell>
                                     <TableCell data-label="Status">
                                         {answer.isCompleted ? 'Completed' :
                                             answer.isChecked ? 'Ready for Review' :
