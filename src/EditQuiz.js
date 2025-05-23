@@ -3,6 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from './firebase';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
 const EditQuiz = () => {
     const { quizId } = useParams();
@@ -152,53 +162,137 @@ const EditQuiz = () => {
         }
     };
 
-    if (loading) return <p>Loading quiz for editing...</p>;
-    if (error && !originalQuizData) return <p className="error-text">{error} <button onClick={() => navigate('/my-quizzes')}>Back to My Quizzes</button></p>;
-    if (!user) return <p>Please log in to edit quizzes.</p>;
-    if (!originalQuizData && !loading) return <p>Quiz data could not be loaded or you are not authorized.</p>
-
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading quiz for editing...</Typography>;
+    if (error && !originalQuizData) return (
+        <Box sx={{ textAlign: 'center', mt: 3 }}>
+            <Typography color="error" className="error-text">{error}</Typography>
+            <Button variant="outlined" onClick={() => navigate('/my-quizzes')} sx={{ mt: 1 }}>
+                Back to My Quizzes
+            </Button>
+        </Box>
+    );
+    if (!user) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Please log in to edit quizzes.</Typography>;
+    if (!originalQuizData && !loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Quiz data could not be loaded or you are not authorized.</Typography>;
 
     // Re-using form structure from Quiz.js, but with state from EditQuiz.js
     return (
         <div className="quiz-container"> {/* Can reuse .quiz-container or make .edit-quiz-container */}
-            <h1>Edit Quiz: {originalQuizData?.title}</h1>
-            <form onSubmit={handleSubmit} className="quiz-creation-form"> {/* Use quiz-creation-form class */}
-                <div>
-                    <label>Title:</label>
-                    <input type="text" value={title} onChange={e => setTitle(e.target.value)} />
-                </div>
-                <div>
-                    <label>Rules:</label>
-                    <textarea value={rules} onChange={e => setRules(e.target.value)} className="form-input-full-width" />
-                </div>
-                <div>
-                    <label>Amount of songs:</label>
-                    <input type="number" min="0" value={amount} readOnly className="form-input-full-width" disabled />
-                </div>
-                <h3>Song Entries</h3>
+            <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 2 }}>
+                Edit Quiz: {originalQuizData?.title}
+            </Typography>
+            <Paper component="form" onSubmit={handleSubmit} className="quiz-creation-form" sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }}>
+                <TextField
+                    label="Title"
+                    variant="outlined"
+                    fullWidth
+                    margin="dense"
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    required
+                    className="form-input-full-width"
+                    InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                    label="Rules"
+                    variant="outlined"
+                    fullWidth
+                    margin="dense"
+                    multiline
+                    rows={3}
+                    value={rules}
+                    onChange={e => setRules(e.target.value)}
+                    className="form-input-full-width"
+                    InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                    label="Amount of songs"
+                    type="number"
+                    variant="outlined"
+                    fullWidth
+                    margin="dense"
+                    value={amount}
+                    readOnly
+                    disabled
+                    className="form-input-full-width"
+                    InputLabelProps={{ shrink: true }}
+                />
+
+                <Typography variant="h6" component="h3" gutterBottom sx={{ mt: 2, mb: 1 }}>
+                    Song Entries
+                </Typography>
                 {questions.map((q, index) => (
-                    <div key={index} className="question-entry-box"> {/* Use question-entry-box class */}
-                        <h4>Song {index + 1}</h4>
-                        <label>Song Link:</label>
-                        <input type="text" placeholder="https://youtube.com/..." value={q.songLink} onChange={e => handleQuestionChange(index, "songLink", e.target.value)} className="form-input-question" />
-                        <label>Artist:</label>
-                        <input type="text" placeholder="Artist Name" value={q.artist} onChange={e => handleQuestionChange(index, "artist", e.target.value)} required className="form-input-question" />
-                        <label>Song Title:</label>
-                        <input type="text" placeholder="Song Title" value={q.song} onChange={e => handleQuestionChange(index, "song", e.target.value)} required className="form-input-question" />
-                        {questions.length > 1 && (
-                            <button type="button" onClick={() => removeQuestion(index)} className="button-remove-question">Remove Song</button>
+                    <Paper key={index} elevation={1} sx={{ p: { xs: 0.5, sm: 1 }, mb: 1 }} className="question-entry-box">
+                        <Typography variant="subtitle1" component="h4" gutterBottom>
+                            Song {index + 1}
+                        </Typography>
+                        <TextField
+                            label="Song Link (Optional)"
+                            variant="outlined"
+                            fullWidth
+                            margin="dense"
+                            value={q.songLink}
+                            onChange={e => handleQuestionChange(index, "songLink", e.target.value)}
+                            className="form-input-question"
+                            InputLabelProps={{ shrink: true }}
+                        />
+                        <TextField
+                            label="Artist"
+                            variant="outlined"
+                            fullWidth
+                            margin="dense"
+                            value={q.artist}
+                            onChange={e => handleQuestionChange(index, "artist", e.target.value)}
+                            required
+                            className="form-input-question"
+                            InputLabelProps={{ shrink: true }}
+                        />
+                        <TextField
+                            label="Song Title"
+                            variant="outlined"
+                            fullWidth
+                            margin="dense"
+                            value={q.song}
+                            onChange={e => handleQuestionChange(index, "song", e.target.value)}
+                            required
+                            className="form-input-question"
+                            InputLabelProps={{ shrink: true }}
+                        />
+                        {questions.length > 0 && ( // Show remove only if there are questions
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                startIcon={<RemoveCircleOutlineIcon />}
+                                onClick={() => removeQuestion(index)}
+                                sx={{ mt: 0.5, mb: 0.5 }}
+                                className="button-remove-question"
+                            >
+                                Remove Song
+                            </Button>
                         )}
-                    </div>
+                    </Paper>
                 ))}
-                <button type="button" onClick={addQuestion} className="button-add-question">Add Song Entry</button>
-                <div className="is-ready-checkbox-container"> {/* Use is-ready-checkbox-container class */}
-                    <label htmlFor="editIsReadyCheckbox" className="is-ready-checkbox-label">Mark as Ready:</label>
-                    <input type="checkbox" id="editIsReadyCheckbox" checked={isReady} onChange={e => setIsReady(e.target.checked)} />
-                </div>
-                <button type="submit" disabled={saving} className="button-submit-quiz">{saving ? 'Saving...' : 'Save Changes'}</button> {/* Use button-submit-quiz class */}
-                {success && <p className="success-text form-message">{success}</p>}
-                {error && <p className="error-text form-message">{error}</p>}
-            </form>
+                <Button
+                    variant="outlined"
+                    startIcon={<AddCircleOutlineIcon />}
+                    onClick={addQuestion}
+                    className="button-add-question"
+                    sx={{ mt: 1, mb: 2 }}
+                >
+                    Add Song Entry
+                </Button>
+
+                <FormControlLabel
+                    control={<Checkbox id="editIsReadyCheckbox" checked={isReady} onChange={e => setIsReady(e.target.checked)} />}
+                    label="Mark as Ready"
+                    className="is-ready-checkbox-container"
+                    sx={{ display: 'block', mt: 1, mb: 2 }}
+                />
+                <Button type="submit" variant="contained" color="primary" fullWidth disabled={saving} className="button-submit-quiz" startIcon={saving ? <CircularProgress size={20} color="inherit" /> : null}>
+                    {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+                {success && <Typography color="success.main" sx={{ mt: 2, textAlign: 'center' }} className="success-text form-message">{success}</Typography>}
+                {error && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{error}</Typography>}
+            </Paper>
         </div>
     );
 };

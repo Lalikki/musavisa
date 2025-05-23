@@ -3,6 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from './firebase'; // Import auth
 import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
 
 const AnswerQuiz = () => {
     const { quizId } = useParams();
@@ -108,55 +115,76 @@ const AnswerQuiz = () => {
         }
     };
 
-    if (loading) return <p>Loading quiz...</p>;
-    if (error) return <p className="error-text">{error}</p>;
-    if (!quiz) return <p>Quiz not found.</p>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading quiz...</Typography>;
+    if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error}</Typography>;
+    if (!quiz) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Quiz not found.</Typography>;
 
     return (
-        <div className="answer-quiz-container">
-            <h1>Answer Quiz: {quiz.title}</h1>
-            <p>{quiz.rules || quiz.description}</p>
-            <form onSubmit={handleSubmit}>
+        <div className="quiz-container">
+            <Typography variant="h4" component="h4" gutterBottom align="center" sx={{ mb: 2 }}>
+                {quiz.title}
+            </Typography>
+            {quiz.rules && (
+                <Typography variant="body1" paragraph align="center" sx={{ mb: 3 }}>
+                    {quiz.rules}
+                </Typography>
+            )}
+            <Paper component="form" onSubmit={handleSubmit} sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }} className="answer-quiz-form">
                 {answers.map((answer, index) => (
-                    <div key={index} className="song-guess-item">
-                        <h4>Song {index + 1} Guess</h4>
-                        <label htmlFor={`artist-${index + 1}`}>Artist: </label>
-                        <input
-                            type="text"
+                    <Box key={index} className="song-guess-item" elevation={4} sx={{ mb: 2, p: { xs: 0.5, sm: 1 }, backgroundColor: 'transparent', boxShadow: 'none', border: 'none' }}>
+                        <Typography variant="h6" component="h4" gutterBottom>
+                            Song {index + 1}
+                        </Typography>
+                        <TextField
+                            label="Artist"
+                            variant="outlined"
+                            fullWidth
+                            margin="dense"
                             id={`artist-${index + 1}`}
                             value={answer.artist}
                             onChange={(e) => handleAnswerChange(index, 'artist', e.target.value)}
-                            placeholder="Artist Name"
                             className="artist-input"
+                            InputLabelProps={{ shrink: true }}
                         />
-                        <label htmlFor={`songName-${index + 1}`}>Song Name: </label>
-                        <input
-                            type="text"
+                        <TextField
+                            label="Song Name"
+                            variant="outlined"
+                            fullWidth
+                            margin="dense"
                             id={`songName-${index + 1}`}
                             value={answer.songName}
                             onChange={(e) => handleAnswerChange(index, 'songName', e.target.value)}
-                            placeholder="Song Name"
                             className="songname-input"
+                            InputLabelProps={{ shrink: true }}
                         />
-                    </div>
+                    </Box>
                 ))}
-                <div className="is-ready-checkbox-container" style={{ marginBottom: '20px' }}> {/* Re-using the class from Quiz.js */}
-                    <label htmlFor="readyForReviewCheckbox" className="is-ready-checkbox-label">
-                        Mark as Ready for Review:
-                    </label>
-                    <input
-                        type="checkbox"
-                        id="readyForReviewCheckbox"
-                        checked={isReadyForReview}
-                        onChange={e => setIsReadyForReview(e.target.checked)}
-                    />
-                </div>
-                <button type="submit" disabled={submitting}>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            id="readyForReviewCheckbox"
+                            checked={isReadyForReview}
+                            onChange={e => setIsReadyForReview(e.target.checked)}
+                        />
+                    }
+                    label="Mark as Ready for Review"
+                    className="is-ready-checkbox-container"
+                    sx={{ display: 'block', mt: 1, mb: 2 }}
+                />
+                <Button type="submit" variant="contained" color="primary" fullWidth disabled={submitting} className="button-submit-answers">
                     {submitting ? 'Submitting...' : 'Submit Answers'}
-                </button>
-                {submitSuccess && <p className="success-text form-message">{submitSuccess}</p>}
-                {submitError && <p className="error-text form-message">{submitError}</p>}
-            </form>
+                </Button>
+                {submitSuccess && (
+                    <Typography color="success.main" sx={{ mt: 2, textAlign: 'center' }} className="success-text form-message">
+                        {submitSuccess}
+                    </Typography>
+                )}
+                {submitError && (
+                    <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">
+                        {submitError}
+                    </Typography>
+                )}
+            </Paper>
         </div>
     );
 };

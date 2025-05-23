@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore'; // Added where
 import { format } from 'date-fns';
-import { Link } from 'react-router-dom';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import Box from '@mui/material/Box';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper'; // Often used with TableContainer
+import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const Highscores = () => {
-    const [highscores, setHighscores] = useState([]);
+    // const [highscores, setHighscores] = useState([]); // Old state
+    const [userStats, setUserStats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -14,22 +24,53 @@ const Highscores = () => {
             setLoading(true);
             setError(null);
             try {
-                const answersCollectionRef = collection(db, "quizAnswers");
-                // Query for all answers, ordered by score descending
-                // You might want to add a limit here later (e.g., .limit(100))
-                // Or filter by isCompleted == true if only completed answers count
-                const q = query(
-                    answersCollectionRef,
-                    orderBy("score", "desc"),
-                    orderBy("submittedAt", "asc") // Secondary sort for ties
+                // Fetch all completed quiz answers
+                const answersQuery = query(
+                    collection(db, "quizAnswers"),
+                    where("isCompleted", "==", true) // Consider only completed and scored answers
                 );
-                const querySnapshot = await getDocs(q);
-                const fetchedHighscores = querySnapshot.docs.map(doc => ({
+                const querySnapshot = await getDocs(answersQuery);
+                const completedAnswers = querySnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
                     submittedAt: doc.data().submittedAt ? doc.data().submittedAt.toDate() : null,
                 }));
-                setHighscores(fetchedHighscores);
+
+                // Process answers to calculate user stats
+                const stats = {}; // Temporary object to hold stats by userId
+
+                completedAnswers.forEach(answer => {
+                    const userId = answer.answerCreatorId;
+                    if (!userId) return; // Skip if no user ID
+
+                    if (!stats[userId]) {
+                        stats[userId] = {
+                            userName: answer.answerCreatorName || 'Anonymous',
+                            quizzesAnsweredCount: 0,
+                            totalCorrectAnswers: 0,
+                            totalPossibleAnswers: 0,
+                        };
+                    }
+
+                    stats[userId].quizzesAnsweredCount += 1;
+                    stats[userId].totalCorrectAnswers += answer.score;
+                    // Assuming each question is 1 point, and answer.answers.length is the number of questions
+                    stats[userId].totalPossibleAnswers += answer.answers ? answer.answers.length * 1 : 0;
+                });
+
+                // Convert stats object to an array and calculate percentages
+                const statsArray = Object.entries(stats).map(([userId, data]) => ({
+                    userId,
+                    ...data,
+                    overallPercentage: data.totalPossibleAnswers > 0
+                        ? (data.totalCorrectAnswers / data.totalPossibleAnswers) * 100
+                        : 0,
+                }));
+
+                // Sort by overall percentage descending, then by quizzes answered
+                statsArray.sort((a, b) => b.overallPercentage - a.overallPercentage || b.quizzesAnsweredCount - a.quizzesAnsweredCount);
+
+                setUserStats(statsArray);
             } catch (err) {
                 console.error("Error fetching highscores:", err);
                 setError("Failed to load highscores. Please try again.");
@@ -41,36 +82,45 @@ const Highscores = () => {
         fetchHighscores();
     }, []);
 
-    if (loading) return <p>Loading highscores...</p>;
-    if (error) return <p className="error-text">{error}</p>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading user stats... <CircularProgress size={20} /></Typography>;
+    if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error}</Typography>;
 
     return (
-        <div className="my-quizzes-container">
-            <h1>Highscores</h1>
-            {highscores.length === 0 && !loading && <p>No highscores recorded yet.</p>}
-            {highscores.length > 0 && (
-                <div className="table-responsive-wrapper">
-                    <table className="quizzes-table">
-                        <thead>
-                            <tr>
-                                <th>Quiz Title</th>
-                                <th>Score</th>
-                                <th>Submitted By</th>
-                                <th>Submitted At</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {highscores.map((scoreEntry) => (
-                                <tr key={scoreEntry.id}>
-                                    <td data-label="Quiz">{scoreEntry.quizTitle}</td>
-                                    <td data-label="Score">{scoreEntry.score} / {scoreEntry.answers ? scoreEntry.answers.length * 1 : 'N/A'}</td>
-                                    <td data-label="Submitted By">{scoreEntry.answerCreatorName || 'Anonymous'}</td>
-                                    <td data-label="Submitted At">{scoreEntry.submittedAt ? format(scoreEntry.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
-                                </tr>
+        <div className="quiz-container"> {/* Re-using quiz-container for consistent page styling */}
+            <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 3 }}>
+                User Leaderboard
+            </Typography>
+
+            {userStats.length === 0 && !loading && (
+                <Typography sx={{ textAlign: 'center', mt: 3 }}>No user statistics available yet.</Typography>
+            )}
+
+            {userStats.length > 0 && (
+                <TableContainer component={Paper} className="table-responsive-wrapper"> {/* Use TableContainer and Paper */}
+                    <Table className="quizzes-table user-stats-table" aria-label="User Statistics Table"> {/* Use Table */}
+                        <TableHead> {/* Use TableHead */}
+                            <TableRow className="quizzes-table-header-row"> {/* Use TableRow */}
+                                <TableCell>Rank</TableCell>
+                                <TableCell>Player</TableCell> {/* Use TableCell */}
+                                <TableCell >Quizzes Answered</TableCell>
+                                <TableCell >Overall Accuracy</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody> {/* Use TableBody */}
+                            {userStats.map((stat, index) => (
+                                <TableRow className="quizzes-table-data-row" key={stat.userId}> {/* Use TableRow */}
+                                    <TableCell data-label="Rank">{index + 1}</TableCell>
+                                    <TableCell data-label="Player">{stat.userName}</TableCell> {/* Use TableCell and keep data-label */}
+                                    <TableCell data-label="Quizzes Answered" >{stat.quizzesAnsweredCount}</TableCell>
+                                    <TableCell data-label="Overall Accuracy" >
+                                        {stat.overallPercentage.toFixed(2)}%
+                                        <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>({stat.totalCorrectAnswers}/{stat.totalPossibleAnswers} correct)</Typography>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             )}
         </div>
     );

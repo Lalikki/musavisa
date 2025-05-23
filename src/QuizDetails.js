@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link as RouterLink } from "react-router-dom"; // Renamed Link to RouterLink
 import { db } from "./firebase";
 import {
   doc,
@@ -11,6 +11,20 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { format } from "date-fns";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import Paper from "@mui/material/Paper";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import Link from "@mui/material/Link"; // MUI Link
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import CircularProgress from "@mui/material/CircularProgress";
 import MusicPlayer from "./components/MusicPlayer";
 
 const QuizDetails = () => {
@@ -87,99 +101,174 @@ const QuizDetails = () => {
     fetchAnswers();
   }, [quizId]);
 
-  if (loading) return <p>Loading quiz details...</p>;
-  if (error) return <p className="error-text">{error}</p>;
+  if (loading)
+    return (
+      <Typography sx={{ textAlign: "center", mt: 3 }}>
+        Loading quiz details... <CircularProgress size={20} />
+      </Typography>
+    );
+  if (error)
+    return (
+      <Typography
+        color="error"
+        sx={{ textAlign: "center", mt: 3 }}
+        className="error-text"
+      >
+        {error}
+      </Typography>
+    );
   if (!quiz)
     return (
-      <p>
-        Quiz not found. <Link to="/my-quizzes">Go back to My Quizzes</Link>
-      </p>
+      <Box sx={{ textAlign: "center", mt: 3 }}>
+        <Typography>Quiz not found.</Typography>
+        <Button
+          component={RouterLink}
+          to="/my-quizzes"
+          variant="outlined"
+          sx={{ mt: 1 }}
+        >
+          Go back to My Quizzes
+        </Button>
+      </Box>
     );
 
   return (
     <div className="quiz-container">
-      <h1>{quiz.title}</h1>
-      <p>
-        <strong>Rules:</strong> {quiz.rules || "No rules provided."}
-      </p>
-      <p>
-        <strong>Number of Songs:</strong> {quiz.amount}
-      </p>
-      <p>
-        <strong>Created By:</strong> {quiz.creatorName || "Unknown"}
-      </p>
-      <p>
-        <strong>Created At:</strong>{" "}
-        {quiz.createdAt ? format(quiz.createdAt, "yyyy-MM-dd HH:mm") : "N/A"}
-      </p>
-      <h2>Questions (Song Details)</h2>
-      {quiz.questions && quiz.questions.length > 0 ? (
-        <ul className="quiz-questions-list">
-          {quiz.questions.map((q, index) => (
-            // <li key={index} className="quiz-question-item">
-            //     <strong>Song {index + 1}:</strong> Artist - "{q.artist}", Title - "{q.song}"
-            //     {q.songLink && <p>Link: <a href={q.songLink} target="_blank" rel="noopener noreferrer">{q.artist} - {q.song}</a></p>}
-            // </li>
-            <MusicPlayer
-              key={index}
-              artist={q.artist}
-              song={q.song}
-              songNumber={index + 1}
-              songLink={q.songLink}
-            />
-          ))}
-        </ul>
-      ) : (
-        <p>No questions found for this quiz.</p>
+      <Typography
+        variant="h4"
+        component="h1"
+        gutterBottom
+        align="center"
+        sx={{ mb: 2 }}
+      >
+        {quiz.title}
+      </Typography>
+      <Paper
+        elevation={1}
+        sx={{ p: { xs: 1.5, sm: 2 }, mb: 3, backgroundColor: "#2a2a2a" }}
+      >
+        <Typography variant="body1">
+          <strong>Rules:</strong> {quiz.rules || "No rules provided."}
+        </Typography>
+        <Typography variant="body1">
+          <strong>Number of Songs:</strong> {quiz.amount}
+        </Typography>
+        <Typography variant="body1">
+          <strong>Created By:</strong> {quiz.creatorName || "Unknown"}
+        </Typography>
+        <Typography variant="body1">
+          <strong>Created At:</strong>{" "}
+          {quiz.createdAt ? format(quiz.createdAt, "yyyy-MM-dd HH:mm") : "N/A"}
+        </Typography>
+      </Paper>
+
+      <Typography
+        variant="h5"
+        component="h2"
+        gutterBottom
+        align="center"
+        sx={{ mb: 2 }}
+      >
+        Questions (Song Details)
+      </Typography>
+      <Paper
+        elevation={1}
+        sx={{ p: { xs: 1, sm: 1.5 }, mb: 3, backgroundColor: "#2a2a2a" }}
+      >
+        {quiz.questions && quiz.questions.length > 0 ? (
+          <List className="quiz-questions-list" dense>
+            {quiz.questions.map((q, index) => (
+              <MusicPlayer
+                key={index}
+                artist={q.artist}
+                song={q.song}
+                songNumber={index + 1}
+                songLink={q.songLink}
+              />
+            ))}
+          </List>
+        ) : (
+          <Typography>No questions found for this quiz.</Typography>
+        )}
+      </Paper>
+
+      <Typography
+        variant="h5"
+        component="h2"
+        gutterBottom
+        align="center"
+        className="section-heading"
+        sx={{ mb: 2 }}
+      >
+        Submitted Answers
+      </Typography>
+      {answersLoading && (
+        <Typography sx={{ textAlign: "center", mt: 2 }}>
+          Loading submitted answers... <CircularProgress size={20} />
+        </Typography>
       )}
-      <h2 className="section-heading">Submitted Answers</h2>
-      {answersLoading && <p>Loading submitted answers...</p>}
-      {answersError && <p className="error-text">{answersError}</p>}
+      {answersError && (
+        <Typography
+          color="error"
+          sx={{ textAlign: "center", mt: 2 }}
+          className="error-text"
+        >
+          {answersError}
+        </Typography>
+      )}
       {!answersLoading && !answersError && answers.length === 0 && (
-        <p>No one has submitted answers for this quiz yet.</p>
+        <Typography sx={{ textAlign: "center", mt: 2 }}>
+          No one has submitted answers for this quiz yet.
+        </Typography>
       )}
       {!answersLoading && !answersError && answers.length > 0 && (
-        <div className="table-responsive-wrapper">
-          <table className="quizzes-table">
-            <thead>
-              <tr>
-                <th>Answered By</th>
-                <th>Score</th>
-                <th>Status</th>
-                <th>Submitted At</th>
-              </tr>
-            </thead>
-            <tbody>
+        <TableContainer component={Paper} className="table-responsive-wrapper">
+          <Table className="quizzes-table" aria-label="Submitted Answers Table">
+            <TableHead>
+              <TableRow className="quizzes-table-header-row">
+                <TableCell>Answered By</TableCell>
+                <TableCell>Score</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Submitted At</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {answers.map((answer) => (
-                <tr key={answer.id}>
-                  <td data-label="Answered By">
+                <TableRow key={answer.id} className="quizzes-table-data-row">
+                  <TableCell data-label="Answered By">
                     {answer.answerCreatorName || "Anonymous"}
-                  </td>
-                  <td data-label="Score">
+                  </TableCell>
+                  <TableCell data-label="Score">
                     {answer.score} /{" "}
                     {answer.answers ? answer.answers.length * 1 : "N/A"}
-                  </td>
-                  <td data-label="Status">
+                  </TableCell>
+                  <TableCell data-label="Status">
                     {answer.isCompleted
                       ? "Completed"
                       : answer.isChecked
                       ? "Ready for Review"
                       : "In Progress"}
-                  </td>
-                  <td data-label="Submitted">
+                  </TableCell>
+                  <TableCell data-label="Submitted">
                     {answer.submittedAt
                       ? format(answer.submittedAt, "yyyy-MM-dd HH:mm")
                       : "N/A"}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
-      <Link to="/my-quizzes" className="back-link">
+      <Button
+        component={RouterLink}
+        to="/my-quizzes"
+        variant="outlined"
+        className="back-link"
+        sx={{ display: "block", mx: "auto", mt: 3 }}
+      >
         Back to My Quizzes
-      </Link>
+      </Button>
     </div>
   );
 };

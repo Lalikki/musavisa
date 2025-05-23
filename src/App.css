@@ -102,7 +102,7 @@ body {
   max-width: 700px;
   /* Adjusted for a form layout */
   margin: 30px auto;
-  padding: 25px;
+  padding-top: 25px;
   background-color: rgba(26, 26, 26, 0.85);
   /* Semi-transparent dark background */
   border-radius: 8px;
@@ -127,8 +127,6 @@ body {
 .quiz-creation-form h4 {
   color: #ff8c00;
   /* Lighter orange for sub-headings */
-  margin-top: 20px;
-  margin-bottom: 10px;
 }
 
 .quiz-creation-form label {
@@ -206,7 +204,7 @@ body {
     /* Create/Edit Quiz form container */
     margin-left: 15px;
     margin-right: 15px;
-    padding: 15px;
+    /* padding: 15px; */
   }
 
   .quizzes-table td,
@@ -387,7 +385,7 @@ body {
 }
 
 .question-entry-box {
-  border: 1px solid #ccc;
+  /* border: 1px solid #ccc; */
   padding: 10px;
   margin-bottom: 15px;
   border-radius: 4px;
@@ -658,8 +656,6 @@ body {
   border: 1px solid #ddd;
   /* Apply border to cells as well */
   padding: 8px;
-  padding: 12px 15px;
-  /* Increased padding */
   text-align: left;
   /* Default alignment, adjust as needed */
   border-color: #444;
@@ -675,7 +671,7 @@ body {
 }
 
 .quizzes-table tbody tr:hover {
-  background-color: #333;
+  background-color: #444;
   /* Darker grey on row hover */
 }
 
@@ -684,12 +680,14 @@ body {
   /* Lighter orange for links in table cells */
   text-decoration: none;
   font-weight: bold;
+  border: none;
 }
 
 .quizzes-table td a:hover {
-  color: #cc0000;
+  color: #f0f0f0;
   /* Red on hover for links */
   text-decoration: underline;
+  border: none;
 }
 
 /* Or define specific ones if needed */
@@ -969,7 +967,7 @@ body {
   color: #ff8c00;
   /* Lighter orange for song number heading */
   margin-top: 0;
-  margin-bottom: 10px;
+  /* margin-bottom: 10px; */
 }
 
 .answer-quiz-container form label {

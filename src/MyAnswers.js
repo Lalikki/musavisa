@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from './firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper'; // Often used with TableContainer
+import EditIcon from '@mui/icons-material/Edit';
+import GradingIcon from '@mui/icons-material/Grading';
+import Button from '@mui/material/Button';
 import { Link } from 'react-router-dom'; // Import Link
 import { format } from 'date-fns';
 
@@ -60,43 +70,43 @@ const MyAnswers = () => {
             <h1>My Submitted Answers</h1>
             {answers.length === 0 && !loading && <p>You haven't submitted any quiz answers yet.</p>}
             {answers.length > 0 && (
-                <div className="table-responsive-wrapper">
-                    <table className="quizzes-table">
-                        <thead>
-                            <tr>
-                                <th>Quiz Title</th>
-                                <th>Your Score</th>
-                                <th>Submitted At</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <TableContainer component={Paper} className="table-responsive-wrapper"> {/* Use TableContainer and Paper */}
+                    <Table className="quizzes-table" aria-label="My Submitted Answers Table"> {/* Use Table */}
+                        <TableHead> {/* Use TableHead */}
+                            <TableRow className="quizzes-table-header-row"> {/* Use TableRow */}
+                                <TableCell>Quiz Title</TableCell> {/* Use TableCell */}
+                                <TableCell>Your Score</TableCell>
+                                <TableCell>Submitted At</TableCell>
+                                <TableCell>Status</TableCell>
+                                <TableCell>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody> {/* Use TableBody */}
                             {answers.map(answer => (
-                                <tr key={answer.id}>
-                                    <td data-label="Title">{answer.quizTitle}</td>
+                                <TableRow className="quizzes-table-data-row" key={answer.id}> {/* Use TableRow */}
+                                    <TableCell data-label="Title">{answer.quizTitle}</TableCell> {/* Use TableCell and keep data-label */}
                                     {/* Assuming max score is 1 point per song (0.5 artist + 0.5 song) */}
-                                    <td data-label="Score">{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</td>
-                                    <td data-label="Submitted">{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</td>
-                                    <td data-label="Status">
+                                    <TableCell data-label="Score">{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</TableCell>
+                                    <TableCell data-label="Submitted">{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                    <TableCell data-label="Status">
                                         {answer.isCompleted ? 'Completed' :
                                             answer.isChecked ? 'Ready for Review' :
                                                 'In Progress'}
-                                    </td>
-                                    <td data-label="Actions">
+                                    </TableCell>
+                                    <TableCell data-label="Actions">
                                         {answer.isChecked && (
-                                            <Link to={`/my-answers/${answer.id}`} className="view-details-button action-button-spacing">Details</Link>
+                                            <Button className="view-action-button" variant="outlined" color="primary" to={`/my-answers/${answer.id}`} startIcon={<GradingIcon />} component={Link}>{answer.isCompleted ? 'Details' : 'Review'}</Button>
                                         )}
                                         {/* Show edit link only if not checked and user is the creator */}
                                         {!answer.isChecked && user && answer.answerCreatorId === user.uid && (
-                                            <Link to={`/edit-answer/${answer.id}`} className="edit-button">Edit</Link>
+                                            <Button className="view-action-button" variant="outlined" color="primary" to={`/edit-answer/${answer.id}`} startIcon={<EditIcon />} component={Link}>Edit</Button>
                                         )}
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             )}
         </div>
     );

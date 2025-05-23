@@ -2,6 +2,15 @@ import React, { useState, useEffect } from "react";
 import { db, auth } from "./firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
 const Quiz = () => {
     const [user, setUser] = useState(null);
@@ -189,101 +198,123 @@ const Quiz = () => {
 
     return (
         <div className="quiz-container">
-            <h1>Create New Quiz</h1>
             {user ? (
-                <form onSubmit={handleSubmit} className="quiz-creation-form">
-                    <h2>Create a New Quiz</h2>
-                    <div>
-                        <label>Title: <span style={{ color: 'red' }}>*</span></label>
-                        <input
-                            type="text"
-                            value={title}
-                            onChange={e => setTitle(e.target.value)}
-                            className="form-input-full-width"
-                        />
-                    </div>
-                    <div>
-                        <label>Rules: <span style={{ color: 'red' }}>*</span></label>
-                        <textarea
-                            value={rules}
-                            onChange={e => setRules(e.target.value)} // Changed state setter
-                            className="form-input-full-width"
-                        />
-                    </div>
-                    <div>
-                        <label>Amount of songs: <span style={{ color: 'red' }}>*</span></label>
-                        <input
-                            type="number"
-                            min="1"
-                            value={amount}
-                            onChange={e => setAmount(e.target.value)}
-                            className="form-input-full-width"
-                        />
-                    </div>
+                <Paper component="form" onSubmit={handleSubmit} className="quiz-creation-form" sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }}> {/* Adjusted padding, transparent, no shadow */}
+                    <Typography variant="h5" component="h2" gutterBottom align="center">
+                        Create a New Quiz
+                    </Typography>
+                    <TextField
+                        label="Title"
+                        variant="outlined"
+                        fullWidth
+                        margin="dense" // Changed from normal to dense
+                        value={title}
+                        onChange={e => setTitle(e.target.value)}
+                        required
+                        className="form-input-full-width"
+                        InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                        label="Rules"
+                        variant="outlined"
+                        fullWidth
+                        margin="dense" // Changed from normal to dense
+                        multiline
+                        rows={3}
+                        value={rules}
+                        onChange={e => setRules(e.target.value)}
+                        required
+                        className="form-input-full-width"
+                        InputLabelProps={{ shrink: true }}
+                    />
+                    <TextField
+                        label="Amount of songs"
+                        type="number"
+                        variant="outlined"
+                        fullWidth
+                        margin="dense" // Changed from normal to dense
+                        value={amount}
+                        onChange={e => setAmount(e.target.value)}
+                        required
+                        className="form-input-full-width"
+                        InputProps={{ inputProps: { min: 1 } }}
+                        InputLabelProps={{ shrink: true }}
+                    />
 
                     {Number(amount) > 0 && (
-                        <>
-                            <h3>Song Entries (Details for checking answers)</h3>
+                        <Box sx={{ mt: 1, mb: 1 }}> {/* Reduced top margin */}
+                            <Typography variant="h6" component="h3" gutterBottom>
+                                Song Entries
+                            </Typography>
                             {questions.map((q, index) => (
-                                <div key={index} className="question-entry-box">
-                                    <h4>Song {index + 1}</h4>
-                                    <label>Song Link (Optional, e.g., YouTube):</label>
-                                    <input
-                                        type="text"
-                                        placeholder="https://youtube.com/watch?v=..."
+                                <Paper key={index} elevation={4} sx={{ p: 1, mb: 1 }} className="question-entry-box"> {/* Reduced padding, margin, and elevation */}
+                                    <Typography variant="subtitle1" component="h4" gutterBottom>
+                                        Song {index + 1}
+                                    </Typography>
+                                    <TextField
+                                        label="Song Link (Youtube/Spotify)"
+                                        variant="outlined"
+                                        fullWidth
+                                        margin="dense"
                                         value={q.songLink}
                                         onChange={e => handleQuestionChange(index, "songLink", e.target.value)}
+                                        required
                                         className={`form-input-question ${q.loadingMetadata ? 'input-loading' : ''}`}
+                                        InputLabelProps={{ shrink: true }}
                                     />
-
-                                    <label>Artist: <span style={{ color: 'red' }}>*</span></label>
-                                    <input
-                                        type="text"
-                                        placeholder="Artist Name"
+                                    <TextField
+                                        label="Artist"
+                                        variant="outlined"
+                                        fullWidth
+                                        margin="dense"
                                         value={q.artist}
                                         onChange={e => handleQuestionChange(index, "artist", e.target.value)}
-                                        className={`form-input-question ${q.loadingMetadata ? 'input-loading' : ''}`}
                                         required
+                                        className={`form-input-question ${q.loadingMetadata ? 'input-loading' : ''}`}
+                                        InputLabelProps={{ shrink: true }}
                                     />
-                                    <label>Song Title: <span style={{ color: 'red' }}>*</span></label>
-                                    <input
-                                        type="text"
-                                        placeholder="Song Title"
+                                    <TextField
+                                        label="Song Title"
+                                        variant="outlined"
+                                        fullWidth
+                                        margin="dense"
                                         value={q.song}
                                         onChange={e => handleQuestionChange(index, "song", e.target.value)}
-                                        className={`form-input-question ${q.loadingMetadata ? 'input-loading' : ''}`}
                                         required
+                                        className={`form-input-question ${q.loadingMetadata ? 'input-loading' : ''}`}
+                                        InputLabelProps={{ shrink: true }}
                                     />
-                                    {q.loadingMetadata && <span className="metadata-loading-indicator"> Fetching...</span>}
+                                    {/* {q.loadingMetadata && <Typography variant="caption" className="metadata-loading-indicator" sx={{ ml: 1 }}> Fetching...</Typography>} */}
                                     {questions.length > 1 && (
-                                        <button type="button" onClick={() => removeQuestion(index)} className="button-remove-question">
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<RemoveCircleOutlineIcon />}
+                                            onClick={() => removeQuestion(index)}
+                                            sx={{ mt: 0.5, mb: 0.5 }} // Reduced margin
+                                            className="button-remove-question"
+                                        >
                                             Remove Song
-                                        </button>
+                                        </Button>
                                     )}
-                                </div>
+                                </Paper>
                             ))}
-
-                        </>
+                        </Box>
                     )}
 
-                    <div className="is-ready-checkbox-container">
-                        <label htmlFor="isReadyCheckbox" className="is-ready-checkbox-label">
-                            Mark as Ready:
-                        </label>
-                        <input
-                            type="checkbox"
-                            id="isReadyCheckbox"
-                            checked={isReady}
-                            onChange={e => setIsReady(e.target.checked)}
-                        />
-                    </div>
+                    <FormControlLabel
+                        control={<Checkbox checked={isReady} onChange={e => setIsReady(e.target.checked)} id="isReadyCheckbox" />}
+                        label="Mark as Ready"
+                        className="is-ready-checkbox-container" sx={{ display: 'block', mt: 1, mb: 1 }} // Reduced margins
+                    />
 
-                    <button type="submit" className="button-submit-quiz">Create Quiz</button>
-                    {success && <div className="success-text form-message">{success}</div>}
-                    {error && <div className="error-text form-message">{error}</div>}
-                </form>
-            ) : (
-                <p>Please log in to create a quiz.</p>
+                    <Button type="submit" variant="contained" color="primary" fullWidth className="button-submit-quiz">
+                        Create Quiz
+                    </Button>
+                    {success && <Typography color="success.main" sx={{ mt: 2 }} className="form-message">{success}</Typography>}
+                    {error && <Typography color="error" sx={{ mt: 2 }} className="form-message">{error}</Typography>}
+                </Paper>) : (
+                <Typography>Please log in to create a quiz.</Typography>
             )}
         </div>
     );
