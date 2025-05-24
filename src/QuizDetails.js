@@ -15,6 +15,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import CircularProgress from '@mui/material/CircularProgress';
+import MusicPlayer from './components/MusicPlayer';
 import { useTheme } from '@mui/material/styles'; // Import useTheme
 
 const QuizDetails = () => {
@@ -145,12 +146,12 @@ const QuizDetails = () => {
                     <List className="quiz-questions-list" dense>
                         {quiz.questions.map((q, index) => (
                             <MusicPlayer
-                		key={index}
-                		artist={q.artist}
-                		song={q.song}
-                		songNumber={index + 1}
-                		songLink={q.songLink}
-              			/>
+                                key={index}
+                                artist={q.artist}
+                                song={q.song}
+                                songNumber={index + 1}
+                                songLink={q.songLink}
+                            />
                         ))}
                     </List>
                 ) : (

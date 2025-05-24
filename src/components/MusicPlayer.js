@@ -23,10 +23,10 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
   const [play, setPlay] = useState(false);
   const [volume, setVolume] = useState(50); // Default volume level
   const [player, setPlayer] = useState(null); // Store the YouTube player instance
-  const [playerCounter, setPlayerCounter] = useState(0); // Counter to track player readiness
+  // const [playerCounter, setPlayerCounter] = useState(0); // Counter to track player readiness
 
   const videoId = songLink ? songLink.split("v=")[1] : ""; // Extract video ID from the link
-  const disableControls = playerCounter < 2 || !videoId; // Disable buttons if player is not ready
+  const disableControls = !player || !videoId; // Disable buttons if player is not ready
   const opts = {
     playerVars: {
       autoplay: 0,
@@ -34,7 +34,7 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
   };
 
   const handlePlay = () => {
-    if (playerCounter < 2) return;
+    if (!player) return;
     player.setVolume(volume); // Prevent play if player is not ready
     if (play) {
       player.pauseVideo();
@@ -45,7 +45,7 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
   };
 
   const handleReplay = () => {
-    if (playerCounter < 2) return; // Prevent play if player is not ready
+    if (!player) return; // Prevent play if player is not ready
     player.stopVideo();
     player.playVideo();
     setPlay(true);
@@ -60,7 +60,7 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
 
   const onPlayerReady = (event) => {
     setPlayer(event.target);
-    setPlayerCounter(playerCounter + 1);
+    // setPlayerCounter(playerCounter + 1);
     // Increment the player counter since YouTube component is rendered twice
   };
 
@@ -135,7 +135,7 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
                   onClick={handleReplay}
                   disabled={disableControls}
                 >
-                  {(playerCounter < 2 && (
+                  {(!player && (
                     <CircularProgress size="50%" color="inherit" />
                   )) || <ReplayIcon />}
                 </Fab>
@@ -147,7 +147,7 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
                   onClick={handlePlay}
                   disabled={disableControls}
                 >
-                  {(playerCounter < 2 && (
+                  {(!player && (
                     <CircularProgress size="50%" color="inherit" />
                   )) ||
                     (!play ? <PlayArrowIcon /> : <PauseIcon />)}
