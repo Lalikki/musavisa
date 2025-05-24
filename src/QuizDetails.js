@@ -8,8 +8,6 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import Link from '@mui/material/Link'; // MUI Link
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -146,14 +144,13 @@ const QuizDetails = () => {
                 {quiz.questions && quiz.questions.length > 0 ? (
                     <List className="quiz-questions-list" dense>
                         {quiz.questions.map((q, index) => (
-                            <ListItem key={index} className="quiz-question-item" sx={{ display: 'block', borderBottom: '1px solid #444', pb: 1, mb: 1 }}>
-                                <Typography variant="subtitle1"><strong>Song {index + 1}:</strong> Artist - "{q.artist}", Title - "{q.song}"</Typography>
-                                {q.songLink && (
-                                    <Typography variant="body2">
-                                        Link: <Link href={q.songLink} target="_blank" rel="noopener noreferrer" color="secondary">{q.artist} - {q.song}</Link>
-                                    </Typography>
-                                )}
-                            </ListItem>
+                            <MusicPlayer
+                		key={index}
+                		artist={q.artist}
+                		song={q.song}
+                		songNumber={index + 1}
+                		songLink={q.songLink}
+              			/>
                         ))}
                     </List>
                 ) : (
