@@ -100,7 +100,7 @@ const ShareQuizModal = ({ open, onClose, quiz }) => {
                 {loadingUsers ? (
                     <CircularProgress />
                 ) : usersList.length === 0 ? (
-                    <Typography>No other users available to share with, or all eligible users have already been shared with.</Typography>
+                    <Typography>All eligible users have already been shared with.</Typography>
                 ) : (
                     <RadioGroup
                         aria-label="select user"

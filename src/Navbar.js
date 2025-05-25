@@ -22,12 +22,17 @@ import './Navbar.css';
 import LogoutIcon from '@mui/icons-material/Logout'; // Import LogoutIcon
 import { auth, provider, db } from "./firebase"; // Assuming provider and db are exported
 import { onAuthStateChanged, signOut, signInWithPopup } from "firebase/auth";
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"; // Import Firestore functions
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const Navbar = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { t, i18n } = useTranslation(); // Hook for translations
     const [currentUser, setCurrentUser] = useState(null);
 
     useEffect(() => {
@@ -88,13 +93,18 @@ const Navbar = () => {
     };
 
     const navItems = [
-        { label: "Home", path: "/", icon: <HomeIcon /> },
-        { label: "All Quizzes", path: "/quizzes", icon: <ListAltIcon /> },
-        { label: "My Quizzes", path: "/my-quizzes", icon: <PlaylistAddCheckIcon />, requiresAuth: true }, // Requires auth
-        { label: "My Answers", path: "/my-answers", icon: <FactCheckIcon />, requiresAuth: true }, // Requires auth
-        { label: "New Quiz", path: "/quiz", icon: <QuizIcon />, requiresAuth: true }, // Requires auth
-        { label: "Highscores", path: "/highscores", icon: <EmojiEventsIcon />, requiresAuth: true }, // Requires auth
+        { labelKey: "navbar.home", path: "/", icon: <HomeIcon /> },
+        { labelKey: "navbar.allQuizzes", path: "/quizzes", icon: <ListAltIcon /> },
+        { labelKey: "navbar.myQuizzes", path: "/my-quizzes", icon: <PlaylistAddCheckIcon />, requiresAuth: true },
+        { labelKey: "navbar.myAnswers", path: "/my-answers", icon: <FactCheckIcon />, requiresAuth: true },
+        { labelKey: "navbar.newQuiz", path: "/quiz", icon: <QuizIcon />, requiresAuth: true },
+        { labelKey: "navbar.highscores", path: "/highscores", icon: <EmojiEventsIcon />, requiresAuth: true },
     ];
+
+    const handleLanguageChange = (event) => {
+        const lang = event.target.value;
+        i18n.changeLanguage(lang);
+    };
 
     const drawer = (
         <div onClick={handleDrawerToggle} className="mobile-drawer">
@@ -107,7 +117,7 @@ const Navbar = () => {
                                 <ListItemIcon className="mobile-drawer-icon">
                                     {item.icon}
                                 </ListItemIcon>
-                                <ListItemText primary={item.label} className="mobile-drawer-text" />
+                                <ListItemText primary={t(item.labelKey)} className="mobile-drawer-text" />
                             </ListItemButton>
                         </ListItem>
                     )
@@ -118,7 +128,7 @@ const Navbar = () => {
                             <ListItemIcon className="mobile-drawer-icon">
                                 <LogoutIcon />
                             </ListItemIcon>
-                            <ListItemText primary="Logout" className="mobile-drawer-text" />
+                            <ListItemText primary={t('navbar.logout')} className="mobile-drawer-text" />
                         </ListItemButton>
                     </ListItem>
                 ) : (
@@ -127,7 +137,7 @@ const Navbar = () => {
                             <ListItemIcon className="mobile-drawer-icon">
                                 <LoginIcon />
                             </ListItemIcon>
-                            <ListItemText primary="Login" className="mobile-drawer-text" />
+                            <ListItemText primary={t('navbar.login')} className="mobile-drawer-text" />
                         </ListItemButton>
                     </ListItem>
                 )}
@@ -158,19 +168,34 @@ const Navbar = () => {
                                     to={item.path}
                                     className={`navbar-button ${location.pathname === item.path && item.path ? "active" : ""}`}
                                     startIcon={item.icon}
-                                >{item.label}</Button>
+                                >{t(item.labelKey)}</Button>
                             )
                         ))}
                         {currentUser ? (
                             <Button onClick={handleLogout} className="navbar-button" startIcon={<LogoutIcon />}>
-                                Logout
+                                {t('navbar.logout')}
                             </Button>
                         ) : (
                             <Button onClick={handleLogin} className={`navbar-button`} startIcon={<LoginIcon />}>
-                                Login
+                                {t('navbar.login')}
                             </Button>
                         )}
                     </div>
+                    <FormControl sx={{ m: 1, minWidth: 100, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.23) !important' }, '& .MuiSvgIcon-root': { color: 'white' } }} size="small">
+                        {/* <InputLabel id="language-select-label" sx={{color: 'white'}}>Language</InputLabel> // Optional label */}
+                        <Select
+                            labelId="language-select-label"
+                            id="language-select"
+                            value={i18n.language.split('-')[0]} // Use base language (e.g., 'en' from 'en-US')
+                            onChange={handleLanguageChange}
+                            // label={t('navbar.language')} // Optional label, if you use InputLabel
+                            sx={{ color: 'white', '.MuiSelect-select': { paddingRight: '24px' } }} // Ensure text is white
+                            variant="outlined" // Or "standard" / "filled" if you prefer
+                        >
+                            <MenuItem value="fi">FI</MenuItem>
+                            <MenuItem value="en">EN</MenuItem>
+                        </Select>
+                    </FormControl>
                 </Toolbar>
             </AppBar>
             <Drawer open={mobileOpen} onClose={handleDrawerToggle} ModalProps={{ keepMounted: true /* Better open performance on mobile. */ }}>

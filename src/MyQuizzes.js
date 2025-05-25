@@ -274,8 +274,16 @@ const MyQuizzes = () => {
                                     <TableCell data-label="Songs" sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
                                     <TableCell data-label="Created By" sx={mobileCardCellStyle(theme)}>{quiz.creatorName || 'Unknown'}</TableCell>
                                     <TableCell data-label="Actions" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2), '& button': { marginRight: theme.spacing(1), marginBottom: theme.spacing(1) } } }}>
-                                        <Button className="view-action-button" variant="outlined" color="primary" to={`/answer-quiz/${quiz.id}`} startIcon={<MediaBluetoothOnIcon />} component={Link}>
-                                            Answer
+                                        <Button
+                                            className="view-action-button"
+                                            variant="outlined"
+                                            color="primary"
+                                            to={`/my-quizzes/${quiz.id}`}
+                                            startIcon={<MediaBluetoothOnIcon />}
+                                            component={Link}
+                                            sx={{ mr: { sm: 1 } }} // Add margin-right on small screens and up
+                                        >
+                                            Host
                                         </Button>
                                         {/* You might add a "View Details" button here too if needed */}
                                     </TableCell>
