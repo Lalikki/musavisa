@@ -41,8 +41,8 @@ const AnswerQuiz = () => {
                 if (quizDocSnap.exists()) {
                     const quizData = { id: quizDocSnap.id, ...quizDocSnap.data() };
                     setQuiz(quizData);
-                    // Initialize answers array based on the number of songs
-                    setAnswers(Array(quizData.amount).fill({ artist: '', songName: '' }));
+                    // Initialize answers array based on the number of songs, including the new hint flag
+                    setAnswers(Array(quizData.amount).fill({ artist: '', songName: '', showEasterEggHint: false }));
                 } else {
                     setError('Quiz not found.');
                 }
@@ -69,7 +69,17 @@ const AnswerQuiz = () => {
 
     const handleAnswerChange = (index, field, value) => {
         const newAnswers = [...answers];
-        newAnswers[index] = { ...newAnswers[index], [field]: value };
+        let showHint = newAnswers[index].showEasterEggHint; // Preserve current hint state by default
+
+        if (field === 'artist') {
+            const lowerCaseValue = value.toLowerCase();
+            if (lowerCaseValue === 'sum 41' || lowerCaseValue === 'blink 182') {
+                showHint = true;
+            } else {
+                showHint = false;
+            }
+        }
+        newAnswers[index] = { ...newAnswers[index], [field]: value, showEasterEggHint: showHint };
         setAnswers(newAnswers);
     };
 
@@ -130,7 +140,7 @@ const AnswerQuiz = () => {
             } else {
                 // Stay on the page, maybe clear the form or show a message
                 // For now, just show success message and clear form state
-                setAnswers(Array(quiz.amount).fill({ artist: '', songName: '' })); // Clear form
+                setAnswers(Array(quiz.amount).fill({ artist: '', songName: '', showEasterEggHint: false })); // Clear form
                 setIsReadyForReview(false); // Reset checkbox
                 setTeamSize(1); // Reset team size
                 setTeamMembers([]); // Reset team members
@@ -140,6 +150,47 @@ const AnswerQuiz = () => {
         } catch (err) {
             console.error("Error submitting answers:", err);
             setSubmitError("Failed to submit answers. Please try again. " + err.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleSubmitAndReview = async (e) => {
+        e.preventDefault(); // Prevent default if it's part of a form, though Button onClick won't by default
+        if (!user) {
+            setSubmitError("You must be logged in to submit answers.");
+            return;
+        }
+        if (!quiz) {
+            setSubmitError("Quiz data is not loaded yet.");
+            return;
+        }
+
+        setSubmitting(true);
+        setSubmitSuccess('');
+        setSubmitError('');
+
+        try {
+            const answerData = {
+                quizId: quiz.id,
+                quizTitle: quiz.title,
+                answers: answers,
+                answerCreatorId: user.uid,
+                answerCreatorName: user.displayName || "Anonymous",
+                submittedAt: serverTimestamp(),
+                score: 0,
+                teamSize: teamSize,
+                teamMembers: teamMembers.filter(name => name.trim() !== ''),
+                isChecked: true // Always true for this action
+            };
+
+            const docRef = await addDoc(collection(db, "quizAnswers"), answerData);
+            setSubmitSuccess("Your answers have been submitted and marked for review!");
+            navigate(`/my-answers/${docRef.id}`); // Redirect to Answer Details page
+
+        } catch (err) {
+            console.error("Error submitting answers for review:", err);
+            setSubmitError("Failed to submit answers for review. Please try again. " + err.message);
         } finally {
             setSubmitting(false);
         }
@@ -202,6 +253,11 @@ const AnswerQuiz = () => {
                         <Typography variant="h6" component="h4" gutterBottom>
                             Song {index + 1}
                         </Typography>
+                        {answer.showEasterEggHint && (
+                            <Typography variant="caption" color="secondary" sx={{ display: 'block', mb: 0.5, textAlign: 'left' }}>
+                                Or was it the other one?
+                            </Typography>
+                        )}
                         <TextField
                             label="Artist"
                             variant="outlined"
@@ -226,21 +282,23 @@ const AnswerQuiz = () => {
                         />
                     </Box>
                 ))}
-                <FormControlLabel
-                    control={
-                        <Checkbox
-                            id="readyForReviewCheckbox"
-                            checked={isReadyForReview}
-                            onChange={e => setIsReadyForReview(e.target.checked)}
-                        />
-                    }
-                    label="Mark as Ready for Review"
-                    className="is-ready-checkbox-container"
-                    sx={{ display: 'block', mt: 1, mb: 2 }}
-                />
-                <Button type="submit" variant="contained" color="primary" fullWidth disabled={submitting} className="button-submit-answers">
-                    {submitting ? 'Submitting...' : 'Submit Answers'}
-                </Button>
+
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 2 }}>
+                    <Button type="submit" variant="outlined" fullWidth disabled={submitting} className="button-submit-answers">
+                        {submitting ? 'Submitting...' : 'Submit Answers'}
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        disabled={submitting}
+                        onClick={handleSubmitAndReview} // Use the new handler
+                        className="button-submit-review"
+                    >
+                        {submitting ? 'Submitting...' : 'Submit and Review'}
+                    </Button>
+                </Box>
+
                 {submitSuccess && (
                     <Typography color="success.main" sx={{ mt: 2, textAlign: 'center' }} className="success-text form-message">
                         {submitSuccess}

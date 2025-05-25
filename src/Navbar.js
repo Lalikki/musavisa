@@ -20,8 +20,9 @@ import LoginIcon from '@mui/icons-material/Login';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'; // Icon for Highscores
 import './Navbar.css';
 import LogoutIcon from '@mui/icons-material/Logout'; // Import LogoutIcon
-import { auth, provider } from "./firebase"; // Import Firebase auth instance and provider
+import { auth, provider, db } from "./firebase"; // Assuming provider and db are exported
 import { onAuthStateChanged, signOut, signInWithPopup } from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"; // Import Firestore functions
 
 const Navbar = () => {
     const location = useLocation();
@@ -51,11 +52,38 @@ const Navbar = () => {
 
     const handleLogin = async () => {
         try {
-            await signInWithPopup(auth, provider);
-            // Navigation after login can be handled by onAuthStateChanged or by redirecting here if needed
+            console.log("Attempting login..."); // New log: Entry point
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            console.log("signInWithPopup successful, result.user:", user); // Log user object
+            console.log("Firestore db instance:", db); // New log: Check db instance
+
+            if (user) {
+                // Check if user exists in Firestore 'users' collection
+                const userDocRef = doc(db, "users", user.uid);
+                console.log("Attempting to get user document from Firestore for UID:", user.uid);
+                const docSnap = await getDoc(userDocRef);
+
+                if (!docSnap.exists()) {
+                    console.log("User document does not exist. Creating new document...");
+                    // User doesn't exist, create a new document
+                    await setDoc(userDocRef, {
+                        uid: user.uid,
+                        displayName: user.displayName || "Anonymous",
+                        email: user.email,
+                        createdAt: serverTimestamp(), // Optional: timestamp of creation
+                        // You can add any other default fields here
+                    });
+                    console.log("SUCCESS: User document CREATED in Firestore for UID:", user.uid);
+                } else {
+                    console.log("INFO: User document ALREADY EXISTS for UID:", user.uid, docSnap.data());
+                }
+            }
+            // onAuthStateChanged will update currentUser state and handle UI updates
         } catch (error) {
-            console.error("Login failed: ", error);
-            alert("Login failed: " + error.message); // Optional: show alert to user
+            console.error("ERROR in handleLogin (Login or Firestore operation): ", error);
+            alert("Login failed or could not save user data: " + error.message + "\nCheck console for more details.");
         }
     };
 

@@ -12,20 +12,27 @@ import EditIcon from '@mui/icons-material/Edit';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box'; // Import Box
 import MediaBluetoothOnIcon from '@mui/icons-material/MediaBluetoothOn';
+import ShareIcon from '@mui/icons-material/Share'; // Import ShareIcon
 import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { onAuthStateChanged } from 'firebase/auth';
 import { format } from 'date-fns'; // For formatting dates
 import Typography from '@mui/material/Typography'; // Import Typography
 import { Link } from 'react-router-dom';
+import ShareQuizModal from './ShareQuizModal'; // We will create this component
 
 const MyQuizzes = () => {
     const [user, setUser] = useState(null);
-    const [quizzes, setQuizzes] = useState([]);
+    const [myQuizzes, setMyQuizzes] = useState([]); // Renamed from quizzes
+    const [sharedQuizzes, setSharedQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingShared, setLoadingShared] = useState(true);
     const [error, setError] = useState(null);
+    const [errorShared, setErrorShared] = useState(null);
     const [expandedQuizId, setExpandedQuizId] = useState(null);
-    const [quizAnswers, setQuizAnswers] = useState([]);
+    // const [quizAnswers, setQuizAnswers] = useState([]); // This state seems unused here, consider removing if not needed for this component's direct logic
     const theme = useTheme(); // Get the theme object
+    const [shareModalOpen, setShareModalOpen] = useState(false);
+    const [quizToShare, setQuizToShare] = useState(null);
 
 
     useEffect(() => {
@@ -33,8 +40,10 @@ const MyQuizzes = () => {
             setUser(currentUser);
             if (currentUser) {
                 fetchUserQuizzes(currentUser.uid);
+                fetchSharedQuizzes(currentUser.uid);
             } else {
-                setQuizzes([]); // Clear quizzes if user logs out
+                setMyQuizzes([]); // Clear quizzes if user logs out
+                setSharedQuizzes([]);
                 setExpandedQuizId(null); // Reset expanded quiz
                 setLoading(false);
             }
@@ -59,7 +68,7 @@ const MyQuizzes = () => {
                 ...doc.data(),
                 createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : null,
             }));
-            setQuizzes(userQuizzesData);
+            setMyQuizzes(userQuizzesData);
         } catch (err) {
             console.error("Error fetching user quizzes:", err);
             setError("Failed to load your quizzes. Please try again. You might need to create a Firestore index.");
@@ -68,11 +77,47 @@ const MyQuizzes = () => {
         }
     };
 
+    const fetchSharedQuizzes = async (uid) => {
+        setLoadingShared(true);
+        setErrorShared(null);
+        try {
+            const quizzesCollectionRef = collection(db, "quizzes");
+            // Query for quizzes where the sharedWithUids array contains the current user's UID
+            const q = query(
+                quizzesCollectionRef,
+                where("sharedWithUids", "array-contains", uid),
+                orderBy("createdAt", "desc") // Optional: order them as well
+            );
+            const querySnapshot = await getDocs(q);
+            const sharedQuizzesData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : null,
+            }));
+            setSharedQuizzes(sharedQuizzesData);
+        } catch (err) {
+            console.error("Error fetching shared quizzes:", err);
+            setErrorShared("Failed to load quizzes shared with you. Please try again.");
+        } finally {
+            setLoadingShared(false);
+        }
+    };
+
+    const handleOpenShareModal = (quiz) => {
+        setQuizToShare(quiz);
+        setShareModalOpen(true);
+    };
+
+    const handleCloseShareModal = () => {
+        setQuizToShare(null);
+        setShareModalOpen(false);
+    };
+
     if (!user && !loading) {
         return <Typography sx={{ textAlign: 'center', mt: 3 }}>Please log in to see the quizzes you've created.</Typography>;
     }
-    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading your quizzes...</Typography>;
-    if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error}</Typography>;
+    // Combined loading state for initial page load
+    if (loading || loadingShared) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading quizzes...</Typography>;
 
     return (
         <Box
@@ -86,12 +131,13 @@ const MyQuizzes = () => {
             <Typography variant="h4" component="h1" gutterBottom align="center">
                 My Created Quizzes
             </Typography>
-            {quizzes.length === 0 && !loading && (
+            {error && <Typography color="error" sx={{ textAlign: 'center', mt: 2, mb: 2 }} className="error-text">{error}</Typography>}
+            {myQuizzes.length === 0 && !loading && !error && (
                 <Typography sx={{ textAlign: 'center', mt: 2 }}>
                     You haven't created any quizzes yet. <Link to="/quiz" style={{ color: 'inherit' }}>Create one now!</Link>
                 </Typography>
             )}
-            {quizzes.length > 0 && (
+            {myQuizzes.length > 0 && (
                 <TableContainer
                     component={Paper}
                     className="table-responsive-wrapper"
@@ -113,7 +159,7 @@ const MyQuizzes = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody> {/* Use TableBody */}
-                            {quizzes.map(quiz => (
+                            {myQuizzes.map(quiz => (
                                 <React.Fragment key={quiz.id}>
                                     <TableRow
                                         className="quizzes-table-data-row"
@@ -152,9 +198,88 @@ const MyQuizzes = () => {
                                             <Button className="view-action-button" variant="outlined" color="primary" to={`/edit-quiz/${quiz.id}`} startIcon={<EditIcon />} component={Link}>
                                                 Edit
                                             </Button>
+                                            <Button
+                                                className="view-action-button"
+                                                variant="outlined"
+                                                color="secondary" // Or your preferred color
+                                                onClick={() => handleOpenShareModal(quiz)}
+                                                startIcon={<ShareIcon />}
+                                                sx={{ ml: { sm: 1 } }} // Add margin-left on small screens and up
+                                            >Share</Button>
                                         </TableCell>
                                     </TableRow>
                                 </React.Fragment>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
+            {quizToShare && (
+                <ShareQuizModal
+                    open={shareModalOpen}
+                    onClose={handleCloseShareModal}
+                    quiz={quizToShare}
+                />
+            )}
+
+            {/* Quizzes Shared With Me Section */}
+            <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mt: 5, mb: 2 }}>
+                Quizzes Shared With Me
+            </Typography>
+            {errorShared && <Typography color="error" sx={{ textAlign: 'center', mt: 2, mb: 2 }} className="error-text">{errorShared}</Typography>}
+            {sharedQuizzes.length === 0 && !loadingShared && !errorShared && (
+                <Typography sx={{ textAlign: 'center', mt: 2 }}>
+                    No quizzes have been shared with you yet.
+                </Typography>
+            )}
+            {sharedQuizzes.length > 0 && (
+                <TableContainer
+                    component={Paper}
+                    className="table-responsive-wrapper"
+                    sx={{
+                        [theme.breakpoints.down('sm')]: {
+                            backgroundColor: 'transparent',
+                            boxShadow: 'none',
+                            overflowX: 'visible',
+                        },
+                    }}
+                >
+                    <Table className="quizzes-table" aria-label="Shared Quizzes Table">
+                        <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}>
+                            <TableRow className="quizzes-table-header-row">
+                                <TableCell>Title</TableCell>
+                                <TableCell>Number of Songs</TableCell>
+                                <TableCell>Created By</TableCell> {/* Show who created/shared it */}
+                                <TableCell>Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {sharedQuizzes.map(quiz => (
+                                <TableRow
+                                    className="quizzes-table-data-row"
+                                    key={quiz.id}
+                                    sx={{
+                                        [theme.breakpoints.down('sm')]: {
+                                            display: 'block',
+                                            marginBottom: theme.spacing(2),
+                                            border: `1px solid ${theme.palette.divider}`,
+                                            backgroundColor: theme.palette.background.paper,
+                                            borderRadius: theme.shape.borderRadius,
+                                            '&:hover': { backgroundColor: theme.palette.background.paper },
+                                            '&:nth-of-type(even)': { backgroundColor: theme.palette.background.paper }
+                                        },
+                                    }}
+                                >
+                                    <TableCell data-label="Title" sx={mobileCardCellStyle(theme)}>{quiz.title}</TableCell>
+                                    <TableCell data-label="Songs" sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
+                                    <TableCell data-label="Created By" sx={mobileCardCellStyle(theme)}>{quiz.creatorName || 'Unknown'}</TableCell>
+                                    <TableCell data-label="Actions" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2), '& button': { marginRight: theme.spacing(1), marginBottom: theme.spacing(1) } } }}>
+                                        <Button className="view-action-button" variant="outlined" color="primary" to={`/answer-quiz/${quiz.id}`} startIcon={<MediaBluetoothOnIcon />} component={Link}>
+                                            Answer
+                                        </Button>
+                                        {/* You might add a "View Details" button here too if needed */}
+                                    </TableCell>
+                                </TableRow>
                             ))}
                         </TableBody>
                     </Table>

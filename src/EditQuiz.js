@@ -13,6 +13,7 @@ import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const EditQuiz = () => {
     const { quizId } = useParams();
@@ -65,7 +66,9 @@ const EditQuiz = () => {
                         setTitle(data.title || "");
                         setRules(data.rules || "");
                         setAmount(data.amount ? String(data.amount) : "");
-                        setQuestions(data.questions && data.questions.length > 0 ? data.questions.map(q => ({ ...q })) : [{ songLink: "", artist: "", song: "" }]);
+                        // Ensure each loaded question has a hint field, defaulting to empty string if not present
+                        const loadedQuestions = data.questions ? data.questions.map(q => ({ ...q, hint: q.hint || "", loadingMetadata: false })) : [{ songLink: "", artist: "", song: "", hint: "", loadingMetadata: false }];
+                        setQuestions(loadedQuestions);
                         setIsReady(data.isReady || false); // Populate isReady state
                     }
                 } else {
@@ -113,7 +116,7 @@ const EditQuiz = () => {
     };
 
     const addQuestion = () => {
-        const newQuestions = [...questions, { songLink: "", artist: "", song: "" }];
+        const newQuestions = [...questions, { songLink: "", artist: "", song: "", hint: "", loadingMetadata: false }];
         setQuestions(newQuestions);
         setAmount(String(newQuestions.length));
     };
@@ -122,6 +125,22 @@ const EditQuiz = () => {
         const newQuestions = questions.filter((_, i) => i !== index);
         setQuestions(newQuestions);
         setAmount(String(newQuestions.length));
+    };
+
+    const onDragEnd = (result) => {
+        // dropped outside the list
+        if (!result.destination) {
+            return;
+        }
+
+        const items = Array.from(questions);
+        const [reorderedItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderedItem);
+
+        setQuestions(items);
+        // Note: We don't need to update 'amount' here as the number of questions hasn't changed,
+        // only their order. If 'amount' was strictly tied to the array length for other reasons,
+        // you might consider it, but for reordering, it's usually not necessary.
     };
 
     const handleSubmit = async (e) => {
@@ -228,57 +247,87 @@ const EditQuiz = () => {
                 <Typography variant="h6" component="h3" gutterBottom sx={{ mt: 2, mb: 1 }}>
                     Song Entries
                 </Typography>
-                {questions.map((q, index) => (
-                    <Paper key={index} elevation={1} sx={{ p: { xs: 0.5, sm: 1 }, mb: 1 }} className="question-entry-box">
-                        <Typography variant="subtitle1" component="h4" gutterBottom>
-                            Song {index + 1}
-                        </Typography>
-                        <TextField
-                            label="Song Link (Optional)"
-                            variant="outlined"
-                            fullWidth
-                            margin="dense"
-                            value={q.songLink}
-                            onChange={e => handleQuestionChange(index, "songLink", e.target.value)}
-                            className="form-input-question"
-                            InputLabelProps={{ shrink: true }}
-                        />
-                        <TextField
-                            label="Artist"
-                            variant="outlined"
-                            fullWidth
-                            margin="dense"
-                            value={q.artist}
-                            onChange={e => handleQuestionChange(index, "artist", e.target.value)}
-                            required
-                            className="form-input-question"
-                            InputLabelProps={{ shrink: true }}
-                        />
-                        <TextField
-                            label="Song Title"
-                            variant="outlined"
-                            fullWidth
-                            margin="dense"
-                            value={q.song}
-                            onChange={e => handleQuestionChange(index, "song", e.target.value)}
-                            required
-                            className="form-input-question"
-                            InputLabelProps={{ shrink: true }}
-                        />
-                        {questions.length > 0 && ( // Show remove only if there are questions
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                startIcon={<RemoveCircleOutlineIcon />}
-                                onClick={() => removeQuestion(index)}
-                                sx={{ mt: 0.5, mb: 0.5 }}
-                                className="button-remove-question"
-                            >
-                                Remove Song
-                            </Button>
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="questionsDroppable">
+                        {(provided) => (
+                            <Box {...provided.droppableProps} ref={provided.innerRef}>
+                                {questions.map((q, index) => (
+                                    <Draggable key={`question-${index}`} draggableId={`question-${index}`} index={index}>
+                                        {(provided) => (
+                                            <Paper
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                elevation={1}
+                                                sx={{ p: { xs: 0.5, sm: 1 }, mb: 1 }}
+                                                className="question-entry-box"
+                                            >
+                                                <Typography variant="subtitle1" component="h4" gutterBottom>
+                                                    Song {index + 1} (Drag to reorder)
+                                                </Typography>
+                                                <TextField
+                                                    label="Song Link (Optional)"
+                                                    variant="outlined"
+                                                    fullWidth
+                                                    margin="dense"
+                                                    value={q.songLink}
+                                                    onChange={e => handleQuestionChange(index, "songLink", e.target.value)}
+                                                    className="form-input-question"
+                                                    InputLabelProps={{ shrink: true }}
+                                                />
+                                                <TextField
+                                                    label="Artist"
+                                                    variant="outlined"
+                                                    fullWidth
+                                                    margin="dense"
+                                                    value={q.artist}
+                                                    onChange={e => handleQuestionChange(index, "artist", e.target.value)}
+                                                    required
+                                                    className="form-input-question"
+                                                    InputLabelProps={{ shrink: true }}
+                                                />
+                                                <TextField
+                                                    label="Song Title"
+                                                    variant="outlined"
+                                                    fullWidth
+                                                    margin="dense"
+                                                    value={q.song}
+                                                    onChange={e => handleQuestionChange(index, "song", e.target.value)}
+                                                    required
+                                                    className="form-input-question"
+                                                    InputLabelProps={{ shrink: true }}
+                                                />
+                                                <TextField
+                                                    label="Hint (Optional)"
+                                                    variant="outlined"
+                                                    fullWidth
+                                                    margin="dense"
+                                                    value={q.hint || ''} // Ensure value is controlled, default to empty string
+                                                    onChange={e => handleQuestionChange(index, "hint", e.target.value)}
+                                                    className="form-input-question"
+                                                    InputLabelProps={{ shrink: true }}
+                                                />
+                                                {questions.length > 0 && (
+                                                    <Button
+                                                        variant="outlined"
+                                                        color="error"
+                                                        startIcon={<RemoveCircleOutlineIcon />}
+                                                        onClick={() => removeQuestion(index)}
+                                                        sx={{ mt: 0.5, mb: 0.5 }}
+                                                        className="button-remove-question"
+                                                    >
+                                                        Remove Song
+                                                    </Button>
+                                                )}
+                                            </Paper>
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                            </Box>
                         )}
-                    </Paper>
-                ))}
+                    </Droppable>
+                </DragDropContext>
                 <Button
                     variant="outlined"
                     startIcon={<AddCircleOutlineIcon />}

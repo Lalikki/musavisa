@@ -37,7 +37,6 @@ const AnswerDetails = () => {
     const [isCompleting, setIsCompleting] = useState(false);
     const [completeError, setCompleteError] = useState(null);
     const [isAutoCalculating, setIsAutoCalculating] = useState(false); // Keep this for button text
-    const [scoreMode, setScoreMode] = useState('manual'); // 'manual' or 'auto'
     const theme = useTheme();
 
     useEffect(() => {
@@ -265,25 +264,22 @@ const AnswerDetails = () => {
                 </Typography>
                 <Typography variant="body1"><strong>Current Saved Score:</strong> {quizAnswer.score} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</Typography>
                 <Typography variant="body1">
-                    <strong>{scoreMode === 'auto' ? 'Auto-Calculated Score (Live):' : 'Manually Assessed Score (Live):'}</strong>
+                    <strong>Live Score (Manual or Auto-Calculated):</strong>
                     {' '}{totalSelfAssessedScore} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}
                 </Typography>
+                {/* Moved Auto-Calculate button here */}
+                {canSelfAssess && !quizAnswer.isCompleted && (
+                    <Button
+                        variant="contained"
+                        onClick={handleAutoCalculateScore}
+                        disabled={isSavingAssessment || isCompleting || isAutoCalculating}
+                        className="button-auto-calculate"
+                        sx={{ mt: 2, display: 'block', mx: 'auto' }} // Added display:block and mx:auto for centering
+                    >
+                        {isAutoCalculating || isSavingAssessment ? 'Calculating...' : 'Automatically Calculate'}
+                    </Button>
+                )}
             </Paper>
-
-            {canSelfAssess && (
-                <Box className="score-mode-selector" sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                id="scoreModeCheckbox"
-                                checked={scoreMode === 'auto'}
-                                onChange={(e) => setScoreMode(e.target.checked ? 'auto' : 'manual')}
-                            />
-                        }
-                        label="Calculate Score Automatically"
-                    />
-                </Box>
-            )}
 
             <Typography variant="h5" component="h2" gutterBottom align="center">Your Guesses</Typography>
             <Paper // New Paper wrapper for the "Your Guesses" section
@@ -366,8 +362,8 @@ const AnswerDetails = () => {
                                                 id={`manual-score-${index}`}
                                                 value={selfAssessedSongScores[index] !== undefined ? selfAssessedSongScores[index] : 0}
                                                 onChange={(e) => handleSelfAssessedScoreChange(index, e.target.value)}
-                                                disabled={!canSelfAssess || scoreMode === 'auto' || quizAnswer.isCompleted}
-                                                IconComponent={(!canSelfAssess || scoreMode === 'auto' || quizAnswer.isCompleted) ? () => null : undefined} // Hide icon when disabled or completed
+                                                disabled={!canSelfAssess || quizAnswer.isCompleted || (!guess.artist && !guess.songName)}
+                                                IconComponent={(!canSelfAssess || quizAnswer.isCompleted || (!guess.artist && !guess.songName)) ? () => null : undefined}
                                                 sx={quizAnswer.isCompleted ? {
                                                     '& .MuiInputBase-input.Mui-disabled': { // Target the input part for text color
                                                         WebkitTextFillColor: theme.palette.text.secondary,
@@ -396,17 +392,6 @@ const AnswerDetails = () => {
                     <Typography sx={{ textAlign: 'center', mt: 2 }}>No guesses recorded for this submission.</Typography>
                 )}
             </Paper>
-            {canSelfAssess && scoreMode === 'auto' && !quizAnswer.isCompleted && (
-                <Button
-                    variant="contained"
-                    onClick={handleAutoCalculateScore}
-                    disabled={isSavingAssessment || isCompleting || isAutoCalculating}
-                    className="button-auto-calculate"
-                    sx={{ mt: 2, mb: 1, display: 'block', mx: 'auto' }}
-                >
-                    {isAutoCalculating || isSavingAssessment ? 'Calculating & Saving...' : 'Automatically Calculate & Save Score'}
-                </Button>
-            )}
             {canSelfAssess && !quizAnswer.isCompleted && (
 
                 <Box
@@ -427,7 +412,7 @@ const AnswerDetails = () => {
                         className="button-save-assessment"
                     // sx prop can be removed if default gap is sufficient
                     >
-                        {isSavingAssessment ? 'Saving...' : 'Save My Assessment'}
+                        {isSavingAssessment ? 'Saving...' : 'Save'}
                     </Button>
                     <Button
                         variant="contained"
@@ -437,7 +422,7 @@ const AnswerDetails = () => {
                         className="button-save-complete-assessment"
                     // sx prop can be removed if default gap is sufficient
                     >
-                        {isCompleting ? 'Completing...' : 'Save and Mark as Completed'}
+                        {isCompleting ? 'Completing...' : 'Save and Complete'}
                     </Button>
                     <Button component={RouterLink} to="/my-answers" variant="text" className="back-link">Cancel</Button>
                     {completeError && <Typography color="error" sx={{ mt: 1 }} className="error-text form-message">{completeError}</Typography>}

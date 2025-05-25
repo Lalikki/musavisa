@@ -8,9 +8,9 @@ import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import LoginIcon from '@mui/icons-material/Login';
-import { auth } from './firebase';
+import { auth, provider, db } from './firebase'; // Import provider and db
 import { onAuthStateChanged, signInWithPopup } from 'firebase/auth'; // Import signInWithPopup
-import { provider } from './firebase'; // Import Firebase provider
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"; // Import Firestore functions
 import { Link } from "react-router-dom"; // Keep for other buttons
 
 const Home = ({ handleLoginOpen }) => { // Receive handleLoginOpen as a prop
@@ -25,12 +25,34 @@ const Home = ({ handleLoginOpen }) => { // Receive handleLoginOpen as a prop
 
     const handleLogin = async () => {
         try {
-            await signInWithPopup(auth, provider);
-            // User is signed in. onAuthStateChanged will update currentUser.
-            // No explicit navigation needed here as onAuthStateChanged handles UI updates.
+            console.log("Attempting login from Home.js...");
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            console.log("signInWithPopup successful from Home.js, result.user:", user);
+            console.log("Firestore db instance (from Home.js):", db);
+
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                console.log("Attempting to get user document from Firestore (Home.js) for UID:", user.uid);
+                const docSnap = await getDoc(userDocRef);
+
+                if (!docSnap.exists()) {
+                    console.log("User document does not exist (Home.js). Creating new document...");
+                    await setDoc(userDocRef, {
+                        uid: user.uid,
+                        displayName: user.displayName || "Anonymous",
+                        email: user.email,
+                        createdAt: serverTimestamp(),
+                    });
+                    console.log("SUCCESS: User document CREATED in Firestore (Home.js) for UID:", user.uid);
+                } else {
+                    console.log("INFO: User document ALREADY EXISTS (Home.js) for UID:", user.uid, docSnap.data());
+                }
+            }
         } catch (error) {
-            console.error("Login failed: ", error);
-            alert("Login failed: " + error.message); // Optional: show alert to user
+            console.error("ERROR in handleLogin from Home.js (Login or Firestore operation): ", error);
+            alert("Login failed or could not save user data: " + error.message + "\nCheck console for more details.");
         }
     };
 

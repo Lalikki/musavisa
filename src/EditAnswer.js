@@ -151,14 +151,14 @@ const EditAnswer = () => {
         try {
             const answerDocRef = doc(db, 'quizAnswers', answerId);
             await updateDoc(answerDocRef, {
+                answers: editedAnswers, // Save current answers
                 isChecked: true,
                 // score: calculatedScore,
                 // Optionally, add a 'markedReadyAt': serverTimestamp() field
             });
-            // Navigate back or show success, and disable further editing
-            navigate('/my-answers');
+            navigate(`/my-answers/${answerId}`); // Navigate to the details page of this answer
         } catch (err) {
-            console.error("Error marking answer as ready:", err);
+            console.error("Error saving and marking answer as ready:", err);
             setMarkReadyError('Failed to mark as ready or save score. Please try again. ' + err.message);
         } finally {
             setMarkingReady(false);
@@ -210,7 +210,6 @@ const EditAnswer = () => {
                             id={`edit-artist-${index}`}
                             value={answer.artist}
                             onChange={(e) => handleAnswerChange(index, 'artist', e.target.value)}
-                            required
                             className="artist-input"
                             InputLabelProps={{ shrink: true }}
                         />
@@ -222,7 +221,6 @@ const EditAnswer = () => {
                             id={`edit-songName-${index}`}
                             value={answer.songName}
                             onChange={(e) => handleAnswerChange(index, 'songName', e.target.value)}
-                            required
                             className="songname-input"
                             InputLabelProps={{ shrink: true }}
                         />
