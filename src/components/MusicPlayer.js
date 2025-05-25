@@ -1,12 +1,4 @@
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Slider,
-  Fab,
-  CircularProgress,
-} from "@mui/material";
+import { Box, Card, CardContent, Typography, Slider, Fab, CircularProgress, Popover, useTheme, useMediaQuery } from '@mui/material';
 import {
   PlayArrow as PlayArrowIcon,
   Pause as PauseIcon,
@@ -14,19 +6,30 @@ import {
   VolumeUp as VolumeUpIcon,
   Replay as ReplayIcon,
   OpenInNew as OpenInNewIcon,
-} from "@mui/icons-material";
-import { useState } from "react";
-import * as React from "react";
-import YouTube from "react-youtube";
+  HelpOutlineOutlined as HelpOutlineOutlinedIcon,
+} from '@mui/icons-material';
+import { useState } from 'react';
+import * as React from 'react';
+import YouTube from 'react-youtube';
 
-export default function MusicPlayer({ artist, song, songNumber, songLink }) {
+export default function MusicPlayer({ artist, song, songNumber, songLink, hint }) {
   const [play, setPlay] = useState(false);
   const [volume, setVolume] = useState(50); // Default volume level
   const [player, setPlayer] = useState(null); // Store the YouTube player instance
   // const [playerCounter, setPlayerCounter] = useState(0); // Counter to track player readiness
+  const [popoverHintAnchorEl, setPopoverHintAnchorEl] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const videoId = songLink ? songLink.split("v=")[1] : ""; // Extract video ID from the link
-  const disableControls = !player || !videoId; // Disable buttons if player is not ready
+  const popoverHintOpen = Boolean(popoverHintAnchorEl);
+  const popoverHintId = popoverHintOpen ? 'simple-popover' : undefined;
+
+  const videoId = () => {
+    const regex = /(?:youtu\.be\/|youtube\.com\/(?:.*v=|v\/|embed\/|shorts\/))([\w-]{11})/;
+    const match = songLink.match(regex);
+    return match ? match[1] : null;
+  };
+  const disableControls = !player || !videoId(); // Disable buttons if player is not ready
   const opts = {
     playerVars: {
       autoplay: 0,
@@ -58,27 +61,27 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
     }
   };
 
-  const onPlayerReady = (event) => {
+  const onPlayerReady = event => {
     setPlayer(event.target);
     // setPlayerCounter(playerCounter + 1);
     // Increment the player counter since YouTube component is rendered twice
   };
 
-  const onPlayerStateChange = (event) => {
+  const onPlayerStateChange = event => {
     // Handle player state changes
   };
 
   return (
-    <Card sx={{ mb: 1 }}>
+    <Card sx={{ mb: 1 }} elevation={3}>
       <Typography
         variant="h1"
         sx={{
           ml: 1,
-          position: "absolute", // Position it absolutely within the card
-          fontWeight: "bold", // Make it bold for emphasis
+          position: 'absolute', // Position it absolutely within the card
+          fontWeight: 'bold', // Make it bold for emphasis
           zIndex: 0, // Ensure it stays in the background
-          pointerEvents: "none", // Prevent it from interfering with interactions
-          whiteSpace: "nowrap", // Prevent text wrapping
+          pointerEvents: 'none', // Prevent it from interfering with interactions
+          whiteSpace: 'nowrap', // Prevent text wrapping
           opacity: 0.2,
         }}
       >
@@ -87,9 +90,9 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
       <Box
         id="main-box"
         sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
           zIndex: 1,
         }}
       >
@@ -97,97 +100,75 @@ export default function MusicPlayer({ artist, song, songNumber, songLink }) {
           id="card-content"
           sx={{
             ml: 3,
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            width: "100%",
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
           }}
         >
           <Box sx={{ mr: 1 }}>
             <Typography component="div" variant="h6">
               {song}
+              {hint && <HelpOutlineOutlinedIcon fontSize="small" color="disabled" onClick={e => setPopoverHintAnchorEl(e.currentTarget)} sx={{ ml: 0.5 }} />}
             </Typography>
-            <Typography
-              variant="subtitle1"
-              component="div"
-              sx={{ color: "text.secondary" }}
+            <Popover
+              id={popoverHintId}
+              open={popoverHintOpen}
+              anchorEl={popoverHintAnchorEl}
+              onClose={() => setPopoverHintAnchorEl(null)}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              sx={{ width: isMobile ? '100svw' : '70svw' }}
+              disableEnforceFocus
             >
+              <Typography sx={{ p: 1 }}>{hint}</Typography>
+            </Popover>
+            <Typography variant="subtitle1" component="div" sx={{ color: 'text.secondary' }}>
               {artist}
             </Typography>
           </Box>
-          {videoId && (
+          {videoId() && (
             <Box
               id="controls-box"
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignSelf: "center",
-                marginLeft: "auto",
+                display: 'flex',
+                flexDirection: 'column',
+                alignSelf: 'center',
+                marginLeft: 'auto',
                 mr: 1,
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Fab
-                  color="secondary"
-                  aria-label="replay"
-                  size="small"
-                  sx={{ justifySelf: "center", mr: 1 }}
-                  onClick={handleReplay}
-                  disabled={disableControls}
-                >
-                  {(!player && (
-                    <CircularProgress size="50%" color="inherit" />
-                  )) || <ReplayIcon />}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Fab color="secondary" aria-label="replay" size="small" sx={{ justifySelf: 'center', mr: 1 }} onClick={handleReplay} disabled={disableControls}>
+                  {(!player && <CircularProgress size="50%" color="inherit" />) || <ReplayIcon />}
                 </Fab>
-                <Fab
-                  color="primary"
-                  aria-label="play"
-                  size="medium"
-                  sx={{ justifySelf: "center", mr: 1 }}
-                  onClick={handlePlay}
-                  disabled={disableControls}
-                >
-                  {(!player && (
-                    <CircularProgress size="50%" color="inherit" />
-                  )) ||
-                    (!play ? <PlayArrowIcon /> : <PauseIcon />)}
+                <Fab color="primary" aria-label="play" size="medium" sx={{ justifySelf: 'center', mr: 1 }} onClick={handlePlay} disabled={disableControls}>
+                  {(!player && <CircularProgress size="50%" color="inherit" />) || (!play ? <PlayArrowIcon /> : <PauseIcon />)}
                 </Fab>
-                <Fab
-                  color="secondary"
-                  aria-label="open-tab"
-                  size="small"
-                  href={songLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  sx={{ justifySelf: "center" }}
-                  disabled={!songLink}
-                >
+                <Fab color="secondary" aria-label="open-tab" size="small" href={songLink} target="_blank" rel="noopener noreferrer" sx={{ justifySelf: 'center' }} disabled={!songLink}>
                   {<OpenInNewIcon />}
                 </Fab>
                 <YouTube
-                  videoId={videoId}
+                  videoId={videoId()}
                   opts={opts}
                   onReady={onPlayerReady}
                   onStateChange={onPlayerStateChange}
-                  style={{ display: "none" }} // Hide the YouTube player
+                  style={{ display: 'none' }} // Hide the YouTube player
                 />
               </Box>
               <Box
                 sx={{
-                  alignItems: "center",
-                  display: "flex",
-                  flexDirection: "row",
-                  width: "100%",
+                  alignItems: 'center',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  width: '100%',
                   mt: 1,
                 }}
               >
                 <VolumeDownIcon />
-                <Slider
-                  aria-label="Volume"
-                  value={volume}
-                  onChange={handleVolumeChange}
-                  disabled={disableControls}
-                />
+                <Slider aria-label="Volume" value={volume} onChange={handleVolumeChange} disabled={disableControls} />
                 <VolumeUpIcon />
               </Box>
             </Box>
