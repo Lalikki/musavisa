@@ -12,8 +12,10 @@ import Paper from '@mui/material/Paper';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const Quiz = () => {
+    const { t } = useTranslation(); // Initialize useTranslation
     const [user, setUser] = useState(null);
     const [title, setTitle] = useState("");
     const [rules, setRules] = useState("");
@@ -100,25 +102,25 @@ const Quiz = () => {
         setSuccess("");
         setError("");
         if (!title.trim()) {
-            setError("Title is required");
+            setError(t('common.error') + ": " + t('createNewQuizPage.quizTitleLabel') + " " + t('common.isRequired', 'is required')); // Example of combining for more specific error
             return;
         }
         if (!rules.trim()) {
-            setError("Rules are required");
+            setError(t('common.error') + ": " + t('createNewQuizPage.rulesOptionalLabel').replace('(Optional)', '').trim() + " " + t('common.isRequired', 'is required'));
             return;
         }
         if (!amount || isNaN(amount) || Number(amount) <= 0) {
-            setError("Amount of songs must be a positive number");
+            setError(t('common.error') + ": " + t('createNewQuizPage.amountOfSongsLabel') + " " + t('common.mustBePositive', 'must be a positive number'));
             return;
         }
         if (questions.length !== Number(amount)) {
-            setError(`Number of song entries (${questions.length}) must match the 'Amount of songs' field (${amount}).`);
+            setError(t('common.error') + ": " + t('createNewQuizPage.songEntriesErrorMismatch', { count: questions.length, amount: amount }));
             return;
         }
         // Optional: Add validation for empty fields within questions
         for (const q of questions) {
             if (!q.artist.trim() || !q.song.trim()) {
-                setError("Artist and Song fields cannot be empty for any song entry.");
+                setError(t('common.error') + ": " + t('createNewQuizPage.songEntryFieldsRequired'));
                 return;
             }
         }
@@ -128,19 +130,19 @@ const Quiz = () => {
                 rules, // Changed from description
                 amount: Number(amount),
                 createdBy: user ? user.uid : "unknown", // Handle case where user might be null briefly
-                creatorName: user ? user.displayName : "Unknown", // Store display name
+                creatorName: user ? user.displayName : t('common.unnamedUser', "Unknown"), // Store display name
                 createdAt: serverTimestamp(),
                 questions,
                 isReady // Add isReady field to Firestore document
             });
-            setSuccess("Quiz created successfully!");
+            setSuccess(t('createNewQuizPage.createQuizSuccess'));
             setTitle("");
             setRules(""); // Changed from setDescription
             setAmount("");
             setQuestions([{ songLink: "", artist: "", song: "", hint: "", loadingMetadata: false }]); // Reset questions
             setIsReady(false); // Reset isReady checkbox
         } catch (err) {
-            setError("Failed to create quiz: " + err.message);
+            setError(t('createNewQuizPage.createQuizError') + ": " + err.message);
         }
     };
 
@@ -157,10 +159,10 @@ const Quiz = () => {
             {user ? (
                 <Paper component="form" onSubmit={handleSubmit} className="quiz-creation-form" sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }}> {/* Adjusted padding, transparent, no shadow */}
                     <Typography variant="h5" component="h2" gutterBottom align="center">
-                        Create a New Quiz
+                        {t('createNewQuizPage.pageTitle')}
                     </Typography>
                     <TextField
-                        label="Title"
+                        label={t('createNewQuizPage.quizTitleLabel')}
                         variant="outlined"
                         fullWidth
                         margin="dense" // Changed from normal to dense
@@ -171,7 +173,7 @@ const Quiz = () => {
                         InputLabelProps={{ shrink: true }}
                     />
                     <TextField
-                        label="Rules"
+                        label={t('createNewQuizPage.rulesOptionalLabel')}
                         variant="outlined"
                         fullWidth
                         margin="dense" // Changed from normal to dense
@@ -179,12 +181,12 @@ const Quiz = () => {
                         rows={3}
                         value={rules}
                         onChange={e => setRules(e.target.value)}
-                        required
+                        // required // Rules are optional based on label
                         className="form-input-full-width"
                         InputLabelProps={{ shrink: true }}
                     />
                     <TextField
-                        label="Amount of songs"
+                        label={t('createNewQuizPage.amountOfSongsLabel')}
                         type="number"
                         variant="outlined"
                         fullWidth
@@ -200,7 +202,7 @@ const Quiz = () => {
                     {Number(amount) > 0 && (
                         <Box sx={{ mt: 1, mb: 1 }}> {/* Reduced top margin */}
                             <Typography variant="h6" component="h3" gutterBottom>
-                                Song Entries
+                                {t('createNewQuizPage.songEntriesTitle')}
                             </Typography>
                             <DragDropContext onDragEnd={onDragEnd}>
                                 <Droppable droppableId="questionsDroppableQuiz">
@@ -218,10 +220,10 @@ const Quiz = () => {
                                                             className="question-entry-box"
                                                         >
                                                             <Typography variant="subtitle1" component="h4" gutterBottom>
-                                                                Song {index + 1} (Drag to reorder)
+                                                                {t('common.songs')} {index + 1} ({t('common.dragToReorder', 'Drag to reorder')})
                                                             </Typography>
                                                             <TextField
-                                                                label="Song Link (Optional, e.g., YouTube)"
+                                                                label={t('createNewQuizPage.songLinkLabel')}
                                                                 variant="outlined"
                                                                 fullWidth
                                                                 margin="dense"
@@ -231,7 +233,7 @@ const Quiz = () => {
                                                                 InputLabelProps={{ shrink: true }}
                                                             />
                                                             <TextField
-                                                                label="Artist"
+                                                                label={t('createNewQuizPage.artistLabel')}
                                                                 variant="outlined"
                                                                 fullWidth
                                                                 margin="dense"
@@ -242,7 +244,7 @@ const Quiz = () => {
                                                                 InputLabelProps={{ shrink: true }}
                                                             />
                                                             <TextField
-                                                                label="Song Title"
+                                                                label={t('createNewQuizPage.songTitleLabel')}
                                                                 variant="outlined"
                                                                 fullWidth
                                                                 margin="dense"
@@ -253,7 +255,7 @@ const Quiz = () => {
                                                                 InputLabelProps={{ shrink: true }}
                                                             />
                                                             <TextField
-                                                                label="Hint (Optional)"
+                                                                label={t('createNewQuizPage.hintOptionalLabel')}
                                                                 variant="outlined"
                                                                 fullWidth
                                                                 margin="dense"
@@ -262,7 +264,7 @@ const Quiz = () => {
                                                                 className="form-input-question" // Can reuse class or create a new one
                                                                 InputLabelProps={{ shrink: true }}
                                                             />
-                                                            {q.loadingMetadata && <Typography variant="caption" className="metadata-loading-indicator" sx={{ ml: 1 }}> Fetching...</Typography>}
+                                                            {q.loadingMetadata && <Typography variant="caption" className="metadata-loading-indicator" sx={{ ml: 1 }}> {t('createNewQuizPage.fetchingMetadata')}</Typography>}
                                                             {questions.length > 1 && ( // Only show remove if more than one question
                                                                 <Button
                                                                     variant="outlined"
@@ -272,7 +274,7 @@ const Quiz = () => {
                                                                     sx={{ mt: 0.5, mb: 0.5 }}
                                                                     className="button-remove-question"
                                                                 >
-                                                                    Remove Song
+                                                                    {t('createNewQuizPage.removeSong')}
                                                                 </Button>
                                                             )}
                                                         </Paper>
@@ -292,23 +294,23 @@ const Quiz = () => {
                                 className="button-add-question"
                                 sx={{ mt: 1, mb: 2, }}
                             >
-                                Add Song Entry
+                                {t('createNewQuizPage.addSongEntry')}
                             </Button>
                         </Box>
                     )}
                     <FormControlLabel
                         control={<Checkbox checked={isReady} onChange={e => setIsReady(e.target.checked)} id="isReadyCheckbox" />}
-                        label="Mark as Ready"
+                        label={t('createNewQuizPage.markAsReadyLabel')}
                         className="is-ready-checkbox-container" sx={{ display: 'block', mt: 1, mb: 1 }} // Reduced margins
                     />
 
                     <Button type="submit" variant="contained" color="primary" fullWidth className="button-submit-quiz">
-                        Create Quiz
+                        {t('createNewQuizPage.createQuizButton')}
                     </Button>
                     {success && <Typography color="success.main" sx={{ mt: 2 }} className="form-message">{success}</Typography>}
                     {error && <Typography color="error" sx={{ mt: 2 }} className="form-message">{error}</Typography>}
                 </Paper>) : (
-                <Typography>Please log in to create a quiz.</Typography>
+                <Typography>{t('createNewQuizPage.loginToCreate')}</Typography>
             )}
         </Box>
     );

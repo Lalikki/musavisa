@@ -12,8 +12,10 @@ import { auth, provider, db } from './firebase'; // Import provider and db
 import { onAuthStateChanged, signInWithPopup } from 'firebase/auth'; // Import signInWithPopup
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"; // Import Firestore functions
 import { Link } from "react-router-dom"; // Keep for other buttons
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const Home = ({ handleLoginOpen }) => { // Receive handleLoginOpen as a prop
+    const { t } = useTranslation(); // Initialize the t function
     const [currentUser, setCurrentUser] = useState(null);
 
     useEffect(() => {
@@ -59,25 +61,25 @@ const Home = ({ handleLoginOpen }) => { // Receive handleLoginOpen as a prop
     return (
         <Box className="home-container" sx={{ textAlign: 'center', py: 4, px: 2 }}>
             <Typography variant="h3" component="h1" gutterBottom>
-                Welcome to Musavisa!
+                {t('homePage.welcome')}
             </Typography>
             <Typography variant="h6" component="p" color="text.secondary" sx={{ mb: 4 }}>
-                Test your music knowledge or create your own quizzes.
+                {t('homePage.description')}
             </Typography>
             <Box className="home-navigation-buttons" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, maxWidth: '300px', margin: '0 auto' }}>
                 <Button component={Link} to="/quizzes" variant="contained" startIcon={<ListAltIcon />} className="home-nav-button" fullWidth>
-                    All Quizzes
+                    {t('navbar.allQuizzes')}
                 </Button>
                 {currentUser && (
                     <>
                         <Button component={Link} to="/my-quizzes" variant="contained" startIcon={<PlaylistAddCheckIcon />} className="home-nav-button" fullWidth>
-                            My Quizzes
+                            {t('navbar.myQuizzes')}
                         </Button>
                         <Button component={Link} to="/my-answers" variant="contained" startIcon={<FactCheckIcon />} className="home-nav-button" fullWidth>
-                            My Answers
+                            {t('navbar.myAnswers')}
                         </Button>
                         <Button component={Link} to="/quiz" variant="contained" startIcon={<AddCircleOutlineIcon />} className="home-nav-button" fullWidth>
-                            Create New Quiz
+                            {t('navbar.newQuiz')}
                         </Button>
                     </>
                 )}
@@ -89,7 +91,7 @@ const Home = ({ handleLoginOpen }) => { // Receive handleLoginOpen as a prop
                         fullWidth
                         onClick={handleLogin} // Call the passed-in function
                     >
-                        Login
+                        {t('navbar.login')}
                     </Button>
                 )}
             </Box>

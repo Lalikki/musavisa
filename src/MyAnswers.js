@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { useTheme } from '@mui/material/styles'; // Import useTheme
 import Box from '@mui/material/Box'; // Import Box
 import Typography from '@mui/material/Typography'; // Import Typography
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const MyAnswers = () => {
     const [user, setUser] = useState(null);
@@ -24,6 +25,7 @@ const MyAnswers = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const theme = useTheme(); // Get the theme object
+    const { t } = useTranslation(); // Initialize useTranslation
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -57,7 +59,7 @@ const MyAnswers = () => {
             setAnswers(userAnswersData);
         } catch (err) {
             console.error("Error fetching user answers:", err);
-            setError("Failed to load your answers. Please try again.");
+            setError(t('myAnswersPage.loadingError'));
         } finally {
             setLoading(false);
         }
@@ -65,7 +67,7 @@ const MyAnswers = () => {
 
     const getTeamDisplayString = (answer) => {
         if (!answer.teamSize || answer.teamSize <= 1) {
-            return answer.answerCreatorName || 'Solo';
+            return answer.answerCreatorName || t('answerQuizPage.player'); // Or a more specific "Solo" if needed
         }
         const members = [answer.answerCreatorName]; // Logged-in user is always first
         if (answer.teamMembers && Array.isArray(answer.teamMembers)) {
@@ -80,10 +82,10 @@ const MyAnswers = () => {
     };
 
     if (!user && !loading) {
-        return <Typography sx={{ textAlign: 'center', mt: 3 }}>Please log in to see your answers.</Typography>;
+        return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.pleaseLogin')}</Typography>;
     }
-    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading your answers...</Typography>;
-    if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error}</Typography>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.loading')}</Typography>;
+    if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error || t('common.error')}</Typography>;
 
     return (
         <Box
@@ -95,9 +97,9 @@ const MyAnswers = () => {
             }}
         >
             <Typography variant="h4" component="h1" gutterBottom align="center">
-                My Submitted Answers
+                {t('myAnswersPage.mySubmittedAnswersTitle')}
             </Typography>
-            {answers.length === 0 && !loading && <Typography sx={{ textAlign: 'center', mt: 2 }}>You haven't submitted any quiz answers yet.</Typography>}
+            {answers.length === 0 && !loading && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('myAnswersPage.noAnswersSubmitted')}</Typography>}
             {answers.length > 0 && (
                 <TableContainer
                     component={Paper}
@@ -113,12 +115,12 @@ const MyAnswers = () => {
                     <Table className="quizzes-table" aria-label="My Submitted Answers Table"> {/* Use Table */}
                         <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}> {/* Hide headers on mobile */}
                             <TableRow className="quizzes-table-header-row"> {/* Use TableRow */}
-                                <TableCell>Quiz</TableCell> {/* Use TableCell */}
-                                <TableCell>Score</TableCell>
-                                <TableCell>Submitted At</TableCell>
-                                <TableCell>Team</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Actions</TableCell>
+                                <TableCell>{t('common.quizTitle')}</TableCell>
+                                <TableCell>{t('common.score')}</TableCell>
+                                <TableCell>{t('common.submitted')}</TableCell>
+                                <TableCell>{t('common.team')}</TableCell>
+                                <TableCell>{t('common.status')}</TableCell>
+                                <TableCell>{t('common.actions')}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody> {/* Use TableBody */}
@@ -142,23 +144,23 @@ const MyAnswers = () => {
                                         },
                                     }}
                                 >
-                                    <TableCell data-label="Title" sx={mobileCardCellStyle(theme)}>{answer.quizTitle}</TableCell>
+                                    <TableCell data-label={t('common.quizTitle')} sx={mobileCardCellStyle(theme)}>{answer.quizTitle}</TableCell>
                                     {/* Assuming max score is 1 point per song (0.5 artist + 0.5 song) */}
-                                    <TableCell data-label="Score" sx={mobileCardCellStyle(theme)}>{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</TableCell>
-                                    <TableCell data-label="Submitted" sx={mobileCardCellStyle(theme)}>{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
-                                    <TableCell data-label="Team" sx={mobileCardCellStyle(theme)}>{getTeamDisplayString(answer)}</TableCell>
-                                    <TableCell data-label="Status" sx={mobileCardCellStyle(theme)}>
-                                        {answer.isCompleted ? 'Completed' :
-                                            answer.isChecked ? 'Ready for Review' :
-                                                'In Progress'}
+                                    <TableCell data-label={t('common.score')} sx={mobileCardCellStyle(theme)}>{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</TableCell>
+                                    <TableCell data-label={t('common.submitted')} sx={mobileCardCellStyle(theme)}>{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                    <TableCell data-label={t('common.team')} sx={mobileCardCellStyle(theme)}>{getTeamDisplayString(answer)}</TableCell>
+                                    <TableCell data-label={t('common.status')} sx={mobileCardCellStyle(theme)}>
+                                        {answer.isCompleted ? t('answerDetailsPage.statusCompleted') :
+                                            answer.isChecked ? t('answerDetailsPage.statusReadyForReview') :
+                                                t('answerDetailsPage.statusInProgress')}
                                     </TableCell>
-                                    <TableCell data-label="Actions" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2), '& button': { marginRight: theme.spacing(1), marginBottom: theme.spacing(1) } } }}>
+                                    <TableCell data-label={t('common.actions')} sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2), '& button': { marginRight: theme.spacing(1), marginBottom: theme.spacing(1) } } }}>
                                         {answer.isChecked && (
-                                            <Button className="view-action-button" variant="outlined" color="primary" to={`/my-answers/${answer.id}`} startIcon={<GradingIcon />} component={Link}>{answer.isCompleted ? 'Details' : 'Review'}</Button>
+                                            <Button className="view-action-button" variant="outlined" color="primary" to={`/my-answers/${answer.id}`} startIcon={<GradingIcon />} component={Link}>{answer.isCompleted ? t('common.details') : t('common.review')}</Button>
                                         )}
                                         {/* Show edit link only if not checked and user is the creator */}
                                         {!answer.isChecked && user && answer.answerCreatorId === user.uid && (
-                                            <Button className="view-action-button" variant="outlined" color="primary" to={`/edit-answer/${answer.id}`} startIcon={<EditIcon />} component={Link}>Edit</Button>
+                                            <Button className="view-action-button" variant="outlined" color="primary" to={`/edit-answer/${answer.id}`} startIcon={<EditIcon />} component={Link}>{t('common.edit')}</Button>
                                         )}
                                     </TableCell>
                                 </TableRow>

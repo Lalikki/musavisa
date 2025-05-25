@@ -10,8 +10,10 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress'; // For loading states in buttons
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const EditAnswer = () => {
+    const { t } = useTranslation(); // Initialize useTranslation
     const { answerId } = useParams();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
@@ -33,7 +35,7 @@ const EditAnswer = () => {
             }
         });
         return () => unsubscribeAuth();
-    }, [navigate, loading]);
+    }, [navigate, loading, t]); // Added t to dependency array
 
     useEffect(() => {
         const fetchQuizAnswer = async () => {
@@ -41,7 +43,7 @@ const EditAnswer = () => {
                 if (!user && answerId) setError("Please log in to edit answers.");
                 setLoading(false);
                 return;
-            }
+            } // This error message is not directly displayed, but good practice
 
             setLoading(true);
             setError(null);
@@ -52,10 +54,10 @@ const EditAnswer = () => {
                 if (answerDocSnap.exists()) {
                     const data = answerDocSnap.data();
                     if (data.answerCreatorId !== user.uid) {
-                        setError("You are not authorized to edit this answer.");
+                        setError(t('editAnswerPage.notFoundError')); // Re-using a general "not found or not authorized"
                         setQuizAnswer(null);
                     } else if (data.isChecked) {
-                        setError("This answer has already been checked and cannot be edited.");
+                        setError(t('editAnswerPage.alreadyCheckedError', "This answer has already been checked and cannot be edited.")); // New key
                         setQuizAnswer(null);
                     } else {
                         const fetchedQuizAnswer = { id: answerDocSnap.id, ...data };
@@ -68,23 +70,23 @@ const EditAnswer = () => {
                         if (quizDocSnapForAnswers.exists()) {
                             setCorrectQuizData(quizDocSnapForAnswers.data());
                         } else {
-                            setError("Could not find the original quiz data to check answers.");
+                            setError(t('editAnswerPage.originalQuizNotFoundError', "Could not find the original quiz data.")); // New key
                             // Potentially clear quizAnswer or handle this state
                         }
                     }
                 } else {
-                    setError('Answer submission not found.');
+                    setError(t('editAnswerPage.notFoundError'));
                 }
             } catch (err) {
                 console.error("Error fetching quiz answer:", err);
-                setError('Failed to load the answer submission. Please try again.');
+                setError(t('editAnswerPage.loadingError'));
             } finally {
                 setLoading(false);
             }
         };
 
         fetchQuizAnswer();
-    }, [answerId, user]);
+    }, [answerId, user, t]); // Added t to dependency array
 
     const handleAnswerChange = (index, field, value) => {
         const newAnswers = [...editedAnswers];
@@ -95,7 +97,7 @@ const EditAnswer = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!quizAnswer || !correctQuizData || quizAnswer.isChecked || quizAnswer.answerCreatorId !== user?.uid) {
-            setSaveError("Cannot save changes. Either the answer is checked, not found, or you're not authorized.");
+            setSaveError(t('editAnswerPage.savePreconditionError', "Cannot save changes. Either the answer is checked, not found, or you're not authorized.")); // New key
             return;
         }
 
@@ -110,7 +112,7 @@ const EditAnswer = () => {
             navigate('/my-answers'); // Navigate back to My Answers page after saving
         } catch (err) {
             console.error("Error updating answer:", err);
-            setSaveError('Failed to save changes. Please try again. ' + err.message);
+            setSaveError(t('editAnswerPage.saveError') + " " + err.message);
         } finally {
             setSaving(false);
         }
@@ -118,7 +120,7 @@ const EditAnswer = () => {
 
     const handleMarkAsReady = async () => {
         if (!quizAnswer || !correctQuizData || quizAnswer.isChecked || quizAnswer.answerCreatorId !== user?.uid) {
-            setMarkReadyError("Cannot mark as ready. Either the answer is already checked, not found, or you're not authorized.");
+            setMarkReadyError(t('editAnswerPage.markReadyPreconditionError', "Cannot mark as ready. Either the answer is already checked, not found, or you're not authorized.")); // New key
             return;
         }
 
@@ -159,26 +161,26 @@ const EditAnswer = () => {
             navigate(`/my-answers/${answerId}`); // Navigate to the details page of this answer
         } catch (err) {
             console.error("Error saving and marking answer as ready:", err);
-            setMarkReadyError('Failed to mark as ready or save score. Please try again. ' + err.message);
+            setMarkReadyError(t('editAnswerPage.markReadyError') + " " + err.message);
         } finally {
             setMarkingReady(false);
         }
     }
 
-    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading answer for editing...</Typography>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.loading')}</Typography>;
     if (error) return (
         <Box sx={{ textAlign: 'center', mt: 3 }}>
-            <Typography color="error" className="error-text">{error}</Typography>
+            <Typography color="error" className="error-text">{error || t('common.error')}</Typography>
             <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ mt: 1 }}>
-                Go to My Answers
+                {t('editAnswerPage.goToMyAnswers')}
             </Button>
         </Box>
     );
     if (!quizAnswer || !correctQuizData) return (
         <Box sx={{ textAlign: 'center', mt: 3 }}>
-            <Typography>Answer submission or original quiz data not found, or answer is not editable.</Typography>
+            <Typography>{t('editAnswerPage.notFoundOrNotEditableError', 'Answer submission or original quiz data not found, or answer is not editable.')}</Typography> {/* New key */}
             <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ mt: 1 }}>
-                Go to My Answers
+                {t('editAnswerPage.goToMyAnswers')}
             </Button>
         </Box>
     );
@@ -194,31 +196,31 @@ const EditAnswer = () => {
             }}
         >
             <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 2 }}>
-                Edit Your Answers for: {quizAnswer.quizTitle}
+                {t('editAnswerPage.pageTitle', { quizTitle: quizAnswer.quizTitle })}
             </Typography>
             <Paper component="form" onSubmit={handleSubmit} sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }} className="edit-answer-form">
                 {editedAnswers.map((answer, index) => (
                     <Box key={index} className="song-guess-item" sx={{ mb: 2, p: { xs: 0.5, sm: 1 } }}>
                         <Typography variant="h6" component="h4" gutterBottom>
-                            Song {index + 1} Guess
+                            {t('common.song')} {index + 1} {/* New key for "Guess" suffix */}
                         </Typography>
                         <TextField
-                            label="Artist"
+                            label={t('editAnswerPage.artistGuess')}
                             variant="outlined"
                             fullWidth
                             margin="dense"
-                            id={`edit-artist-${index}`}
+                            id={`edit-artist-${index + 1}`}
                             value={answer.artist}
                             onChange={(e) => handleAnswerChange(index, 'artist', e.target.value)}
                             className="artist-input"
                             InputLabelProps={{ shrink: true }}
                         />
                         <TextField
-                            label="Song Name"
+                            label={t('editAnswerPage.songNameGuess')}
                             variant="outlined"
                             fullWidth
                             margin="dense"
-                            id={`edit-songName-${index}`}
+                            id={`edit-songName-${index + 1}`}
                             value={answer.songName}
                             onChange={(e) => handleAnswerChange(index, 'songName', e.target.value)}
                             className="songname-input"
@@ -228,13 +230,13 @@ const EditAnswer = () => {
                 ))}
                 <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'center', gap: 1 }}>
                     <Button type="submit" variant="contained" color="primary" disabled={saving || markingReady} startIcon={saving ? <CircularProgress size={20} color="inherit" /> : null}>
-                        {saving ? 'Saving...' : 'Save Changes'}
+                        {saving ? t('common.saving') : t('editAnswerPage.saveChanges')}
                     </Button>
                     <Button type="button" variant="outlined" onClick={handleMarkAsReady} disabled={saving || markingReady} className="button-ready-review" startIcon={markingReady ? <CircularProgress size={20} color="inherit" /> : null}>
-                        {markingReady ? 'Marking...' : 'Ready for Review'}
+                        {markingReady ? t('editAnswerPage.markingAsReady') : t('editAnswerPage.readyForReview')}
                     </Button>
                     <Button type="button" variant="text" onClick={() => navigate('/my-answers')} className="button-cancel-edit">
-                        Cancel
+                        {t('common.cancel')}
                     </Button>
                 </Box>
                 {saveError && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{saveError}</Typography>}
