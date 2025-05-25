@@ -16,12 +16,14 @@ import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { Button } from "@mui/material";
 import { format } from 'date-fns'; // Import date-fns for formatting dates
 import { Link } from "react-router-dom"; // Optional: if you want to link to individual quizzes later
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const Quizzes = () => {
     const [quizzes, setQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const theme = useTheme(); // Get the theme object
+    const { t } = useTranslation(); // Initialize the t function
 
     useEffect(() => {
         const fetchQuizzes = async () => {
@@ -44,7 +46,7 @@ const Quizzes = () => {
                 setQuizzes(quizzesData);
             } catch (err) {
                 console.error("Error fetching quizzes:", err);
-                setError("Failed to load quizzes. Please try again later. You might need to create a Firestore index for 'isReady' and 'createdAt'.");
+                setError(t('allQuizzesPage.loadingError')); // Use translated error message
             } finally {
                 setLoading(false);
             }
@@ -64,11 +66,11 @@ const Quizzes = () => {
             }}
         >
             <Typography variant="h4" component="h1" gutterBottom align="center">
-                All Quizzes
+                {t('allQuizzesPage.allQuizzesTitle')}
             </Typography>
-            {loading && <Typography sx={{ textAlign: 'center', mt: 2 }}>Loading quizzes...</Typography>}
+            {loading && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('common.loading')}</Typography>}
             {error && <Typography color="error" sx={{ textAlign: 'center', mt: 2 }} className="error-text">{error}</Typography>}
-            {!loading && !error && quizzes.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>No ready quizzes found.</Typography>}
+            {!loading && !error && quizzes.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('allQuizzesPage.noReadyQuizzes')}</Typography>}
             {!loading && !error && quizzes.length > 0 && (
                 <TableContainer
                     component={Paper}
@@ -88,11 +90,11 @@ const Quizzes = () => {
                     <Table className="quizzes-table" aria-label="All Quizzes Table"> {/* Use Table */}
                         <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}> {/* Hide headers on mobile */}
                             <TableRow className="quizzes-table-header-row">
-                                <TableCell>Title</TableCell>
-                                <TableCell>Number of Songs</TableCell>
-                                <TableCell>Created</TableCell>
-                                <TableCell>Created By (Name)</TableCell>
-                                <TableCell>Actions</TableCell>
+                                <TableCell>{t('common.title')}</TableCell>
+                                <TableCell>{t('common.numSongs')}</TableCell>
+                                <TableCell>{t('common.created')}</TableCell>
+                                <TableCell>{t('common.by')}</TableCell>
+                                <TableCell>{t('common.actions')}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -118,12 +120,12 @@ const Quizzes = () => {
                                         },
                                     }}
                                 >
-                                    <TableCell data-label="Title" sx={mobileCardCellStyle(theme)}>{quiz.title}</TableCell>
-                                    <TableCell data-label="Songs" sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
-                                    <TableCell data-label="Created" sx={mobileCardCellStyle(theme)}>{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
-                                    <TableCell data-label="Created By" sx={mobileCardCellStyle(theme)}>{quiz.creatorName || 'Unknown'}</TableCell>
-                                    <TableCell data-label="Actions" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2) } }}>
-                                        <Button className="view-action-button" variant="outlined" color="primary" to={`/answer-quiz/${quiz.id}`} startIcon={<AddCircleIcon />} component={Link}>Answer</Button>
+                                    <TableCell data-label={t('common.title')} sx={mobileCardCellStyle(theme)}>{quiz.title}</TableCell>
+                                    <TableCell data-label={t('common.songs')} sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
+                                    <TableCell data-label={t('common.created')} sx={mobileCardCellStyle(theme)}>{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                    <TableCell data-label={t('common.by')} sx={mobileCardCellStyle(theme)}>{quiz.creatorName || t('common.unnamedUser', 'Unknown')}</TableCell> {/* Added default for unnamed user */}
+                                    <TableCell data-label={t('common.actions')} sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2) } }}>
+                                        <Button className="view-action-button" variant="outlined" color="primary" to={`/answer-quiz/${quiz.id}`} startIcon={<AddCircleIcon />} component={Link}>{t('myQuizzesPage.answerAction')}</Button>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -136,7 +138,7 @@ const Quizzes = () => {
 };
 
 // Helper function for mobile cell styles to keep sx prop cleaner
-const mobileCardCellStyle = (theme) => ({
+const mobileCardCellStyle = (theme) => ({ // No direct translation needed here, but its `data-label` usage is translated above
     [theme.breakpoints.down('sm')]: {
         display: 'block',
         textAlign: 'right',

@@ -14,8 +14,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const EditQuiz = () => {
+    const { t } = useTranslation(); // Initialize useTranslation
     const { quizId } = useParams();
     const navigate = useNavigate();
 
@@ -40,11 +42,11 @@ const EditQuiz = () => {
             setUser(currentUser);
         });
         return () => unsubscribe();
-    }, []);
+    }, []); // No t needed here
 
     useEffect(() => {
         if (!quizId || !user) {
-            if (!user && quizId) setError("Please log in to edit quizzes.");
+            if (!user && quizId) setError(t('common.pleaseLogin')); // Or a more specific "login to edit"
             // Don't set loading to false here if user is null yet, wait for auth state
             return;
         }
@@ -59,7 +61,7 @@ const EditQuiz = () => {
                 if (quizDocSnap.exists()) {
                     const data = quizDocSnap.data();
                     if (data.createdBy !== user.uid) {
-                        setError("You are not authorized to edit this quiz.");
+                        setError(t('editQuizPage.notFoundError')); // Reusing "not found or not authorized"
                         setOriginalQuizData(null); // Clear any potentially sensitive data
                     } else {
                         setOriginalQuizData(data);
@@ -72,18 +74,17 @@ const EditQuiz = () => {
                         setIsReady(data.isReady || false); // Populate isReady state
                     }
                 } else {
-                    setError("Quiz not found.");
+                    setError(t('common.notFound'));
                 }
             } catch (err) {
                 console.error("Error fetching quiz for editing:", err);
-                setError("Failed to load quiz data. " + err.message);
+                setError(t('editQuizPage.loadingError') + " " + err.message);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchQuiz();
-    }, [quizId, user]);
+    }, [quizId, user, t]); // Added t to dependency array
 
     // Effect to sync questions array with amount input
     useEffect(() => {
@@ -149,16 +150,16 @@ const EditQuiz = () => {
         setError("");
 
         if (!originalQuizData || originalQuizData.createdBy !== user?.uid) {
-            setError("Authorization error or quiz data not loaded properly.");
+            setError(t('editQuizPage.authOrLoadError', "Authorization error or quiz data not loaded properly.")); // New key
             return;
         }
 
         // Validations (similar to Quiz.js)
-        if (!title.trim()) { setError("Title is required"); return; }
-        if (!amount || isNaN(amount) || Number(amount) <= 0) { setError("Amount of songs must be a positive number"); return; }
-        if (questions.length !== Number(amount)) { setError(`Number of song entries (${questions.length}) must match 'Amount of songs' (${amount}).`); return; }
+        if (!title.trim()) { setError(t('common.error') + ": " + t('createNewQuizPage.quizTitleLabel') + " " + t('common.isRequired', 'is required')); return; }
+        if (!amount || isNaN(amount) || Number(amount) <= 0) { setError(t('common.error') + ": " + t('createNewQuizPage.amountOfSongsLabel') + " " + t('common.mustBePositive', 'must be a positive number')); return; }
+        if (questions.length !== Number(amount)) { setError(t('common.error') + ": " + t('createNewQuizPage.songEntriesErrorMismatch', { count: questions.length, amount: amount })); return; }
         for (const q of questions) {
-            if (!q.artist.trim() || !q.song.trim()) { setError("Artist and Song fields cannot be empty for any song entry."); return; }
+            if (!q.artist.trim() || !q.song.trim()) { setError(t('common.error') + ": " + t('createNewQuizPage.songEntryFieldsRequired')); return; }
         }
 
         setSaving(true);
@@ -172,26 +173,26 @@ const EditQuiz = () => {
                 isReady, // Add isReady to the update
                 updatedAt: serverTimestamp() // Optional: track updates
             });
-            setSuccess("Quiz updated successfully!");
+            setSuccess(t('editQuizPage.updateSuccess'));
             setTimeout(() => navigate('/my-quizzes'), 1500); // Redirect after a short delay
         } catch (err) {
-            setError("Failed to update quiz: " + err.message);
+            setError(t('editQuizPage.updateError') + " " + err.message);
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading quiz for editing...</Typography>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.loading')}</Typography>;
     if (error && !originalQuizData) return (
         <Box sx={{ textAlign: 'center', mt: 3 }}>
-            <Typography color="error" className="error-text">{error}</Typography>
+            <Typography color="error" className="error-text">{error || t('common.error')}</Typography>
             <Button variant="outlined" onClick={() => navigate('/my-quizzes')} sx={{ mt: 1 }}>
-                Back to My Quizzes
+                {t('editQuizPage.backToMyQuizzes')}
             </Button>
         </Box>
     );
-    if (!user) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Please log in to edit quizzes.</Typography>;
-    if (!originalQuizData && !loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Quiz data could not be loaded or you are not authorized.</Typography>;
+    if (!user) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.pleaseLogin')}</Typography>; // Or a more specific "login to edit"
+    if (!originalQuizData && !loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('editQuizPage.authOrLoadError', 'Quiz data could not be loaded or you are not authorized.')}</Typography>;
 
     // Re-using form structure from Quiz.js, but with state from EditQuiz.js
     return (
@@ -205,11 +206,11 @@ const EditQuiz = () => {
             }}
         >
             <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 2 }}>
-                Edit Quiz: {originalQuizData?.title}
+                {t('editQuizPage.pageTitle', { quizTitle: originalQuizData?.title || '...' })}
             </Typography>
             <Paper component="form" onSubmit={handleSubmit} className="quiz-creation-form" sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }}>
                 <TextField
-                    label="Title"
+                    label={t('createNewQuizPage.quizTitleLabel')}
                     variant="outlined"
                     fullWidth
                     margin="dense"
@@ -220,7 +221,7 @@ const EditQuiz = () => {
                     InputLabelProps={{ shrink: true }}
                 />
                 <TextField
-                    label="Rules"
+                    label={t('createNewQuizPage.rulesOptionalLabel')}
                     variant="outlined"
                     fullWidth
                     margin="dense"
@@ -232,7 +233,7 @@ const EditQuiz = () => {
                     InputLabelProps={{ shrink: true }}
                 />
                 <TextField
-                    label="Amount of songs"
+                    label={t('createNewQuizPage.amountOfSongsLabel')}
                     type="number"
                     variant="outlined"
                     fullWidth
@@ -245,7 +246,7 @@ const EditQuiz = () => {
                 />
 
                 <Typography variant="h6" component="h3" gutterBottom sx={{ mt: 2, mb: 1 }}>
-                    Song Entries
+                    {t('createNewQuizPage.songEntriesTitle')}
                 </Typography>
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId="questionsDroppable">
@@ -263,10 +264,10 @@ const EditQuiz = () => {
                                                 className="question-entry-box"
                                             >
                                                 <Typography variant="subtitle1" component="h4" gutterBottom>
-                                                    Song {index + 1} (Drag to reorder)
+                                                    {t('common.songs')} {index + 1} ({t('common.dragToReorder', 'Drag to reorder')})
                                                 </Typography>
                                                 <TextField
-                                                    label="Song Link (Optional)"
+                                                    label={t('createNewQuizPage.songLinkLabel')}
                                                     variant="outlined"
                                                     fullWidth
                                                     margin="dense"
@@ -276,7 +277,7 @@ const EditQuiz = () => {
                                                     InputLabelProps={{ shrink: true }}
                                                 />
                                                 <TextField
-                                                    label="Artist"
+                                                    label={t('createNewQuizPage.artistLabel')}
                                                     variant="outlined"
                                                     fullWidth
                                                     margin="dense"
@@ -287,7 +288,7 @@ const EditQuiz = () => {
                                                     InputLabelProps={{ shrink: true }}
                                                 />
                                                 <TextField
-                                                    label="Song Title"
+                                                    label={t('createNewQuizPage.songTitleLabel')}
                                                     variant="outlined"
                                                     fullWidth
                                                     margin="dense"
@@ -298,7 +299,7 @@ const EditQuiz = () => {
                                                     InputLabelProps={{ shrink: true }}
                                                 />
                                                 <TextField
-                                                    label="Hint (Optional)"
+                                                    label={t('createNewQuizPage.hintOptionalLabel')}
                                                     variant="outlined"
                                                     fullWidth
                                                     margin="dense"
@@ -316,7 +317,7 @@ const EditQuiz = () => {
                                                         sx={{ mt: 0.5, mb: 0.5 }}
                                                         className="button-remove-question"
                                                     >
-                                                        Remove Song
+                                                        {t('createNewQuizPage.removeSong')}
                                                     </Button>
                                                 )}
                                             </Paper>
@@ -335,17 +336,17 @@ const EditQuiz = () => {
                     className="button-add-question"
                     sx={{ mt: 1, mb: 2 }}
                 >
-                    Add Song Entry
+                    {t('createNewQuizPage.addSongEntry')}
                 </Button>
 
                 <FormControlLabel
                     control={<Checkbox id="editIsReadyCheckbox" checked={isReady} onChange={e => setIsReady(e.target.checked)} />}
-                    label="Mark as Ready"
+                    label={t('createNewQuizPage.markAsReadyLabel')}
                     className="is-ready-checkbox-container"
                     sx={{ display: 'block', mt: 1, mb: 2 }}
                 />
                 <Button type="submit" variant="contained" color="primary" fullWidth disabled={saving} className="button-submit-quiz" startIcon={saving ? <CircularProgress size={20} color="inherit" /> : null}>
-                    {saving ? 'Saving...' : 'Save Changes'}
+                    {saving ? t('common.saving') : t('editQuizPage.updateQuizButton')}
                 </Button>
                 {success && <Typography color="success.main" sx={{ mt: 2, textAlign: 'center' }} className="success-text form-message">{success}</Typography>}
                 {error && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{error}</Typography>}

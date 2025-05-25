@@ -18,6 +18,7 @@
         "teamSize": "Team Size",
         "player": "Player",
         "teamMemberName": "Team Member {{count}} Name",
+        "playerCount": "{{count}} Players",
         "artist": "Artist",
         "songName": "Song Name",
         "submitAnswers": "Submit Answers",
@@ -48,12 +49,14 @@
         "player": "Player",
         "rank": "Rank",
         "songs": "Songs",
+        "song": "Song",
         "created": "Created",
         "submitted": "Submitted",
         "quizTitle": "Quiz Title",
         "numSongs": "Number of Songs",
         "pleaseLogin": "Please log in.",
-        "notFound": "Not Found."
+        "notFound": "Not Found.",
+        "dragToReorder": "Drag to reorder"
     },
     "editAnswerPage": {
         "pageTitle": "Edit Your Answers for: {{quizTitle}}",

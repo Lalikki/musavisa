@@ -17,7 +17,8 @@ import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { onAuthStateChanged } from 'firebase/auth';
 import { format } from 'date-fns'; // For formatting dates
 import Typography from '@mui/material/Typography'; // Import Typography
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Added useNavigate
+import { useTranslation } from 'react-i18next';
 import ShareQuizModal from './ShareQuizModal'; // We will create this component
 
 const MyQuizzes = () => {
@@ -33,6 +34,8 @@ const MyQuizzes = () => {
     const theme = useTheme(); // Get the theme object
     const [shareModalOpen, setShareModalOpen] = useState(false);
     const [quizToShare, setQuizToShare] = useState(null);
+    const { t } = useTranslation(); // Initialize useTranslation
+    const navigate = useNavigate(); // Initialize useNavigate
 
 
     useEffect(() => {
@@ -71,7 +74,7 @@ const MyQuizzes = () => {
             setMyQuizzes(userQuizzesData);
         } catch (err) {
             console.error("Error fetching user quizzes:", err);
-            setError("Failed to load your quizzes. Please try again. You might need to create a Firestore index.");
+            setError(t('myQuizzesPage.loadingError'));
         } finally {
             setLoading(false);
         }
@@ -97,7 +100,7 @@ const MyQuizzes = () => {
             setSharedQuizzes(sharedQuizzesData);
         } catch (err) {
             console.error("Error fetching shared quizzes:", err);
-            setErrorShared("Failed to load quizzes shared with you. Please try again.");
+            setErrorShared(t('myQuizzesPage.loadingSharedError'));
         } finally {
             setLoadingShared(false);
         }
@@ -113,11 +116,16 @@ const MyQuizzes = () => {
         setShareModalOpen(false);
     };
 
+    const handleHostQuiz = (quizId) => {
+        // Navigate to a hosting page or trigger hosting logic
+        // For now, let's assume it navigates to a quiz details page that might have hosting controls
+        navigate(`/my-quizzes/${quizId}`); // Or a specific hosting route
+    };
+
     if (!user && !loading) {
-        return <Typography sx={{ textAlign: 'center', mt: 3 }}>Please log in to see the quizzes you've created.</Typography>;
+        return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.pleaseLogin')}</Typography>;
     }
-    // Combined loading state for initial page load
-    if (loading || loadingShared) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading quizzes...</Typography>;
+    if (loading || loadingShared) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.loading')}</Typography>;
 
     return (
         <Box
@@ -129,12 +137,12 @@ const MyQuizzes = () => {
             }}
         >
             <Typography variant="h4" component="h1" gutterBottom align="center">
-                My Created Quizzes
+                {t('myQuizzesPage.myCreatedQuizzesTitle')}
             </Typography>
             {error && <Typography color="error" sx={{ textAlign: 'center', mt: 2, mb: 2 }} className="error-text">{error}</Typography>}
             {myQuizzes.length === 0 && !loading && !error && (
                 <Typography sx={{ textAlign: 'center', mt: 2 }}>
-                    You haven't created any quizzes yet. <Link to="/quiz" style={{ color: 'inherit' }}>Create one now!</Link>
+                    {t('myQuizzesPage.noQuizzesCreated')} <Link to="/quiz" style={{ color: 'inherit' }}>{t('navbar.newQuiz')}</Link>
                 </Typography>
             )}
             {myQuizzes.length > 0 && (
@@ -152,10 +160,10 @@ const MyQuizzes = () => {
                     <Table className="quizzes-table" aria-label="My Quizzes Table"> {/* Use Table */}
                         <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}> {/* Hide headers on mobile */}
                             <TableRow className="quizzes-table-header-row"> {/* Use TableRow */}
-                                <TableCell>Title</TableCell> {/* Use TableCell */}
-                                <TableCell>Number of Songs</TableCell>
-                                <TableCell>Created At</TableCell>
-                                <TableCell>Actions</TableCell>
+                                <TableCell>{t('common.title')}</TableCell>
+                                <TableCell>{t('common.numSongs')}</TableCell>
+                                <TableCell>{t('common.created')}</TableCell>
+                                <TableCell>{t('common.actions')}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody> {/* Use TableBody */}
@@ -180,32 +188,31 @@ const MyQuizzes = () => {
                                             },
                                         }}
                                     >
-                                        <TableCell data-label="Title" sx={mobileCardCellStyle(theme)}>{quiz.title}</TableCell>
-                                        <TableCell data-label="Songs" sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
-                                        <TableCell data-label="Created" sx={mobileCardCellStyle(theme)}>{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
-                                        <TableCell data-label="Actions" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2), '& button': { marginRight: theme.spacing(1), marginBottom: theme.spacing(1) } } }}>
+                                        <TableCell data-label={t('common.title')} sx={mobileCardCellStyle(theme)}>{quiz.title}</TableCell>
+                                        <TableCell data-label={t('common.numSongs')} sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
+                                        <TableCell data-label={t('common.created')} sx={mobileCardCellStyle(theme)}>{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                        <TableCell data-label={t('common.actions')} sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2), '& button': { marginRight: theme.spacing(1), marginBottom: theme.spacing(1) } } }}>
                                             <Button
                                                 className="view-action-button"
                                                 variant="outlined"
                                                 color="primary"
-                                                to={`/my-quizzes/${quiz.id}`}
+                                                onClick={() => handleHostQuiz(quiz.id)} // Updated to use handler
                                                 startIcon={<MediaBluetoothOnIcon />}
-                                                component={Link}
                                                 sx={{ mr: { sm: 1 } }} // Add margin-right on small screens and up
                                             >
-                                                Host
+                                                {t('myQuizzesPage.hostAction')}
                                             </Button>
-                                            <Button className="view-action-button" variant="outlined" color="primary" to={`/edit-quiz/${quiz.id}`} startIcon={<EditIcon />} component={Link}>
-                                                Edit
+                                            <Button className="edit-action-button" variant="outlined" color="primary" to={`/edit-quiz/${quiz.id}`} startIcon={<EditIcon />} component={Link}>
+                                                {t('common.edit')}
                                             </Button>
                                             <Button
-                                                className="view-action-button"
+                                                className="share-action-button"
                                                 variant="outlined"
                                                 color="secondary" // Or your preferred color
                                                 onClick={() => handleOpenShareModal(quiz)}
                                                 startIcon={<ShareIcon />}
                                                 sx={{ ml: { sm: 1 } }} // Add margin-left on small screens and up
-                                            >Share</Button>
+                                            >{t('myQuizzesPage.shareAction')}</Button>
                                         </TableCell>
                                     </TableRow>
                                 </React.Fragment>
@@ -224,12 +231,12 @@ const MyQuizzes = () => {
 
             {/* Quizzes Shared With Me Section */}
             <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mt: 5, mb: 2 }}>
-                Quizzes Shared With Me
+                {t('myQuizzesPage.sharedWithMeTitle')}
             </Typography>
             {errorShared && <Typography color="error" sx={{ textAlign: 'center', mt: 2, mb: 2 }} className="error-text">{errorShared}</Typography>}
             {sharedQuizzes.length === 0 && !loadingShared && !errorShared && (
                 <Typography sx={{ textAlign: 'center', mt: 2 }}>
-                    No quizzes have been shared with you yet.
+                    {t('myQuizzesPage.noQuizzesShared')}
                 </Typography>
             )}
             {sharedQuizzes.length > 0 && (
@@ -247,10 +254,10 @@ const MyQuizzes = () => {
                     <Table className="quizzes-table" aria-label="Shared Quizzes Table">
                         <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}>
                             <TableRow className="quizzes-table-header-row">
-                                <TableCell>Title</TableCell>
-                                <TableCell>Number of Songs</TableCell>
-                                <TableCell>Created By</TableCell> {/* Show who created/shared it */}
-                                <TableCell>Actions</TableCell>
+                                <TableCell>{t('common.title')}</TableCell>
+                                <TableCell>{t('common.numSongs')}</TableCell>
+                                <TableCell>{t('common.by')}</TableCell> {/* Show who created/shared it */}
+                                <TableCell>{t('common.actions')}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -271,21 +278,19 @@ const MyQuizzes = () => {
                                     }}
                                 >
                                     <TableCell data-label="Title" sx={mobileCardCellStyle(theme)}>{quiz.title}</TableCell>
-                                    <TableCell data-label="Songs" sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
-                                    <TableCell data-label="Created By" sx={mobileCardCellStyle(theme)}>{quiz.creatorName || 'Unknown'}</TableCell>
-                                    <TableCell data-label="Actions" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2), '& button': { marginRight: theme.spacing(1), marginBottom: theme.spacing(1) } } }}>
+                                    <TableCell data-label={t('common.numSongs')} sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
+                                    <TableCell data-label={t('common.by')} sx={mobileCardCellStyle(theme)}>{quiz.creatorName || t('common.unnamedUser', 'Unknown')}</TableCell>
+                                    <TableCell data-label={t('common.actions')} sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2), '& button': { marginRight: theme.spacing(1), marginBottom: theme.spacing(1) } } }}>
                                         <Button
-                                            className="view-action-button"
+                                            className="answer-action-button"
                                             variant="outlined"
                                             color="primary"
-                                            to={`/my-quizzes/${quiz.id}`}
-                                            startIcon={<MediaBluetoothOnIcon />}
-                                            component={Link}
+                                            onClick={() => handleHostQuiz(quiz.id)} // Use handleHostQuiz
+                                            startIcon={<MediaBluetoothOnIcon />} // Add Host icon
                                             sx={{ mr: { sm: 1 } }} // Add margin-right on small screens and up
                                         >
-                                            Host
+                                            {t('myQuizzesPage.hostAction')}
                                         </Button>
-                                        {/* You might add a "View Details" button here too if needed */}
                                     </TableCell>
                                 </TableRow>
                             ))}

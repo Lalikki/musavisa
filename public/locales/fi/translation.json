@@ -18,6 +18,7 @@
         "teamSize": "Tiimin koko",
         "player": "Pelaaja",
         "teamMemberName": "Tiimin jäsenen {{count}} nimi",
+        "playerCount": "{{count}} Pelaajaa",
         "artist": "Artisti",
         "songName": "Kappaleen nimi",
         "submitAnswers": "Lähetä Vastaukset",
@@ -48,12 +49,14 @@
         "player": "Pelaaja",
         "rank": "Sija",
         "songs": "Kappaleet",
+        "song": "Kappale",
         "created": "Luotu",
         "submitted": "Lähetetty",
         "quizTitle": "Visan nimi",
         "numSongs": "Kappaleiden määrä",
         "pleaseLogin": "Ole hyvä ja kirjaudu sisään.",
-        "notFound": "Ei löytynyt."
+        "notFound": "Ei löytynyt.",
+        "dragToReorder": "Vedä järjestelläksesi"
     },
     "editAnswerPage": {
         "pageTitle": "Muokkaa vastauksiasi visaan: {{quizTitle}}",

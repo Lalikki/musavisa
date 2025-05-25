@@ -20,9 +20,11 @@ import InputLabel from '@mui/material/InputLabel';
 import { TextField } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom'; // For MUI Link component
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 
 const AnswerDetails = () => {
+    const { t } = useTranslation(); // Initialize useTranslation
     const { answerId } = useParams();
     const navigate = useNavigate();
     const [quizAnswer, setQuizAnswer] = useState(null);
@@ -37,19 +39,19 @@ const AnswerDetails = () => {
     const [isCompleting, setIsCompleting] = useState(false);
     const [completeError, setCompleteError] = useState(null);
     const [isAutoCalculating, setIsAutoCalculating] = useState(false); // Keep this for button text
-    const theme = useTheme();
+    const theme = useTheme(); // theme is used, keep it
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
         });
         return () => unsubscribe();
-    }, []);
+    }, []); // No t needed here
 
     useEffect(() => {
         const fetchQuizAnswer = async () => {
             if (!answerId) {
-                setError("No answer ID provided.");
+                setError(t('answerDetailsPage.noAnswerIdError', "No answer ID provided.")); // New key
                 setLoading(false);
                 return;
             }
@@ -79,21 +81,21 @@ const AnswerDetails = () => {
                     if (quizDocSnapForAnswers.exists()) {
                         setCorrectQuizData(quizDocSnapForAnswers.data());
                     } else {
-                        setError("Could not find the original quiz data to display correct answers.");
+                        setError(t('editAnswerPage.originalQuizNotFoundError', "Could not find the original quiz data to display correct answers.")); // Reusing key
                     }
                 } else {
-                    setError('Answer submission not found.');
+                    setError(t('editAnswerPage.notFoundError')); // Reusing key
                 }
             } catch (err) {
                 console.error("Error fetching quiz answer details:", err);
-                setError('Failed to load the answer submission details. Please try again.');
+                setError(t('answerDetailsPage.loadingError'));
             } finally {
                 setLoading(false);
             }
         };
 
         fetchQuizAnswer();
-    }, [answerId]);
+    }, [answerId, t]); // Added t to dependency array
 
     const handleSelfAssessedScoreChange = (index, scoreValue) => {
         const newScores = [...selfAssessedSongScores];
@@ -105,7 +107,7 @@ const AnswerDetails = () => {
 
     const handleSaveAssessment = async () => {
         if (!canSelfAssess) {
-            setSaveAssessmentError("You cannot save this assessment at this time.");
+            setSaveAssessmentError(t('answerDetailsPage.cannotSaveAssessmentError', "You cannot save this assessment at this time.")); // New key
             return;
         }
         setIsSavingAssessment(true);
@@ -118,7 +120,7 @@ const AnswerDetails = () => {
                 score: totalSelfAssessedScore, // Save total self-assessed score to the main 'score' field
                 lastSelfAssessedAt: serverTimestamp()
             });
-            setSaveAssessmentSuccess("Your assessment has been saved!");
+            setSaveAssessmentSuccess(t('answerDetailsPage.saveAssessmentSuccess'));
             // Update local quizAnswer state to reflect the saved score
             setQuizAnswer(prev => ({
                 ...prev,
@@ -127,7 +129,7 @@ const AnswerDetails = () => {
             }));
         } catch (err) {
             console.error("Error saving self-assessment:", err);
-            setSaveAssessmentError("Failed to save your assessment. Please try again.");
+            setSaveAssessmentError(t('answerDetailsPage.saveAssessmentError'));
         } finally {
             setIsSavingAssessment(false);
         }
@@ -135,7 +137,7 @@ const AnswerDetails = () => {
 
     const handleSaveAndCompleteAssessment = async () => {
         if (!canSelfAssess) {
-            setCompleteError("You cannot complete this assessment at this time.");
+            setCompleteError(t('answerDetailsPage.cannotCompleteAssessmentError', "You cannot complete this assessment at this time.")); // New key
             return;
         }
         setIsCompleting(true);
@@ -150,12 +152,12 @@ const AnswerDetails = () => {
                 isCompleted: true, // Mark as completed
                 // isChecked might remain true, or you could set it to false if needed
             });
-            setSaveAssessmentSuccess("Your assessment has been saved and marked as completed!");
+            setSaveAssessmentSuccess(t('answerDetailsPage.saveAndCompleteSuccess', "Your assessment has been saved and marked as completed!")); // New key
             // Redirect to My Answers page
             navigate('/my-answers');
         } catch (err) {
             console.error("Error saving and completing assessment:", err);
-            setCompleteError("Failed to save and complete your assessment. Please try again.");
+            setCompleteError(t('answerDetailsPage.completeError'));
         } finally {
             setIsCompleting(false);
         }
@@ -163,7 +165,7 @@ const AnswerDetails = () => {
 
     const handleAutoCalculateScore = async () => { // Make it async
         if (!correctQuizData || !quizAnswer || !quizAnswer.answers || !canSelfAssess) {
-            setSaveAssessmentError("Cannot auto-calculate score at this time."); // Use a general error state
+            setSaveAssessmentError(t('answerDetailsPage.cannotAutoCalcError', "Cannot auto-calculate score at this time.")); // New key
             return;
         }
 
@@ -201,12 +203,12 @@ const AnswerDetails = () => {
                 score: calculatedTotalScore, // Save total auto-calculated score to the main 'score' field
                 lastSelfAssessedAt: serverTimestamp()
             });
-            setSelfAssessedSongScores(newScores); // Update local state for song scores
+            setSelfAssessedSongScores([...newScores]); // Update local state for song scores, ensure new array
             setQuizAnswer(prev => ({ ...prev, score: calculatedTotalScore, selfAssessedSongScores: [...newScores] })); // Update local state for total score
-            setSaveAssessmentSuccess("Scores auto-calculated and saved successfully!");
+            setSaveAssessmentSuccess(t('answerDetailsPage.autoCalcSuccess', "Scores auto-calculated and saved successfully!")); // New key
         } catch (err) {
             console.error("Error auto-calculating and saving score:", err);
-            setSaveAssessmentError("Failed to auto-calculate and save score. Please try again.");
+            setSaveAssessmentError(t('answerDetailsPage.autoCalcError', "Failed to auto-calculate and save score. Please try again.")); // New key
             setSaveAssessmentSuccess('');
         } finally {
             setIsAutoCalculating(false); // Reset this specific flag
@@ -217,7 +219,7 @@ const AnswerDetails = () => {
 
     const getTeamDisplayString = (answer) => {
         if (!answer || !answer.teamSize || answer.teamSize <= 1) {
-            return answer?.answerCreatorName || 'Solo';
+            return answer?.answerCreatorName || t('answerQuizPage.player'); // Reusing key
         }
         const members = [answer.answerCreatorName]; // Logged-in user (submitter) is always first
         if (answer.teamMembers && Array.isArray(answer.teamMembers)) {
@@ -230,9 +232,9 @@ const AnswerDetails = () => {
         return members.join(', ');
     };
 
-    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading answer details...</Typography>;
-    if (error) return <Box sx={{ textAlign: 'center', mt: 3 }}><Typography color="error" className="error-text">{error}</Typography> <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ ml: 1 }}>Go to My Answers</Button></Box>;
-    if (!quizAnswer) return <Box sx={{ textAlign: 'center', mt: 3 }}><Typography>Answer submission not found.</Typography> <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ ml: 1 }}>Go to My Answers</Button></Box>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.loading')}</Typography>;
+    if (error) return <Box sx={{ textAlign: 'center', mt: 3 }}><Typography color="error" className="error-text">{error || t('common.error')}</Typography> <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ ml: 1 }}>{t('answerDetailsPage.backToMyAnswers')}</Button></Box>;
+    if (!quizAnswer) return <Box sx={{ textAlign: 'center', mt: 3 }}><Typography>{t('editAnswerPage.notFoundError')}</Typography> <Button variant="outlined" onClick={() => navigate('/my-answers')} sx={{ ml: 1 }}>{t('answerDetailsPage.backToMyAnswers')}</Button></Box>;
 
 
     // User can self-assess if they are the creator of the answer.
@@ -251,20 +253,20 @@ const AnswerDetails = () => {
             }}
         >
             <Typography variant="h4" component="h1" gutterBottom align="center">
-                Answers for: {quizAnswer.quizTitle}
+                {t('answerDetailsPage.pageTitle', { quizTitle: quizAnswer.quizTitle })}
             </Typography>
             <Paper elevation={1} sx={{ p: { xs: 1.5, sm: 2.5 }, mb: 3, backgroundColor: 'background.paper' }} className="answer-summary">
-                <Typography variant="body1"><strong>Submitted By:</strong> {quizAnswer.answerCreatorName || 'Anonymous'}</Typography>
-                {quizAnswer.teamSize > 1 && <Typography variant="body1"><strong>Team:</strong> {getTeamDisplayString(quizAnswer)}</Typography>}
-                <Typography variant="body1"><strong>Submitted At:</strong> {quizAnswer.submittedAt ? format(quizAnswer.submittedAt.toDate(), 'yyyy-MM-dd HH:mm') : 'N/A'}</Typography>
-                <Typography variant="body1"><strong>Status:</strong>
-                    {quizAnswer.isCompleted ? ' Completed' :
-                        quizAnswer.isChecked ? ' Ready for Review' :
-                            ' In Progress'}
+                <Typography variant="body1"><strong>{t('answerDetailsPage.submittedBy')}:</strong> {quizAnswer.answerCreatorName || t('common.unnamedUser', 'Anonymous')}</Typography>
+                {quizAnswer.teamSize > 1 && <Typography variant="body1"><strong>{t('common.team')}:</strong> {getTeamDisplayString(quizAnswer)}</Typography>}
+                <Typography variant="body1"><strong>{t('answerDetailsPage.submittedAt')}:</strong> {quizAnswer.submittedAt ? format(quizAnswer.submittedAt.toDate(), 'yyyy-MM-dd HH:mm') : 'N/A'}</Typography>
+                <Typography variant="body1"><strong>{t('common.status')}:</strong>
+                    {quizAnswer.isCompleted ? ` ${t('answerDetailsPage.statusCompleted')}` :
+                        quizAnswer.isChecked ? ` ${t('answerDetailsPage.statusReadyForReview')}` :
+                            ` ${t('answerDetailsPage.statusInProgress')}`}
                 </Typography>
-                <Typography variant="body1"><strong>Current Saved Score:</strong> {quizAnswer.score} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</Typography>
+                <Typography variant="body1"><strong>{t('answerDetailsPage.currentSavedScore')}:</strong> {quizAnswer.score} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</Typography>
                 <Typography variant="body1">
-                    <strong>Live Score (Manual or Auto-Calculated):</strong>
+                    <strong>{t('answerDetailsPage.liveScore')}:</strong>
                     {' '}{totalSelfAssessedScore} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}
                 </Typography>
                 {/* Moved Auto-Calculate button here */}
@@ -276,12 +278,12 @@ const AnswerDetails = () => {
                         className="button-auto-calculate"
                         sx={{ mt: 2, display: 'block', mx: 'auto' }} // Added display:block and mx:auto for centering
                     >
-                        {isAutoCalculating || isSavingAssessment ? 'Calculating...' : 'Automatically Calculate'}
+                        {isAutoCalculating || isSavingAssessment ? t('answerDetailsPage.calculatingAndSaving') : t('answerDetailsPage.autoCalcButton')}
                     </Button>
                 )}
             </Paper>
 
-            <Typography variant="h5" component="h2" gutterBottom align="center">Your Guesses</Typography>
+            <Typography variant="h5" component="h2" gutterBottom align="center">{t('answerDetailsPage.yourGuessesTitle')}</Typography>
             <Paper // New Paper wrapper for the "Your Guesses" section
                 elevation={0}
                 sx={{
@@ -311,9 +313,9 @@ const AnswerDetails = () => {
                                         }}
                                         className="answer-guess-item detailed-guess-item"
                                     >
-                                        <Typography variant="h6" component="h4" gutterBottom>Song {index + 1}</Typography>
+                                        <Typography variant="h6" component="h4" gutterBottom>{t('common.song')} {index + 1}</Typography>
                                         <TextField
-                                            label="Artist Guess"
+                                            label={t('editAnswerPage.artistGuess')}
                                             variant="outlined"
                                             fullWidth
                                             margin="dense"
@@ -334,7 +336,7 @@ const AnswerDetails = () => {
                                             }}
                                         />
                                         <TextField
-                                            label="Song Name Guess"
+                                            label={t('editAnswerPage.songNameGuess')}
                                             variant="outlined"
                                             fullWidth
                                             margin="dense"
@@ -356,7 +358,7 @@ const AnswerDetails = () => {
                                         />
                                         {/* Correct answer display can be added here if needed, using Typography and MUI Link */}
                                         <FormControl fullWidth margin="dense" variant="outlined" className="manual-score-input" sx={{ mt: 1 }}>
-                                            <InputLabel id={`manual-score-label-${index}`}>Score</InputLabel>
+                                            <InputLabel id={`manual-score-label-${index}`}>{t('common.score')}</InputLabel>
                                             <Select
                                                 labelId={`manual-score-label-${index}`}
                                                 id={`manual-score-${index}`}
@@ -376,7 +378,7 @@ const AnswerDetails = () => {
                                                         backgroundColor: theme.palette.action.disabledBackground,
                                                     },
                                                 } : {}}
-                                                label="Score"
+                                                label={t('common.score')}
                                             >
                                                 <MenuItem value={0}>0</MenuItem>
                                                 <MenuItem value={0.5}>0.5</MenuItem>
@@ -389,7 +391,7 @@ const AnswerDetails = () => {
                         })}
                     </List>
                 ) : (
-                    <Typography sx={{ textAlign: 'center', mt: 2 }}>No guesses recorded for this submission.</Typography>
+                    <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('answerDetailsPage.noGuessesRecorded')}</Typography>
                 )}
             </Paper>
             {canSelfAssess && !quizAnswer.isCompleted && (
@@ -411,8 +413,8 @@ const AnswerDetails = () => {
                         disabled={isSavingAssessment}
                         className="button-save-assessment"
                     // sx prop can be removed if default gap is sufficient
-                    >
-                        {isSavingAssessment ? 'Saving...' : 'Save'}
+                    > {/* Changed to common.save and common.saving */}
+                        {isSavingAssessment ? t('common.saving') : t('common.save')}
                     </Button>
                     <Button
                         variant="contained"
@@ -421,10 +423,10 @@ const AnswerDetails = () => {
                         disabled={isCompleting || isSavingAssessment}
                         className="button-save-complete-assessment"
                     // sx prop can be removed if default gap is sufficient
-                    >
-                        {isCompleting ? 'Completing...' : 'Save and Complete'}
+                    > {/* Changed to use completing and saveAndComplete keys */}
+                        {isCompleting ? t('answerDetailsPage.completing') : t('answerDetailsPage.saveAndComplete')}
                     </Button>
-                    <Button component={RouterLink} to="/my-answers" variant="text" className="back-link">Cancel</Button>
+                    <Button component={RouterLink} to="/my-answers" variant="text" className="back-link">{t('common.cancel')}</Button>
                     {completeError && <Typography color="error" sx={{ mt: 1 }} className="error-text form-message">{completeError}</Typography>}
                     {saveAssessmentError && <Typography color="error" sx={{ mt: 1 }} className="error-text form-message">{saveAssessmentError}</Typography>}
                     {saveAssessmentSuccess && <Typography color="success.main" sx={{ mt: 1 }} className="success-text form-message">{saveAssessmentSuccess}</Typography>}

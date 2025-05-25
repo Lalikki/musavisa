@@ -17,6 +17,7 @@ import TableRow from '@mui/material/TableRow';
 import CircularProgress from '@mui/material/CircularProgress';
 import MusicPlayer from './components/MusicPlayer';
 import { useTheme } from '@mui/material/styles'; // Import useTheme
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const QuizDetails = () => {
     const { quizId } = useParams();
@@ -27,6 +28,7 @@ const QuizDetails = () => {
     const [answersLoading, setAnswersLoading] = useState(true);
     const [answersError, setAnswersError] = useState(null);
     const theme = useTheme(); // Get the theme object
+    const { t } = useTranslation(); // Initialize useTranslation
 
     useEffect(() => {
         const fetchQuizDetails = async () => {
@@ -44,11 +46,11 @@ const QuizDetails = () => {
                         createdAt: data.createdAt ? data.createdAt.toDate() : null,
                     });
                 } else {
-                    setError('Quiz not found.');
+                    setError(t('common.notFound'));
                 }
             } catch (err) {
                 console.error("Error fetching quiz details:", err);
-                setError('Failed to load quiz details. Please try again.');
+                setError(t('quizDetailsPage.loadingError'));
             } finally {
                 setLoading(false);
             }
@@ -57,7 +59,7 @@ const QuizDetails = () => {
         if (quizId) {
             fetchQuizDetails();
         }
-    }, [quizId]);
+    }, [quizId, t]); // Added t to dependency array
 
     // Effect to fetch answers related to this quiz
     useEffect(() => {
@@ -82,18 +84,18 @@ const QuizDetails = () => {
                 setAnswers(fetchedAnswers);
             } catch (err) {
                 console.error("Error fetching answers for quiz details:", err);
-                setAnswersError("Failed to load submitted answers.");
+                setAnswersError(t('quizDetailsPage.loadingAnswersError', "Failed to load submitted answers.")); // New key
             } finally {
                 setAnswersLoading(false);
             }
         };
 
         fetchAnswers();
-    }, [quizId]);
+    }, [quizId, t]); // Added t to dependency array
 
     const getTeamDisplayString = (answer) => {
         if (!answer.teamSize || answer.teamSize <= 1) {
-            return answer.answerCreatorName || 'Solo';
+            return answer.answerCreatorName || t('answerQuizPage.player'); // Reusing key
         }
         const members = [answer.answerCreatorName]; // Logged-in user is always first
         if (answer.teamMembers && Array.isArray(answer.teamMembers)) {
@@ -107,13 +109,13 @@ const QuizDetails = () => {
     };
 
 
-    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading quiz details... <CircularProgress size={20} /></Typography>;
-    if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error}</Typography>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.loading')} <CircularProgress size={20} /></Typography>;
+    if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error || t('common.error')}</Typography>;
     if (!quiz) return (
         <Box sx={{ textAlign: 'center', mt: 3 }}>
-            <Typography>Quiz not found.</Typography>
+            <Typography>{t('common.notFound')}</Typography>
             <Button component={RouterLink} to="/my-quizzes" variant="outlined" sx={{ mt: 1 }}>
-                Go back to My Quizzes
+                {t('editQuizPage.backToMyQuizzes')}
             </Button>
         </Box>
     );
@@ -129,17 +131,17 @@ const QuizDetails = () => {
             }}
         >
             <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 2 }}>
-                {quiz.title}
+                {t('quizDetailsPage.pageTitle', { quizTitle: quiz.title })}
             </Typography>
             <Paper elevation={1} sx={{ p: { xs: 1.5, sm: 2 }, mb: 3, backgroundColor: '#2a2a2a' }}>
-                <Typography variant="body1"><strong>Rules:</strong> {quiz.rules || 'No rules provided.'}</Typography>
-                <Typography variant="body1"><strong>Number of Songs:</strong> {quiz.amount}</Typography>
-                <Typography variant="body1"><strong>Created By:</strong> {quiz.creatorName || 'Unknown'}</Typography>
-                <Typography variant="body1"><strong>Created At:</strong> {quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</Typography>
+                <Typography variant="body1"><strong>{t('common.rules')}:</strong> {quiz.rules || t('quizDetailsPage.noRulesProvided')}</Typography>
+                <Typography variant="body1"><strong>{t('common.numSongs')}:</strong> {quiz.amount}</Typography>
+                <Typography variant="body1"><strong>{t('common.by')}:</strong> {quiz.creatorName || t('common.unnamedUser', 'Unknown')}</Typography>
+                <Typography variant="body1"><strong>{t('common.created')}:</strong> {quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</Typography>
             </Paper>
 
             <Typography variant="h5" component="h2" gutterBottom align="center" sx={{ mb: 2 }}>
-                Questions (Song Details)
+                {t('quizDetailsPage.songsInThisQuiz')}
             </Typography>
             <Paper elevation={1} sx={{ p: { xs: 1, sm: 1.5 }, mb: 3, backgroundColor: '#2a2a2a' }}>
                 {quiz.questions && quiz.questions.length > 0 ? (
@@ -155,16 +157,16 @@ const QuizDetails = () => {
                         ))}
                     </List>
                 ) : (
-                    <Typography>No questions found for this quiz.</Typography>
+                    <Typography>{t('quizDetailsPage.noQuestionsFound', 'No questions found for this quiz.')}</Typography>
                 )}
             </Paper>
 
             <Typography variant="h5" component="h2" gutterBottom align="center" className="section-heading" sx={{ mb: 2 }}>
-                Submitted Answers
+                {t('quizDetailsPage.submittedAnswersTitle')}
             </Typography>
-            {answersLoading && <Typography sx={{ textAlign: 'center', mt: 2 }}>Loading submitted answers... <CircularProgress size={20} /></Typography>}
-            {answersError && <Typography color="error" sx={{ textAlign: 'center', mt: 2 }} className="error-text">{answersError}</Typography>}
-            {!answersLoading && !answersError && answers.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>No one has submitted answers for this quiz yet.</Typography>}
+            {answersLoading && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('common.loading')} <CircularProgress size={20} /></Typography>}
+            {answersError && <Typography color="error" sx={{ textAlign: 'center', mt: 2 }} className="error-text">{answersError || t('common.error')}</Typography>}
+            {!answersLoading && !answersError && answers.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('quizDetailsPage.noSubmissionsYet')}</Typography>}
             {!answersLoading && !answersError && answers.length > 0 && (
                 <TableContainer
                     component={Paper}
@@ -180,11 +182,11 @@ const QuizDetails = () => {
                     <Table className="quizzes-table" aria-label="Submitted Answers Table">
                         <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}>
                             <TableRow className="quizzes-table-header-row">
-                                <TableCell>Answered By</TableCell>
-                                <TableCell>Team</TableCell>
-                                <TableCell>Score</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell align="right">Submitted At</TableCell>
+                                <TableCell>{t('quizDetailsPage.answeredBy')}</TableCell>
+                                <TableCell>{t('common.team')}</TableCell>
+                                <TableCell>{t('common.score')}</TableCell>
+                                <TableCell>{t('common.status')}</TableCell>
+                                <TableCell align="right">{t('common.submitted')}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -208,11 +210,15 @@ const QuizDetails = () => {
                                         },
                                     }}
                                 >
-                                    <TableCell data-label="Answered By" sx={mobileCardCellStyle(theme)}>{answer.answerCreatorName || 'Anonymous'}</TableCell>
-                                    <TableCell data-label="Team" sx={mobileCardCellStyle(theme)}>{getTeamDisplayString(answer)}</TableCell>
-                                    <TableCell data-label="Score" sx={mobileCardCellStyle(theme)}>{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</TableCell>
-                                    <TableCell data-label="Status" sx={mobileCardCellStyle(theme)}>{answer.isCompleted ? 'Completed' : answer.isChecked ? 'Ready for Review' : 'In Progress'}</TableCell>
-                                    <TableCell data-label="Submitted" sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.up('sm')]: { textAlign: 'right' } }}>
+                                    <TableCell data-label={t('quizDetailsPage.answeredBy')} sx={mobileCardCellStyle(theme)}>{answer.answerCreatorName || t('common.unnamedUser', 'Anonymous')}</TableCell>
+                                    <TableCell data-label={t('common.team')} sx={mobileCardCellStyle(theme)}>{getTeamDisplayString(answer)}</TableCell>
+                                    <TableCell data-label={t('common.score')} sx={mobileCardCellStyle(theme)}>{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</TableCell>
+                                    <TableCell data-label={t('common.status')} sx={mobileCardCellStyle(theme)}>
+                                        {answer.isCompleted ? t('answerDetailsPage.statusCompleted') :
+                                            answer.isChecked ? t('answerDetailsPage.statusReadyForReview') :
+                                                t('answerDetailsPage.statusInProgress')}
+                                    </TableCell>
+                                    <TableCell data-label={t('common.submitted')} sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.up('sm')]: { textAlign: 'right' } }}>
                                         {answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}
                                     </TableCell>
                                 </TableRow>
@@ -221,9 +227,6 @@ const QuizDetails = () => {
                     </Table>
                 </TableContainer>
             )}
-            <Button component={RouterLink} to="/my-quizzes" variant="outlined" className="back-link" sx={{ display: 'block', mx: 'auto', mt: 3 }}>
-                Back to My Quizzes
-            </Button>
         </Box>
     );
 };

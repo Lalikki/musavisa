@@ -14,8 +14,10 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const AnswerQuiz = () => {
+    const { t } = useTranslation(); // Initialize useTranslation
     const { quizId } = useParams();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
@@ -44,16 +46,15 @@ const AnswerQuiz = () => {
                     // Initialize answers array based on the number of songs, including the new hint flag
                     setAnswers(Array(quizData.amount).fill({ artist: '', songName: '', showEasterEggHint: false }));
                 } else {
-                    setError('Quiz not found.');
+                    setError(t('common.notFound')); // Or a more specific "Quiz not found" key
                 }
             } catch (err) {
                 console.error("Error fetching quiz:", err);
-                setError('Failed to load the quiz. Please try again.');
+                setError(t('quizDetailsPage.loadingError')); // Reusing a general quiz loading error
             } finally {
                 setLoading(false);
             }
         };
-
         if (quizId) {
             fetchQuiz();
         }
@@ -65,7 +66,7 @@ const AnswerQuiz = () => {
         // Cleanup subscription on unmount
         return () => unsubscribe();
 
-    }, [quizId]);
+    }, [quizId, t]); // Added t to dependency array
 
     const handleAnswerChange = (index, field, value) => {
         const newAnswers = [...answers];
@@ -106,11 +107,11 @@ const AnswerQuiz = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!user) {
-            setSubmitError("You must be logged in to submit answers.");
+            setSubmitError(t('common.pleaseLogin')); // Or a more specific "must be logged in to submit"
             return;
         }
         if (!quiz) {
-            setSubmitError("Quiz data is not loaded yet.");
+            setSubmitError(t('answerQuizPage.quizNotLoadedError', 'Quiz data is not loaded yet.'));
             return;
         }
 
@@ -123,8 +124,8 @@ const AnswerQuiz = () => {
                 quizId: quiz.id,
                 quizTitle: quiz.title,
                 answers: answers, // The array of { artist: '', songName: '' }
-                answerCreatorId: user.uid,
-                answerCreatorName: user.displayName || "Anonymous",
+                answerCreatorId: user.uid, // No translation needed
+                answerCreatorName: user.displayName || t('common.unnamedUser', 'Anonymous'),
                 submittedAt: serverTimestamp(),
                 score: 0,
                 teamSize: teamSize,
@@ -133,7 +134,7 @@ const AnswerQuiz = () => {
             };
 
             const docRef = await addDoc(collection(db, "quizAnswers"), answerData); // Capture the DocumentReference
-            setSubmitSuccess("Your answers have been submitted successfully!");
+            setSubmitSuccess(t('answerQuizPage.submitSuccess'));
 
             if (isReadyForReview) {
                 navigate(`/my-answers/${docRef.id}`); // Redirect to Answer Details page
@@ -149,7 +150,7 @@ const AnswerQuiz = () => {
             }
         } catch (err) {
             console.error("Error submitting answers:", err);
-            setSubmitError("Failed to submit answers. Please try again. " + err.message);
+            setSubmitError(t('answerQuizPage.submitError') + " " + err.message);
         } finally {
             setSubmitting(false);
         }
@@ -158,11 +159,11 @@ const AnswerQuiz = () => {
     const handleSubmitAndReview = async (e) => {
         e.preventDefault(); // Prevent default if it's part of a form, though Button onClick won't by default
         if (!user) {
-            setSubmitError("You must be logged in to submit answers.");
+            setSubmitError(t('common.pleaseLogin'));
             return;
         }
         if (!quiz) {
-            setSubmitError("Quiz data is not loaded yet.");
+            setSubmitError(t('answerQuizPage.quizNotLoadedError', 'Quiz data is not loaded yet.'));
             return;
         }
 
@@ -175,8 +176,8 @@ const AnswerQuiz = () => {
                 quizId: quiz.id,
                 quizTitle: quiz.title,
                 answers: answers,
-                answerCreatorId: user.uid,
-                answerCreatorName: user.displayName || "Anonymous",
+                answerCreatorId: user.uid, // No translation needed
+                answerCreatorName: user.displayName || t('common.unnamedUser', 'Anonymous'),
                 submittedAt: serverTimestamp(),
                 score: 0,
                 teamSize: teamSize,
@@ -185,20 +186,20 @@ const AnswerQuiz = () => {
             };
 
             const docRef = await addDoc(collection(db, "quizAnswers"), answerData);
-            setSubmitSuccess("Your answers have been submitted and marked for review!");
+            setSubmitSuccess(t('answerQuizPage.submitAndReviewSuccess'));
             navigate(`/my-answers/${docRef.id}`); // Redirect to Answer Details page
 
         } catch (err) {
             console.error("Error submitting answers for review:", err);
-            setSubmitError("Failed to submit answers for review. Please try again. " + err.message);
+            setSubmitError(t('answerQuizPage.submitAndReviewError') + " " + err.message);
         } finally {
             setSubmitting(false);
         }
     };
 
-    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Loading quiz...</Typography>;
-    if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error}</Typography>;
-    if (!quiz) return <Typography sx={{ textAlign: 'center', mt: 3 }}>Quiz not found.</Typography>;
+    if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.loading')}</Typography>;
+    if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error || t('common.error')}</Typography>;
+    if (!quiz) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.notFound')}</Typography>; // Or a more specific "Quiz not found"
 
     return (
         <Box
@@ -220,25 +221,25 @@ const AnswerQuiz = () => {
             )}
             <Paper component="form" onSubmit={handleSubmit} sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }} className="answer-quiz-form">
                 <FormControl fullWidth margin="normal">
-                    <InputLabel id="team-size-label">Team Size</InputLabel>
+                    <InputLabel id="team-size-label">{t('answerQuizPage.teamSize')}</InputLabel>
                     <Select
                         labelId="team-size-label"
                         id="team-size-select"
                         value={teamSize}
-                        label="Team Size"
+                        label={t('answerQuizPage.teamSize')}
                         onChange={handleTeamSizeChange}
                     >
-                        <MenuItem value={1}>1 Player</MenuItem>
-                        <MenuItem value={2}>2 Players</MenuItem>
-                        <MenuItem value={3}>3 Players</MenuItem>
-                        <MenuItem value={4}>4 Players</MenuItem>
+                        <MenuItem value={1}>{t('answerQuizPage.playerCount', { count: 1 })}</MenuItem>
+                        <MenuItem value={2}>{t('answerQuizPage.playerCount', { count: 2 })}</MenuItem>
+                        <MenuItem value={3}>{t('answerQuizPage.playerCount', { count: 3 })}</MenuItem>
+                        <MenuItem value={4}>{t('answerQuizPage.playerCount', { count: 4 })}</MenuItem>
                     </Select>
                 </FormControl>
 
                 {teamMembers.map((memberName, index) => (
                     <TextField
                         key={`team-member-${index}`}
-                        label={`Team Member ${index + 2} Name`} // +2 because member 1 is the logged-in user
+                        label={t('answerQuizPage.teamMemberName', { count: index + 2 })} // +2 because member 1 is the logged-in user
                         variant="outlined"
                         fullWidth
                         margin="dense"
@@ -251,20 +252,20 @@ const AnswerQuiz = () => {
                 {answers.map((answer, index) => (
                     <Box key={index} className="song-guess-item" elevation={4} sx={{ mb: 2, p: { xs: 0.5, sm: 1 }, backgroundColor: 'transparent', boxShadow: 'none', border: 'none' }}>
                         <Typography variant="h6" component="h4" gutterBottom>
-                            Song {index + 1}
+                            {t('common.songs')} {index + 1}
                         </Typography>
                         {answer.showEasterEggHint && (
                             <Typography variant="caption" color="secondary" sx={{ display: 'block', mb: 0.5, textAlign: 'left' }}>
-                                Or was it the other one?
+                                {t('answerQuizPage.easterEggOther')}
                             </Typography>
                         )}
                         <TextField
-                            label="Artist"
+                            label={t('answerQuizPage.artist')}
                             variant="outlined"
                             fullWidth
                             margin="dense"
                             id={`artist-${index + 1}`}
-                            value={answer.artist}
+                            value={answer.artist || ''} // Ensure value is not null/undefined
                             onChange={(e) => handleAnswerChange(index, 'artist', e.target.value)}
                             className="artist-input"
                             InputLabelProps={{ shrink: true }}
@@ -275,7 +276,7 @@ const AnswerQuiz = () => {
                             fullWidth
                             margin="dense"
                             id={`songName-${index + 1}`}
-                            value={answer.songName}
+                            value={answer.songName || ''} // Ensure value is not null/undefined
                             onChange={(e) => handleAnswerChange(index, 'songName', e.target.value)}
                             className="songname-input"
                             InputLabelProps={{ shrink: true }}
@@ -285,7 +286,7 @@ const AnswerQuiz = () => {
 
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 2 }}>
                     <Button type="submit" variant="outlined" fullWidth disabled={submitting} className="button-submit-answers">
-                        {submitting ? 'Submitting...' : 'Submit Answers'}
+                        {submitting ? t('answerQuizPage.submitting') : t('answerQuizPage.submitAnswers')}
                     </Button>
                     <Button
                         variant="contained"
@@ -295,7 +296,7 @@ const AnswerQuiz = () => {
                         onClick={handleSubmitAndReview} // Use the new handler
                         className="button-submit-review"
                     >
-                        {submitting ? 'Submitting...' : 'Submit and Review'}
+                        {submitting ? t('answerQuizPage.submitting') : t('answerQuizPage.submitAndReview')}
                     </Button>
                 </Box>
 
