@@ -17,6 +17,8 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import YTSearch from './components/YTSearch';
 
+const emptyQuestion = { songLink: "", artist: "", song: "", hint: "" }; // Default question structure
+
 const EditQuiz = () => {
     const { t } = useTranslation(); // Initialize useTranslation
     const { quizId } = useParams();
@@ -70,7 +72,7 @@ const EditQuiz = () => {
                         setRules(data.rules || "");
                         setAmount(data.amount ? String(data.amount) : "");
                         // Ensure each loaded question has a hint field, defaulting to empty string if not present
-                        const loadedQuestions = data.questions ? data.questions.map(q => ({ ...q, hint: q.hint || "", loadingMetadata: false })) : [{ songLink: "", artist: "", song: "", hint: "", loadingMetadata: false }];
+                        const loadedQuestions = data.questions ? data.questions.map(q => ({ ...q, hint: q.hint || "" })) : [emptyQuestion];
                         setQuestions(loadedQuestions);
                         setIsReady(data.isReady || false); // Populate isReady state
                     }
@@ -93,7 +95,7 @@ const EditQuiz = () => {
         if (!isNaN(numAmount) && numAmount >= 0 && questions) { // Allow 0 for amount
             const currentLength = questions.length;
             if (numAmount > currentLength) {
-                const newQuestionsToAdd = Array(numAmount - currentLength).fill(null).map(() => ({ songLink: "", artist: "", song: "" }));
+                const newQuestionsToAdd = Array(numAmount - currentLength).fill(null).map(() => (emptyQuestion));
                 setQuestions(prevQuestions => [...prevQuestions, ...newQuestionsToAdd]);
             }
             // Decreasing 'amount' in the input field will no longer automatically remove question entries.
@@ -102,7 +104,7 @@ const EditQuiz = () => {
             // If amount is cleared, and questions exist, reset questions array.
             // This is a deliberate action by the user to clear the amount.
             if (questions.length !== 0) {
-                setQuestions([]); // Or setQuestions([{ songLink: "", artist: "", song: "" }]) if 1 is min
+                setQuestions([]); // Or setQuestions([emptyQuestion]) if 1 is min
             }
         }
     }, [amount]); // Only re-run if amount changes
@@ -129,7 +131,7 @@ const EditQuiz = () => {
     };
 
     const addQuestion = () => {
-        const newQuestions = [...questions, { songLink: "", artist: "", song: "", hint: "", loadingMetadata: false }];
+        const newQuestions = [...questions, emptyQuestion];
         setQuestions(newQuestions);
         setAmount(String(newQuestions.length));
     };
