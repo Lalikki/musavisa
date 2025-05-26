@@ -31,7 +31,7 @@ const EditQuiz = () => {
     const [title, setTitle] = useState("");
     const [rules, setRules] = useState("");
     const [amount, setAmount] = useState("");
-    const [questions, setQuestions] = useState([{ songLink: "", artist: "", song: "" }]);
+    const [questions, setQuestions] = useState([emptyQuestion]);
     const [isReady, setIsReady] = useState(false); // New state for isReady
 
     // UI state

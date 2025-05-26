@@ -26,7 +26,7 @@ const Quiz = () => {
   const [success, setSuccess] = useState('');
   const [isReady, setIsReady] = useState(false); // New state for isReady, defaults to false
   const [error, setError] = useState('');
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState([emptyQuestion]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, currentUser => {
