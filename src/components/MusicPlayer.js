@@ -175,9 +175,6 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
                   opts={opts}
                   onReady={onPlayerReady}
                   onStateChange={onPlayerStateChange}
-                  onPlaybackRateChange={() => {
-                    console.log('Playback rate changed');
-                  }}
                   style={{ display: 'none' }} // Hide the YouTube player
                 />
               </Box>
