@@ -15,6 +15,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import YTSearch from './components/YTSearch';
 
 const EditQuiz = () => {
     const { t } = useTranslation(); // Initialize useTranslation
@@ -105,6 +106,17 @@ const EditQuiz = () => {
             }
         }
     }, [amount]); // Only re-run if amount changes
+
+    const handleYouTubeSearchSelection = (index, data) => {
+        const updatedQuestions = [...questions];
+        updatedQuestions[index] = {
+          ...updatedQuestions[index],
+          songLink: data.songLink,
+          artist: data.songArtist,
+          song: data.songName,
+        };
+        setQuestions(updatedQuestions);
+      };
 
     const handleQuestionChange = (index, field, value) => {
         const updatedQuestions = questions.map((q, i) => {
@@ -266,16 +278,7 @@ const EditQuiz = () => {
                                                 <Typography variant="subtitle1" component="h4" gutterBottom>
                                                     {t('common.songs')} {index + 1} ({t('common.dragToReorder', 'Drag to reorder')})
                                                 </Typography>
-                                                <TextField
-                                                    label={t('createNewQuizPage.songLinkLabel')}
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    margin="dense"
-                                                    value={q.songLink}
-                                                    onChange={e => handleQuestionChange(index, "songLink", e.target.value)}
-                                                    className="form-input-question"
-                                                    InputLabelProps={{ shrink: true }}
-                                                />
+                                                <YTSearch handleSelection={handleYouTubeSearchSelection} handleQuestionChange={handleQuestionChange} value={q.songLink} index={index} />
                                                 <TextField
                                                     label={t('createNewQuizPage.artistLabel')}
                                                     variant="outlined"
