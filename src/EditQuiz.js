@@ -15,6 +15,9 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import YTSearch from './components/YTSearch';
+
+const emptyQuestion = { songLink: "", artist: "", song: "", hint: "" }; // Default question structure
 
 const EditQuiz = () => {
     const { t } = useTranslation(); // Initialize useTranslation
@@ -28,7 +31,7 @@ const EditQuiz = () => {
     const [title, setTitle] = useState("");
     const [rules, setRules] = useState("");
     const [amount, setAmount] = useState("");
-    const [questions, setQuestions] = useState([{ songLink: "", artist: "", song: "" }]);
+    const [questions, setQuestions] = useState([emptyQuestion]);
     const [isReady, setIsReady] = useState(false); // New state for isReady
 
     // UI state
@@ -69,7 +72,7 @@ const EditQuiz = () => {
                         setRules(data.rules || "");
                         setAmount(data.amount ? String(data.amount) : "");
                         // Ensure each loaded question has a hint field, defaulting to empty string if not present
-                        const loadedQuestions = data.questions ? data.questions.map(q => ({ ...q, hint: q.hint || "", loadingMetadata: false })) : [{ songLink: "", artist: "", song: "", hint: "", loadingMetadata: false }];
+                        const loadedQuestions = data.questions ? data.questions.map(q => ({ ...q, hint: q.hint || "" })) : [emptyQuestion];
                         setQuestions(loadedQuestions);
                         setIsReady(data.isReady || false); // Populate isReady state
                     }
@@ -92,7 +95,7 @@ const EditQuiz = () => {
         if (!isNaN(numAmount) && numAmount >= 0 && questions) { // Allow 0 for amount
             const currentLength = questions.length;
             if (numAmount > currentLength) {
-                const newQuestionsToAdd = Array(numAmount - currentLength).fill(null).map(() => ({ songLink: "", artist: "", song: "" }));
+                const newQuestionsToAdd = Array(numAmount - currentLength).fill(null).map(() => (emptyQuestion));
                 setQuestions(prevQuestions => [...prevQuestions, ...newQuestionsToAdd]);
             }
             // Decreasing 'amount' in the input field will no longer automatically remove question entries.
@@ -101,10 +104,21 @@ const EditQuiz = () => {
             // If amount is cleared, and questions exist, reset questions array.
             // This is a deliberate action by the user to clear the amount.
             if (questions.length !== 0) {
-                setQuestions([]); // Or setQuestions([{ songLink: "", artist: "", song: "" }]) if 1 is min
+                setQuestions([]); // Or setQuestions([emptyQuestion]) if 1 is min
             }
         }
     }, [amount]); // Only re-run if amount changes
+
+    const handleYouTubeSearchSelection = (index, data) => {
+        const updatedQuestions = [...questions];
+        updatedQuestions[index] = {
+          ...updatedQuestions[index],
+          songLink: data.songLink,
+          artist: data.songArtist,
+          song: data.songName,
+        };
+        setQuestions(updatedQuestions);
+      };
 
     const handleQuestionChange = (index, field, value) => {
         const updatedQuestions = questions.map((q, i) => {
@@ -117,7 +131,7 @@ const EditQuiz = () => {
     };
 
     const addQuestion = () => {
-        const newQuestions = [...questions, { songLink: "", artist: "", song: "", hint: "", loadingMetadata: false }];
+        const newQuestions = [...questions, emptyQuestion];
         setQuestions(newQuestions);
         setAmount(String(newQuestions.length));
     };
@@ -266,16 +280,7 @@ const EditQuiz = () => {
                                                 <Typography variant="subtitle1" component="h4" gutterBottom>
                                                     {t('common.songs')} {index + 1} ({t('common.dragToReorder', 'Drag to reorder')})
                                                 </Typography>
-                                                <TextField
-                                                    label={t('createNewQuizPage.songLinkLabel')}
-                                                    variant="outlined"
-                                                    fullWidth
-                                                    margin="dense"
-                                                    value={q.songLink}
-                                                    onChange={e => handleQuestionChange(index, "songLink", e.target.value)}
-                                                    className="form-input-question"
-                                                    InputLabelProps={{ shrink: true }}
-                                                />
+                                                <YTSearch handleSelection={handleYouTubeSearchSelection} handleQuestionChange={handleQuestionChange} value={q.songLink} index={index} />
                                                 <TextField
                                                     label={t('createNewQuizPage.artistLabel')}
                                                     variant="outlined"

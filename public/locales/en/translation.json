@@ -111,7 +111,10 @@
         "creatingQuiz": "Creating quiz...",
         "createQuizError": "Failed to create quiz",
         "createQuizSuccess": "Quiz created successfully!",
-        "loginToCreate": "Please log in to create a quiz."
+        "loginToCreate": "Please log in to create a quiz.",
+        "searchFromYouTube": "Search from YouTube",
+        "emptyVideoList": "Clear video list",
+        "songLinkSearchLabel": "Song link / YouTube search (Optional)"
     },
     "editQuizPage": {
         "pageTitle": "Edit Quiz: {{quizTitle}}",

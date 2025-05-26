@@ -111,7 +111,10 @@
         "creatingQuiz": "Luodaan visaa...",
         "createQuizError": "Visan luonti epäonnistui",
         "createQuizSuccess": "Visa luotu onnistuneesti!",
-        "loginToCreate": "Ole hyvä ja kirjaudu sisään luodaksesi visan."
+        "loginToCreate": "Ole hyvä ja kirjaudu sisään luodaksesi visan.",
+        "searchFromYouTube": "Hae YouTubesta",
+        "emptyVideoList": "Tyhjennä videolista",
+        "songLinkSearchLabel": "Kappalelinkki / YouTube-haku (Vapaaehtoinen)"
     },
     "editQuizPage": {
         "pageTitle": "Muokkaa visaa: {{quizTitle}}",
