@@ -17,12 +17,8 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
   const [volume, setVolume] = useState(50); // Default volume level
   const [duration, setDuration] = useState(0); // Default volume level
   const [player, setPlayer] = useState(null); // Store the YouTube player instance
-  // const [playerCounter, setPlayerCounter] = useState(0); // Counter to track player readiness
   const [popoverHintAnchorEl, setPopoverHintAnchorEl] = useState(null);
-  const [time, setTime] = useState({
-    curTime: 0,
-    prevTime: 0,
-  });
+  const [progress, setProgress] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -35,9 +31,6 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
     return match ? match[1] : null;
   };
 
-  const { curTime, prevTime } = time;
-  const progress = (curTime / duration) * 100;
-
   const disableControls = !player || !videoId(); // Disable buttons if player is not ready
   const opts = {
     playerVars: {
@@ -48,27 +41,20 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
   useEffect(() => {
     if (player && play) {
       const interval = setInterval(() => {
-        const currentTime = player.getCurrentTime();
-        console.log('Current Time:', currentTime, 'Duration:', duration);
-        setTime({ ...time, curTime: currentTime });
+        const curTime = player.getCurrentTime();
+        setProgress((curTime / duration) * 100);
       }, 100);
+
+      if (!play) {
+        clearInterval(interval); // Clear the interval if not playing
+      }
 
       return () => clearInterval(interval);
     }
-  }, [player, duration, play, curTime, prevTime, time]);
-
-  useEffect(() => {
-    if (progress >= 100 && curTime === prevTime) {
-      setPlay(false); // Stop playback when progress reaches 100%
-      setTime({ ...time, curTime: 0 }); // Reset progress
-    } else {
-      setTime({ ...time, prevTime: time.curTime }); // Update previous time
-    }
-  }, [progress, curTime, prevTime, time]);
+  }, [player, duration, play]);
 
   const handlePlay = () => {
     if (!player) return;
-    console.log(player.getCurrentTime(), duration, progress);
     player.setVolume(volume); // Prevent play if player is not ready
     if (play) {
       player.pauseVideo();
@@ -95,12 +81,14 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
   const onPlayerReady = event => {
     setPlayer(event.target);
     setDuration(event.target.getDuration());
-    // setPlayerCounter(playerCounter + 1);
-    // Increment the player counter since YouTube component is rendered twice
   };
 
   const onPlayerStateChange = event => {
-    // Handle player state changes
+    if (event.data === YouTube.PlayerState.ENDED) {
+      setPlay(false); // Stop playback when the video ends
+      setProgress(0); // Reset progress
+      player.stopVideo(); // Stop the video
+    }
   };
 
   return (
@@ -190,7 +178,7 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
                   onPlaybackRateChange={() => {
                     console.log('Playback rate changed');
                   }}
-                  // style={{ display: 'none' }} // Hide the YouTube player
+                  style={{ display: 'none' }} // Hide the YouTube player
                 />
               </Box>
               <Box
@@ -210,7 +198,7 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
           )}
         </CardContent>
         <Box sx={{ width: '100%' }}>
-          <LinearProgress variant="determinate" value={progress} sx={{ height: 10 }} />
+          <LinearProgress variant="determinate" value={progress} />
         </Box>
       </Box>
     </Card>
