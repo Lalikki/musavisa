@@ -258,7 +258,7 @@ const AnswerDetails = () => {
             <Paper elevation={1} sx={{ p: { xs: 1.5, sm: 2.5 }, mb: 3, backgroundColor: 'background.paper' }} className="answer-summary">
                 <Typography variant="body1"><strong>{t('answerDetailsPage.submittedBy')}:</strong> {quizAnswer.answerCreatorName || t('common.unnamedUser', 'Anonymous')}</Typography>
                 {quizAnswer.teamSize > 1 && <Typography variant="body1"><strong>{t('common.team')}:</strong> {getTeamDisplayString(quizAnswer)}</Typography>}
-                <Typography variant="body1"><strong>{t('answerDetailsPage.submittedAt')}:</strong> {quizAnswer.submittedAt ? format(quizAnswer.submittedAt.toDate(), 'yyyy-MM-dd HH:mm') : 'N/A'}</Typography>
+                <Typography variant="body1"><strong>{t('answerDetailsPage.submittedAt')}:</strong> {quizAnswer.submittedAt ? format(quizAnswer.submittedAt.toDate(), 'dd.MM.yyyy HH:mm') : 'N/A'}</Typography>
                 <Typography variant="body1"><strong>{t('common.status')}:</strong>
                     {quizAnswer.isCompleted ? ` ${t('answerDetailsPage.statusCompleted')}` :
                         quizAnswer.isChecked ? ` ${t('answerDetailsPage.statusReadyForReview')}` :

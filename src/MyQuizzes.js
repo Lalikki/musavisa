@@ -190,7 +190,7 @@ const MyQuizzes = () => {
                                     >
                                         <TableCell data-label={t('common.title')} sx={mobileCardCellStyle(theme)}>{quiz.title}</TableCell>
                                         <TableCell data-label={t('common.numSongs')} sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
-                                        <TableCell data-label={t('common.created')} sx={mobileCardCellStyle(theme)}>{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                        <TableCell data-label={t('common.created')} sx={mobileCardCellStyle(theme)}>{quiz.createdAt ? format(quiz.createdAt, 'dd.MM.yyyy') : 'N/A'}</TableCell>
                                         <TableCell data-label={t('common.actions')} sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2), '& button': { marginRight: theme.spacing(1), marginBottom: theme.spacing(1) } } }}>
                                             <Button
                                                 className="view-action-button"

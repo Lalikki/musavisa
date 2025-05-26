@@ -112,13 +112,13 @@ const EditQuiz = () => {
     const handleYouTubeSearchSelection = (index, data) => {
         const updatedQuestions = [...questions];
         updatedQuestions[index] = {
-          ...updatedQuestions[index],
-          songLink: data.songLink,
-          artist: data.songArtist,
-          song: data.songName,
+            ...updatedQuestions[index],
+            songLink: data.songLink,
+            artist: data.songArtist,
+            song: data.songName,
         };
         setQuestions(updatedQuestions);
-      };
+    };
 
     const handleQuestionChange = (index, field, value) => {
         const updatedQuestions = questions.map((q, i) => {
@@ -222,6 +222,7 @@ const EditQuiz = () => {
             <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 2 }}>
                 {t('editQuizPage.pageTitle', { quizTitle: originalQuizData?.title || '...' })}
             </Typography>
+
             <Paper component="form" onSubmit={handleSubmit} className="quiz-creation-form" sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }}>
                 <TextField
                     label={t('createNewQuizPage.quizTitleLabel')}

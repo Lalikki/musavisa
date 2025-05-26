@@ -4,18 +4,18 @@ import { db } from './firebase';
 import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
 import {
-    Typography,
-    Button,
-    Box,
-    Paper,
-    List,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    CircularProgress,
+  Typography,
+  Button,
+  Box,
+  Paper,
+  List,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  CircularProgress,
 } from '@mui/material';
 import MusicPlayer from './components/MusicPlayer';
 import { useTheme } from '@mui/material/styles'; // Import useTheme
@@ -57,7 +57,7 @@ const QuizDetails = () => {
         setLoading(false);
       }
     };
-    
+
     const fetchAnswers = async () => {
       setAnswersLoading(true);
       setAnswersError(null);
@@ -150,7 +150,7 @@ const QuizDetails = () => {
           <strong>{t('common.by')}:</strong> {quiz.creatorName || t('common.unnamedUser', 'Unknown')}
         </Typography>
         <Typography variant="body1">
-          <strong>{t('common.created')}:</strong> {quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}
+          <strong>{t('common.created')}:</strong> {quiz.createdAt ? format(quiz.createdAt, 'dd.MM.yyyy') : 'N/A'}
         </Typography>
       </Paper>
 
@@ -239,7 +239,7 @@ const QuizDetails = () => {
                     {answer.isCompleted ? t('answerDetailsPage.statusCompleted') : answer.isChecked ? t('answerDetailsPage.statusReadyForReview') : t('answerDetailsPage.statusInProgress')}
                   </TableCell>
                   <TableCell data-label={t('common.submitted')} sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.up('sm')]: { textAlign: 'right' } }}>
-                    {answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}
+                    {answer.submittedAt ? format(answer.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A'}
                   </TableCell>
                 </TableRow>
               ))}

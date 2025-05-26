@@ -198,6 +198,11 @@ const EditAnswer = () => {
             <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 2 }}>
                 {t('editAnswerPage.pageTitle', { quizTitle: quizAnswer.quizTitle })}
             </Typography>
+            {correctQuizData?.rules && (
+                <Typography variant="body1" paragraph align="center" sx={{ mb: 3 }}>
+                    {correctQuizData.rules}
+                </Typography>
+            )}
             <Paper component="form" onSubmit={handleSubmit} sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }} className="edit-answer-form">
                 {editedAnswers.map((answer, index) => (
                     <Box key={index} className="song-guess-item" sx={{ mb: 2, p: { xs: 0.5, sm: 1 } }}>

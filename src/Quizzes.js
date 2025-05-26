@@ -122,7 +122,7 @@ const Quizzes = () => {
                                 >
                                     <TableCell data-label={t('common.title')} sx={mobileCardCellStyle(theme)}>{quiz.title}</TableCell>
                                     <TableCell data-label={t('common.songs')} sx={mobileCardCellStyle(theme)}>{quiz.amount}</TableCell>
-                                    <TableCell data-label={t('common.created')} sx={mobileCardCellStyle(theme)}>{quiz.createdAt ? format(quiz.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                    <TableCell data-label={t('common.created')} sx={mobileCardCellStyle(theme)}>{quiz.createdAt ? format(quiz.createdAt, 'dd.MM.yyyy') : 'N/A'}</TableCell>
                                     <TableCell data-label={t('common.by')} sx={mobileCardCellStyle(theme)}>{quiz.creatorName || t('common.unnamedUser', 'Unknown')}</TableCell> {/* Added default for unnamed user */}
                                     <TableCell data-label={t('common.actions')} sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2) } }}>
                                         <Button className="view-action-button" variant="outlined" color="primary" to={`/answer-quiz/${quiz.id}`} startIcon={<AddCircleIcon />} component={Link}>{t('myQuizzesPage.answerAction')}</Button>

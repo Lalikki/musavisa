@@ -147,7 +147,7 @@ const MyAnswers = () => {
                                     <TableCell data-label={t('common.quizTitle')} sx={mobileCardCellStyle(theme)}>{answer.quizTitle}</TableCell>
                                     {/* Assuming max score is 1 point per song (0.5 artist + 0.5 song) */}
                                     <TableCell data-label={t('common.score')} sx={mobileCardCellStyle(theme)}>{answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}</TableCell>
-                                    <TableCell data-label={t('common.submitted')} sx={mobileCardCellStyle(theme)}>{answer.submittedAt ? format(answer.submittedAt, 'yyyy-MM-dd HH:mm') : 'N/A'}</TableCell>
+                                    <TableCell data-label={t('common.submitted')} sx={mobileCardCellStyle(theme)}>{answer.submittedAt ? format(answer.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A'}</TableCell>
                                     <TableCell data-label={t('common.team')} sx={mobileCardCellStyle(theme)}>{getTeamDisplayString(answer)}</TableCell>
                                     <TableCell data-label={t('common.status')} sx={mobileCardCellStyle(theme)}>
                                         {answer.isCompleted ? t('answerDetailsPage.statusCompleted') :

@@ -271,7 +271,7 @@ const AnswerQuiz = () => {
                             InputLabelProps={{ shrink: true }}
                         />
                         <TextField
-                            label="Song Name"
+                            label={t('answerQuizPage.songName')}
                             variant="outlined"
                             fullWidth
                             margin="dense"
