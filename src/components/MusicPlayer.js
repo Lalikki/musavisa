@@ -97,12 +97,13 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
         variant="h1"
         sx={{
           ml: 1,
+          fontSize: '6.5rem',
           position: 'absolute', // Position it absolutely within the card
           fontWeight: 'bold', // Make it bold for emphasis
           zIndex: 0, // Ensure it stays in the background
           pointerEvents: 'none', // Prevent it from interfering with interactions
           whiteSpace: 'nowrap', // Prevent text wrapping
-          opacity: 0.2,
+          opacity: 0.1,
         }}
       >
         {songNumber}
