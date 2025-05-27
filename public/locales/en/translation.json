@@ -106,6 +106,7 @@
         "fetchingMetadata": "Fetching metadata...",
         "removeSong": "Remove Song",
         "addSongEntry": "Add Song Entry",
+        "maxScorePerSongLabel": "Max score per song",
         "markAsReadyLabel": "Mark as Ready",
         "createQuizButton": "Create Quiz",
         "creatingQuiz": "Creating quiz...",

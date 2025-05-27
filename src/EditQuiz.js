@@ -14,6 +14,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import { InputLabel } from '@mui/material';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import YTSearch from './components/YTSearch';
 
@@ -31,6 +35,7 @@ const EditQuiz = () => {
     const [title, setTitle] = useState("");
     const [rules, setRules] = useState("");
     const [amount, setAmount] = useState("");
+    const [maxScorePerSong, setMaxScorePerSong] = useState("1"); // New state, default to 1
     const [questions, setQuestions] = useState([emptyQuestion]);
     const [isReady, setIsReady] = useState(false); // New state for isReady
 
@@ -71,6 +76,7 @@ const EditQuiz = () => {
                         setTitle(data.title || "");
                         setRules(data.rules || "");
                         setAmount(data.amount ? String(data.amount) : "");
+                        setMaxScorePerSong(data.maxScorePerSong ? String(data.maxScorePerSong) : "1.5"); // Populate maxScorePerSong
                         // Ensure each loaded question has a hint field, defaulting to empty string if not present
                         const loadedQuestions = data.questions ? data.questions.map(q => ({ ...q, hint: q.hint || "" })) : [emptyQuestion];
                         setQuestions(loadedQuestions);
@@ -171,6 +177,7 @@ const EditQuiz = () => {
         // Validations (similar to Quiz.js)
         if (!title.trim()) { setError(t('common.error') + ": " + t('createNewQuizPage.quizTitleLabel') + " " + t('common.isRequired', 'is required')); return; }
         if (!amount || isNaN(amount) || Number(amount) <= 0) { setError(t('common.error') + ": " + t('createNewQuizPage.amountOfSongsLabel') + " " + t('common.mustBePositive', 'must be a positive number')); return; }
+        if (!maxScorePerSong || isNaN(maxScorePerSong) || Number(maxScorePerSong) <= 0) { setError(t('common.error') + ": " + t('createNewQuizPage.maxScorePerSongLabel', 'Max score per song') + " " + t('common.mustBePositive', 'must be a positive number')); return; }
         if (questions.length !== Number(amount)) { setError(t('common.error') + ": " + t('createNewQuizPage.songEntriesErrorMismatch', { count: questions.length, amount: amount })); return; }
         for (const q of questions) {
             if (!q.artist.trim() || !q.song.trim()) { setError(t('common.error') + ": " + t('createNewQuizPage.songEntryFieldsRequired')); return; }
@@ -183,6 +190,7 @@ const EditQuiz = () => {
                 title,
                 rules,
                 amount: Number(amount),
+                maxScorePerSong: Number(maxScorePerSong), // Add maxScorePerSong to the update
                 questions,
                 isReady, // Add isReady to the update
                 updatedAt: serverTimestamp() // Optional: track updates
@@ -259,6 +267,21 @@ const EditQuiz = () => {
                     className="form-input-full-width"
                     InputLabelProps={{ shrink: true }}
                 />
+                <FormControl fullWidth margin="dense" required className="form-input-full-width">
+                    <InputLabel id="edit-max-score-per-song-label" shrink>{t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}</InputLabel>
+                    <Select
+                        labelId="edit-max-score-per-song-label"
+                        id="edit-max-score-per-song-select"
+                        value={maxScorePerSong}
+                        label={t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}
+                        onChange={e => setMaxScorePerSong(e.target.value)}
+                    >
+                        <MenuItem value="1">1</MenuItem>
+                        <MenuItem value="1.5">1.5</MenuItem>
+                        <MenuItem value="2">2</MenuItem>
+                    </Select>
+                </FormControl>
+
 
                 <Typography variant="h6" component="h3" gutterBottom sx={{ mt: 2, mb: 1 }}>
                     {t('createNewQuizPage.songEntriesTitle')}

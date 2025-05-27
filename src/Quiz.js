@@ -11,6 +11,10 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import { InputLabel } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import YTSearch from './components/YTSearch';
@@ -23,6 +27,7 @@ const Quiz = () => {
   const [title, setTitle] = useState('');
   const [rules, setRules] = useState('');
   const [amount, setAmount] = useState('');
+  const [maxScorePerSong, setMaxScorePerSong] = useState('1'); // Default to 1
   const [success, setSuccess] = useState('');
   const [isReady, setIsReady] = useState(false); // New state for isReady, defaults to false
   const [error, setError] = useState('');
@@ -127,6 +132,10 @@ const Quiz = () => {
       setError(t('common.error') + ': ' + t('createNewQuizPage.amountOfSongsLabel') + ' ' + t('common.mustBePositive', 'must be a positive number'));
       return;
     }
+    if (!maxScorePerSong || isNaN(maxScorePerSong) || Number(maxScorePerSong) <= 0) {
+      setError(t('common.error') + ': ' + t('createNewQuizPage.maxScorePerSongLabel', 'Max score per song') + ' ' + t('common.mustBePositive', 'must be a positive number')); // Add new translation key
+      return;
+    }
     if (questions.length !== Number(amount)) {
       setError(t('common.error') + ': ' + t('createNewQuizPage.songEntriesErrorMismatch', { count: questions.length, amount: amount }));
       return;
@@ -144,6 +153,7 @@ const Quiz = () => {
         rules, // Changed from description
         amount: Number(amount),
         createdBy: user ? user.uid : 'unknown', // Handle case where user might be null briefly
+        maxScorePerSong: Number(maxScorePerSong), // Save the max score per song
         creatorName: user ? user.displayName : t('common.unnamedUser', 'Unknown'), // Store display name
         createdAt: serverTimestamp(),
         questions,
@@ -153,6 +163,7 @@ const Quiz = () => {
       setTitle('');
       setRules(''); // Changed from setDescription
       setAmount('');
+      setMaxScorePerSong('1.5'); // Reset max score per song
       setQuestions([emptyQuestion]); // Reset questions
       setIsReady(false); // Reset isReady checkbox
     } catch (err) {
@@ -197,7 +208,7 @@ const Quiz = () => {
             rows={3}
             value={rules}
             onChange={e => setRules(e.target.value)}
-            // required // Rules are optional based on label
+            required
             className="form-input-full-width"
             slotProps={{ inputLabel: { shrink: true } }}
           />
@@ -213,6 +224,21 @@ const Quiz = () => {
             className="form-input-full-width"
             slotProps={{ inputLabel: { shrink: true }, inputProps: { min: 1 } }}
           />
+          <FormControl fullWidth margin="dense" required className="form-input-full-width">
+            <InputLabel id="max-score-per-song-label" shrink>{t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}</InputLabel>
+            <Select
+              labelId="max-score-per-song-label"
+              id="max-score-per-song-select"
+              value={maxScorePerSong}
+              label={t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')} // Label for accessibility and when not shrunk
+              onChange={e => setMaxScorePerSong(e.target.value)}
+            >
+              <MenuItem value="1">1</MenuItem>
+              <MenuItem value="1.5">1.5</MenuItem>
+              <MenuItem value="2">2</MenuItem>
+            </Select>
+          </FormControl>
+
           {Number(amount) > 0 && (
             <Box sx={{ mt: 1, mb: 1 }}>
               {' '}

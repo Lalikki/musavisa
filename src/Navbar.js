@@ -186,7 +186,7 @@ const Navbar = () => {
                         <Select
                             labelId="language-select-label"
                             id="language-select"
-                            value={i18n.language.split('-')[0]} // Use base language (e.g., 'en' from 'en-US')
+                            value={i18n?.language?.split('-')[0] || ''} // Use base language (e.g., 'en' from 'en-US')
                             onChange={handleLanguageChange}
                             // label={t('navbar.language')} // Optional label, if you use InputLabel
                             sx={{ color: 'white', '.MuiSelect-select': { paddingRight: '24px' } }} // Ensure text is white
