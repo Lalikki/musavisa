@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { db, auth } from './firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -23,6 +24,7 @@ const emptyQuestion = { songLink: '', artist: '', song: '', hint: '' };
 
 const Quiz = () => {
   const { t } = useTranslation(); // Initialize useTranslation
+  const navigate = useNavigate(); // Initialize useNavigate
   const [user, setUser] = useState(null);
   const [title, setTitle] = useState('');
   const [rules, setRules] = useState('');
@@ -160,12 +162,16 @@ const Quiz = () => {
         isReady, // Add isReady field to Firestore document
       });
       setSuccess(t('createNewQuizPage.createQuizSuccess'));
-      setTitle('');
-      setRules(''); // Changed from setDescription
-      setAmount('');
-      setMaxScorePerSong('1.5'); // Reset max score per song
-      setQuestions([emptyQuestion]); // Reset questions
-      setIsReady(false); // Reset isReady checkbox
+      // Instead of resetting fields, navigate to My Quizzes page
+      // Fields will naturally reset when the component unmounts or re-mounts on next visit
+      // Or you can keep the resets if you prefer, but navigation will happen quickly
+      // setTitle('');
+      // setRules('');
+      // setAmount('');
+      // setMaxScorePerSong('1'); // Reset to initial default
+      // setQuestions([emptyQuestion]);
+      // setIsReady(false);
+      navigate('/my-quizzes'); // Redirect to My Quizzes page
     } catch (err) {
       setError(t('createNewQuizPage.createQuizError') + ': ' + err.message);
     }

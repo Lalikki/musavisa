@@ -14,6 +14,8 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
+import Snackbar from '@mui/material/Snackbar'; // Added
+import Alert from '@mui/material/Alert'; // Added
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const AnswerQuiz = () => {
@@ -134,20 +136,28 @@ const AnswerQuiz = () => {
             };
 
             const docRef = await addDoc(collection(db, "quizAnswers"), answerData); // Capture the DocumentReference
-            setSubmitSuccess(t('answerQuizPage.submitSuccess'));
+            setSubmitSuccess(t('common.saveSuccessMessage'));
+            // Clear success message after a delay, slightly longer than Snackbar duration if needed
+            setTimeout(() => {
+                setSubmitSuccess('');
+            }, 2500); // e.g., 2.5 seconds
 
-            if (isReadyForReview) {
-                navigate(`/my-answers/${docRef.id}`); // Redirect to Answer Details page
-            } else {
-                // Stay on the page, maybe clear the form or show a message
-                // For now, just show success message and clear form state
-                setAnswers(Array(quiz.amount).fill({ artist: '', songName: '', showEasterEggHint: false })); // Clear form
-                setIsReadyForReview(false); // Reset checkbox
-                setTeamSize(1); // Reset team size
-                setTeamMembers([]); // Reset team members
-                // Redirect to My Answers page after successful submission
-                navigate('/my-answers');
-            }
+            // Delay navigation for 2 seconds to show success message
+            setTimeout(() => {
+                if (isReadyForReview) {
+                    navigate(`/my-answers/${docRef.id}`); // Redirect to Answer Details page
+                } else {
+                    // If not ready for review, but still submitted, redirect to My Answers
+                    // Form clearing can happen if user stays, but here we navigate
+                    // setAnswers(Array(quiz.amount).fill({ artist: '', songName: '', showEasterEggHint: false }));
+                    // setIsReadyForReview(false);
+                    // setTeamSize(1);
+                    // setTeamMembers([]);
+                    navigate('/my-answers');
+                }
+            }, 2000); // 2000 milliseconds = 2 seconds
+
+
         } catch (err) {
             console.error("Error submitting answers:", err);
             setSubmitError(t('answerQuizPage.submitError') + " " + err.message);
@@ -186,12 +196,19 @@ const AnswerQuiz = () => {
             };
 
             const docRef = await addDoc(collection(db, "quizAnswers"), answerData);
-            setSubmitSuccess(t('answerQuizPage.submitAndReviewSuccess'));
-            navigate(`/my-answers/${docRef.id}`); // Redirect to Answer Details page
+            setSubmitSuccess(t('common.saveSuccessMessage'));
+            // Clear success message after a delay
+            setTimeout(() => {
+                setSubmitSuccess('');
+            }, 2500);
+            // Delay navigation for 2 seconds
+            setTimeout(() => {
+                navigate(`/my-answers/${docRef.id}`); // Redirect to Answer Details page
+            }, 2000); // 2000 milliseconds = 2 seconds
 
         } catch (err) {
             console.error("Error submitting answers for review:", err);
-            setSubmitError(t('answerQuizPage.submitAndReviewError') + " " + err.message);
+            setSubmitError(t('common.saveErrorMessage') + " " + err.message);
         } finally {
             setSubmitting(false);
         }
@@ -300,17 +317,17 @@ const AnswerQuiz = () => {
                     </Button>
                 </Box>
 
-                {submitSuccess && (
-                    <Typography color="success.main" sx={{ mt: 2, textAlign: 'center' }} className="success-text form-message">
-                        {submitSuccess}
-                    </Typography>
-                )}
                 {submitError && (
                     <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">
                         {submitError}
                     </Typography>
                 )}
             </Paper>
+            <Snackbar open={!!submitSuccess} autoHideDuration={2000} onClose={() => setSubmitSuccess('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+                <Alert onClose={() => setSubmitSuccess('')} severity="success" sx={{ width: '100%' }}>
+                    {submitSuccess}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

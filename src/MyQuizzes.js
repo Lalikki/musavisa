@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from './firebase';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, doc, deleteDoc, limit } from 'firebase/firestore';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -13,6 +13,7 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box'; // Import Box
 import MediaBluetoothOnIcon from '@mui/icons-material/MediaBluetoothOn';
 import ShareIcon from '@mui/icons-material/Share'; // Import ShareIcon
+import DeleteIcon from '@mui/icons-material/Delete'; // Import DeleteIcon
 import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { onAuthStateChanged } from 'firebase/auth';
 import { format } from 'date-fns'; // For formatting dates
@@ -66,11 +67,23 @@ const MyQuizzes = () => {
                 orderBy("createdAt", "desc")
             );
             const querySnapshot = await getDocs(q);
-            const userQuizzesData = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : null,
-            }));
+            const userQuizzesDataPromises = querySnapshot.docs.map(async (quizDoc) => {
+                const quizData = {
+                    id: quizDoc.id,
+                    ...quizDoc.data(),
+                    createdAt: quizDoc.data().createdAt ? quizDoc.data().createdAt.toDate() : null
+                };
+                // Check if this quiz has any answers
+                const answersQuery = query(
+                    collection(db, "quizAnswers"),
+                    where("quizId", "==", quizDoc.id),
+                    limit(1)
+                );
+                const answerSnapshots = await getDocs(answersQuery);
+                quizData.hasAnswers = !answerSnapshots.empty;
+                return quizData;
+            });
+            const userQuizzesData = await Promise.all(userQuizzesDataPromises);
             setMyQuizzes(userQuizzesData);
         } catch (err) {
             console.error("Error fetching user quizzes:", err);
@@ -120,6 +133,24 @@ const MyQuizzes = () => {
         // Navigate to a hosting page or trigger hosting logic
         // For now, let's assume it navigates to a quiz details page that might have hosting controls
         navigate(`/my-quizzes/${quizId}`); // Or a specific hosting route
+    };
+
+    const handleDeleteQuiz = async (quizIdToDelete) => {
+        // The button is only rendered if quiz.hasAnswers is false,
+        // so we can directly proceed with confirmation and deletion.
+        if (window.confirm(t('myQuizzesPage.confirmDeleteQuiz', 'Are you sure you want to delete this quiz? This action cannot be undone.'))) {
+            try {
+                const quizDocRef = doc(db, "quizzes", quizIdToDelete);
+                await deleteDoc(quizDocRef);
+                // Update local state to remove the quiz
+                setMyQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz.id !== quizIdToDelete));
+                // Optionally, show a success message
+                // setSuccessMessage(t('myQuizzesPage.deleteSuccess', 'Quiz deleted successfully.'));
+            } catch (err) {
+                console.error("Error deleting quiz:", err);
+                setError(t('myQuizzesPage.deleteError', 'Failed to delete quiz. Please try again.'));
+            }
+        }
     };
 
     if (!user && !loading) {
@@ -211,8 +242,13 @@ const MyQuizzes = () => {
                                                 color="secondary" // Or your preferred color
                                                 onClick={() => handleOpenShareModal(quiz)}
                                                 startIcon={<ShareIcon />}
-                                                sx={{ ml: { sm: 1 } }} // Add margin-left on small screens and up
+                                                sx={{ ml: { sm: 1 }, mr: { sm: 1 } }} // Add margin-left on small screens and up
                                             >{t('myQuizzesPage.shareAction')}</Button>
+                                            {!quiz.hasAnswers && (
+                                                <Button className="delete-action-button" variant="outlined" color="error" onClick={() => handleDeleteQuiz(quiz.id)} startIcon={<DeleteIcon />}>
+                                                    {t('common.delete', 'Delete')}
+                                                </Button>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 </React.Fragment>
