@@ -17,8 +17,9 @@
     "answerQuizPage": {
         "teamSize": "Team Size",
         "player": "Player",
-        "teamMemberName": "Team Member {{count}} Name",
+        "teamMemberName": "{{count}}. Player name",
         "playerCount": "{{count}} Players",
+        "singlePlayerCount": "{{count}} Player",
         "artist": "Artist",
         "songName": "Song Name",
         "submitAnswers": "Submit Answers",

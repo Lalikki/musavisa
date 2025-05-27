@@ -17,8 +17,9 @@
     "answerQuizPage": {
         "teamSize": "Tiimin koko",
         "player": "Pelaaja",
-        "teamMemberName": "Tiimin jäsenen {{count}} nimi",
+        "teamMemberName": "{{count}}. Pelaajan nimi",
         "playerCount": "{{count}} Pelaajaa",
+        "singlePlayerCount": "{{count}} Pelaaja",
         "artist": "Artisti",
         "songName": "Kappaleen nimi",
         "submitAnswers": "Tallenna keskeneräisenä",

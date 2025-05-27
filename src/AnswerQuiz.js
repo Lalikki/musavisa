@@ -229,7 +229,7 @@ const AnswerQuiz = () => {
                         label={t('answerQuizPage.teamSize')}
                         onChange={handleTeamSizeChange}
                     >
-                        <MenuItem value={1}>{t('answerQuizPage.playerCount', { count: 1 })}</MenuItem>
+                        <MenuItem value={1}>{t('answerQuizPage.singlePlayerCount', { count: 1 })}</MenuItem>
                         <MenuItem value={2}>{t('answerQuizPage.playerCount', { count: 2 })}</MenuItem>
                         <MenuItem value={3}>{t('answerQuizPage.playerCount', { count: 3 })}</MenuItem>
                         <MenuItem value={4}>{t('answerQuizPage.playerCount', { count: 4 })}</MenuItem>
@@ -252,7 +252,7 @@ const AnswerQuiz = () => {
                 {answers.map((answer, index) => (
                     <Box key={index} className="song-guess-item" elevation={4} sx={{ mb: 2, p: { xs: 0.5, sm: 1 }, backgroundColor: 'transparent', boxShadow: 'none', border: 'none' }}>
                         <Typography variant="h6" component="h4" gutterBottom>
-                            {t('common.songs')} {index + 1}
+                            {t('common.song')} {index + 1}
                         </Typography>
                         {answer.showEasterEggHint && (
                             <Typography variant="caption" color="secondary" sx={{ display: 'block', mb: 0.5, textAlign: 'left' }}>
