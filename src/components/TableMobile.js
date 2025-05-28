@@ -1,4 +1,4 @@
-import { Box, Button, ButtonGroup, Card, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { Box, Card, Table, TableBody, TableCell, TableRow } from '@mui/material';
 
 export default function TableMobile({ headers, rows, data, actions }) {
   return (
@@ -7,8 +7,8 @@ export default function TableMobile({ headers, rows, data, actions }) {
         <TableBody>
           {headers.map((header, index) => (
             <TableRow key={index}>
-              <TableCell variant="head">{header}</TableCell>
-              <TableCell>{rows[index]}</TableCell>
+              <TableCell variant="head">{header.value}</TableCell>
+              <TableCell>{rows[index].value}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore'; // Added where
-import { format } from 'date-fns';
-import { Button, useMediaQuery } from '@mui/material';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
+import { useMediaQuery } from '@mui/material';
 import Box from '@mui/material/Box';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper'; // Often used with TableContainer
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import TableWeb from './components/TableWeb';
+import TableMobile from './components/TableMobile';
 
 const Highscores = () => {
   // const [highscores, setHighscores] = useState([]); // Old state
@@ -26,17 +19,16 @@ const Highscores = () => {
   const { t } = useTranslation(); // Initialize useTranslation
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const headers = [t('common.rank'), t('common.player'), t('highscoresPage.quizzesAnswered'), t('highscoresPage.overallAccuracy')]; // Define the headers for the web table
-  const rows = data => {
-    if (!Array.isArray(data)) return getRowData(data);
+  const headers = [{ value: t('common.rank') }, { value: t('common.player') }, { value: t('highscoresPage.quizzesAnswered') }, { value: t('highscoresPage.overallAccuracy'), align: 'right' }]; // Define the headers for the web table
+  const rows = (data, index) => {
+    if (!Array.isArray(data)) return getRowData(data, index);
     return data && data.map((item, i) => getRowData(item, i)); // Define the rows for the web table
   };
   const getRowData = (data, index) => {
-    if (!data || typeof data !== 'object') return headers.map(() => 'N/A'); // Handle case where quiz is not an object
-    const rank = index + 1; // Calculate rank based on index
+    const rank = ++index; 
     const overallPercentage = data.overallPercentage ? `${data.overallPercentage.toFixed(2)}%` : '0%'; // Format percentage
-    const overallPercentageSubText = `${data.totalCorrectAnswers}/${data.totalPossibleAnswers} ${t('highscoresPage.correctAnswers')}`
-    return [rank, data.userName, data.quizzesAnsweredCount, overallPercentage];
+    const overallPercentageSubText = `${data.totalCorrectAnswers}/${data.totalPossibleAnswers} ${t('highscoresPage.correctAnswers')}`;
+    return [{ value: rank }, { value: data.userName }, { value: data.quizzesAnsweredCount }, { value: overallPercentage, subValue: overallPercentageSubText, align: 'right' }]; // Return an array for the row
   };
 
   useEffect(() => {
@@ -124,39 +116,11 @@ const Highscores = () => {
       <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ mb: 3 }}>
         {t('highscoresPage.userLeaderboardTitle')}
       </Typography>
-
       {userStats.length === 0 && !loading && <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('highscoresPage.noHighscores')}</Typography>}
-
-      {userStats.length > 0 && <TableWeb headers={headers} rows={rows(userStats)} data={userStats} />}
+      {(userStats.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(userStats)} data={userStats} />) ||
+        (isMobile && userStats.map((user, index) => <TableMobile key={index} headers={headers} rows={rows(user, index)} data={user} />))}
     </Box>
   );
 };
-
-// Helper function for mobile cell styles
-const mobileCardCellStyle = theme => ({
-  [theme.breakpoints.down('sm')]: {
-    display: 'block',
-    textAlign: 'right', // Default for value, label will be on left
-    fontSize: '0.875rem',
-    paddingLeft: '50%', // Make space for the label
-    position: 'relative',
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    '&:last-of-type': {
-      borderBottom: 0,
-    },
-    '&::before': {
-      content: 'attr(data-label)',
-      position: 'absolute',
-      left: theme.spacing(2),
-      top: '50%',
-      transform: 'translateY(-50%)',
-      width: `calc(50% - ${theme.spacing(4)})`,
-      whiteSpace: 'nowrap',
-      textAlign: 'left',
-      fontWeight: 'bold',
-      color: theme.palette.primary.main, // Orange color for labels
-    },
-  },
-});
 
 export default Highscores;

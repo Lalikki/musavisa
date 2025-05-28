@@ -1,4 +1,4 @@
-import { TableContainer, TableHead, Table, TableBody, TableCell, TableRow, Paper } from '@mui/material';
+import { TableContainer, TableHead, Table, TableBody, TableCell, TableRow, Paper, Typography } from '@mui/material';
 
 export default function TableWeb({ headers, rows, data, actions }) {
   return (
@@ -7,20 +7,27 @@ export default function TableWeb({ headers, rows, data, actions }) {
         <TableHead>
           <TableRow>
             {headers.map((header, index) => (
-              <TableCell key={index}>{header}</TableCell>
+              <TableCell key={index} align={header.align || 'left'}>
+                {header.value}
+              </TableCell>
             ))}
-            <TableCell></TableCell>
+            {actions && <TableCell></TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
           {data.map((d, dataIndex) => (
-            <TableRow>
+            <TableRow key={dataIndex}>
               {rows[dataIndex].map((row, rowIndex) => (
-                <TableCell key={rowIndex}>{row}</TableCell>
+                <TableCell key={rowIndex} align={row.align || 'left'}>
+                  {row.value || 'N/A'}
+                  {row.subValue && (
+                    <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
+                      {row.subValue}
+                    </Typography>
+                  )}
+                </TableCell>
               ))}
-              {actions && (
-                <TableCell>{actions(d)}</TableCell>
-              )}
+              {actions && <TableCell>{actions(d)}</TableCell>}
             </TableRow>
           ))}
         </TableBody>

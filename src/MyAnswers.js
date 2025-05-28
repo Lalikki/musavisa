@@ -38,7 +38,8 @@ const MyAnswers = () => {
     }
     return members.join(', ');
   };
-  const headers = [t('common.title'), t('common.score'), t('common.created'), t('common.team'), t('common.status')]; // Define the headers for the web table
+
+  const headers = [{ value: t('common.title') }, { value: t('common.score') }, { value: t('common.created') }, { value: t('common.team') }, { value: t('common.status') }]; // Define the headers for the web table
   const rows = data => {
     if (!Array.isArray(data)) return getRowData(data); // Ensure data is an array
     return data && data.map(answer => getRowData(answer)); // Define the rows for the web table
@@ -48,23 +49,23 @@ const MyAnswers = () => {
     const team = getTeamDisplayString(data); // Get team display string
     const score = `${data.score}/${data.answers && data.answers.length}`;
     const status = data.isCompleted ? t('answerDetailsPage.statusCompleted') : data.isChecked ? t('answerDetailsPage.statusReadyForReview') : t('answerDetailsPage.statusInProgress');
-    return [data.quizTitle, score, data.submittedAt ? format(data.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A', team, status];
+    return [{ value: data.quizTitle }, { value: score }, { value: data.submittedAt ? format(data.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A' }, { value: team }, { value: status }];
   };
-
-  const quizActions = answer => {
+  const actions = answer => {
     return (
       (answer.isChecked && (
-        <Button className="view-action-button" variant="outlined" color="primary" to={`/my-answers/${answer.id}`} startIcon={<GradingIcon />} component={Link}>
+        <Button variant="outlined" to={`/my-answers/${answer.id}`} startIcon={<GradingIcon />} component={Link}>
           {answer.isCompleted ? t('common.details') : t('common.review')}
         </Button>
       )) ||
       (!answer.isChecked && user && answer.answerCreatorId === user.uid && (
-        <Button className="view-action-button" variant="outlined" color="primary" to={`/edit-answer/${answer.id}`} startIcon={<EditIcon />} component={Link}>
+        <Button variant="outlined" to={`/edit-answer/${answer.id}`} startIcon={<EditIcon />} component={Link}>
           {t('common.edit')}
         </Button>
       ))
     );
   };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, currentUser => {
       setUser(currentUser);
@@ -98,23 +99,6 @@ const MyAnswers = () => {
       setLoading(false);
     }
   };
-  const actions = answer => {
-    return (
-      <>
-        {answer.isChecked && (
-          <Button variant="outlined" to={`/my-answers/${answer.id}`} startIcon={<GradingIcon />} component={Link}>
-            {answer.isCompleted ? t('common.details') : t('common.review')}
-          </Button>
-        )}
-        {/* Show edit link only if not checked and user is the creator */}
-        {!answer.isChecked && user && answer.answerCreatorId === user.uid && (
-          <Button variant="outlined" to={`/edit-answer/${answer.id}`} startIcon={<EditIcon />} component={Link}>
-            {t('common.edit')}
-          </Button>
-        )}
-      </>
-    );
-  };
 
   if (!user && !loading) {
     return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.pleaseLogin')}</Typography>;
@@ -141,7 +125,7 @@ const MyAnswers = () => {
       </Typography>
       {answers.length === 0 && !loading && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('myAnswersPage.noAnswersSubmitted')}</Typography>}
       {(answers.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(answers)} data={answers} actions={actions} />) ||
-        (isMobile && answers.map(answer => <TableMobile headers={headers} rows={rows(answer)} data={answer} actions={quizActions} />))}
+        (isMobile && answers.map((answer, key) => <TableMobile key={key} headers={headers} rows={rows(answer)} data={answer} actions={actions} />))}
     </Box>
   );
 };

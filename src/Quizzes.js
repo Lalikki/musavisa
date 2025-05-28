@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase'; // Import your Firestore instance
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
-import Table from '@mui/material/Table';
 import { useMediaQuery } from '@mui/material';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper'; // Often used with TableContainer
 import Box from '@mui/material/Box'; // Import Box
 import Typography from '@mui/material/Typography'; // Import Typography
 import AddCircleIcon from '@mui/icons-material/AddCircle';
-import IconButton from '@mui/material/IconButton';
 import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { Button } from '@mui/material';
 import { format } from 'date-fns'; // Import date-fns for formatting dates
@@ -29,7 +21,7 @@ const Quizzes = () => {
   const { t } = useTranslation(); // Initialize the t function
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const headers = [t('common.title'), t('common.numSongs'), t('common.created'), t('common.by')]; // Define the headers for the web table
+  const headers = [{ value: t('common.title') }, { value: t('common.numSongs') }, { value: t('common.created') }, { value: t('common.by') }]; // Define the headers for the web table
   const rows = data => {
     if (!Array.isArray(data)) return getRowData(data);
     return data && data.map(quiz => getRowData(quiz)); // Define the rows for the web table
@@ -38,7 +30,7 @@ const Quizzes = () => {
     if (!data || typeof data !== 'object') return ['N/A', 'N/A', 'N/A']; // Handle case where quiz is not an object
     const createdAt = data.createdAt ? format(data.createdAt, 'dd.MM.yyyy') : 'N/A';
     const createdBy = data.creatorName || t('common.unnamedUser', 'Unknown'); // Default to 'Unknown' if creatorName is not available
-    return [data.title, data.amount, createdAt, createdBy];
+    return [{ value: data.title }, { value: data.amount }, { value: createdAt }, { value: createdBy }];
   };
   const actions = quiz => {
     return (
@@ -100,7 +92,7 @@ const Quizzes = () => {
       )}
       {!loading && !error && quizzes.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('allQuizzesPage.noReadyQuizzes')}</Typography>}
       {(!loading && !error && quizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(quizzes)} data={quizzes} actions={actions} />) ||
-        (isMobile && quizzes.map(quiz => <TableMobile headers={headers} rows={rows(quiz)} data={quiz} actions={actions} />))}
+        (isMobile && quizzes.map((quiz, key) => <TableMobile key={key} headers={headers} rows={rows(quiz)} data={quiz} actions={actions} />))}
     </Box>
   );
 };
