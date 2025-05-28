@@ -1,15 +1,9 @@
 import { TableContainer, TableHead, Table, TableBody, TableCell, TableRow, Paper } from '@mui/material';
-import React, { useState, useEffect } from 'react';
-
-import { format } from 'date-fns'; // For formatting dates
 
 export default function TableWeb({ headers, rows, data, actions }) {
-  const formatDate = dateString => {
-    return dateString ? format(dateString, 'dd.MM.yyyy') : 'N/A';
-  };
   return (
     <TableContainer component={Paper}>
-      <Table aria-label="My Quizzes Table">
+      <Table aria-label="My Quizzes Table" variant="outlined">
         <TableHead>
           <TableRow>
             {headers.map((header, index) => (
@@ -19,12 +13,14 @@ export default function TableWeb({ headers, rows, data, actions }) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {data.map(d => (
+          {data.map((d, dataIndex) => (
             <TableRow>
-              {rows.map(row => (
-                <TableCell>{(row === 'createdAt' && formatDate(d[row])) || d[row]}</TableCell>
+              {rows[dataIndex].map((row, rowIndex) => (
+                <TableCell key={rowIndex}>{row}</TableCell>
               ))}
-              <TableCell>{actions(d)}</TableCell>
+              {actions && (
+                <TableCell>{actions(d)}</TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

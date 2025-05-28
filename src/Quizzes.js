@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from './firebase'; // Import your Firestore instance
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import Table from '@mui/material/Table';
-import {useMediaQuery} from '@mui/material';
+import { useMediaQuery } from '@mui/material';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
@@ -18,6 +18,8 @@ import { Button } from '@mui/material';
 import { format } from 'date-fns'; // Import date-fns for formatting dates
 import { Link } from 'react-router-dom'; // Optional: if you want to link to individual quizzes later
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import TableWeb from './components/TableWeb';
+import TableMobile from './components/TableMobile';
 
 const Quizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -26,6 +28,25 @@ const Quizzes = () => {
   const theme = useTheme(); // Get the theme object
   const { t } = useTranslation(); // Initialize the t function
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const headers = [t('common.title'), t('common.numSongs'), t('common.created'), t('common.by')]; // Define the headers for the web table
+  const rows = data => {
+    if (!Array.isArray(data)) return getRowData(data);
+    return data && data.map(quiz => getRowData(quiz)); // Define the rows for the web table
+  };
+  const getRowData = data => {
+    if (!data || typeof data !== 'object') return ['N/A', 'N/A', 'N/A']; // Handle case where quiz is not an object
+    const createdAt = data.createdAt ? format(data.createdAt, 'dd.MM.yyyy') : 'N/A';
+    const createdBy = data.creatorName || t('common.unnamedUser', 'Unknown'); // Default to 'Unknown' if creatorName is not available
+    return [data.title, data.amount, createdAt, createdBy];
+  };
+  const actions = quiz => {
+    return (
+      <Button variant="outlined" to={`/answer-quiz/${quiz.id}`} startIcon={<AddCircleIcon />} component={Link}>
+        {t('myQuizzesPage.answerAction')}
+      </Button>
+    );
+  };
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -78,114 +99,10 @@ const Quizzes = () => {
         </Typography>
       )}
       {!loading && !error && quizzes.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('allQuizzesPage.noReadyQuizzes')}</Typography>}
-      {!loading && !error && quizzes.length > 0 && !isMobile && (
-        <TableContainer
-          component={Paper}
-          className="table-responsive-wrapper"
-          sx={{
-            // On mobile, prevent the container itself from scrolling horizontally
-            // if the table content reflows properly.
-            [theme.breakpoints.down('sm')]: {
-              // Make the TableContainer's Paper background transparent on mobile
-              // so the margin between cards shows the page background.
-              backgroundColor: 'transparent',
-              boxShadow: 'none', // Remove shadow if Paper is transparent
-              overflowX: 'visible',
-            },
-          }}
-        >
-          <Table className="quizzes-table" aria-label="All Quizzes Table">
-            {' '}
-            {/* Use Table */}
-            <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}>
-              {' '}
-              {/* Hide headers on mobile */}
-              <TableRow className="quizzes-table-header-row">
-                <TableCell>{t('common.title')}</TableCell>
-                <TableCell>{t('common.numSongs')}</TableCell>
-                <TableCell>{t('common.created')}</TableCell>
-                <TableCell>{t('common.by')}</TableCell>
-                <TableCell>{t('common.actions')}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {quizzes.map(quiz => (
-                <TableRow
-                  className="quizzes-table-data-row"
-                  key={quiz.id}
-                  sx={{
-                    [theme.breakpoints.down('sm')]: {
-                      display: 'block',
-                      marginBottom: theme.spacing(2),
-                      border: `1px solid ${theme.palette.divider}`,
-                      // Apply the 'paper' background to each card on mobile
-                      backgroundColor: theme.palette.background.paper,
-                      borderRadius: theme.shape.borderRadius,
-                      // Override hover/even styles from App.css for mobile card view if needed
-                      '&:hover': {
-                        backgroundColor: 'transparent', // Or a subtle mobile hover
-                      },
-                      '&:nth-of-type(even)': {
-                        backgroundColor: 'transparent', // Or consistent card background
-                      },
-                    },
-                  }}
-                >
-                  <TableCell data-label={t('common.title')} sx={mobileCardCellStyle(theme)}>
-                    {quiz.title}
-                  </TableCell>
-                  <TableCell data-label={t('common.songs')} sx={mobileCardCellStyle(theme)}>
-                    {quiz.amount}
-                  </TableCell>
-                  <TableCell data-label={t('common.created')} sx={mobileCardCellStyle(theme)}>
-                    {quiz.createdAt ? format(quiz.createdAt, 'dd.MM.yyyy') : 'N/A'}
-                  </TableCell>
-                  <TableCell data-label={t('common.by')} sx={mobileCardCellStyle(theme)}>
-                    {quiz.creatorName || t('common.unnamedUser', 'Unknown')}
-                  </TableCell>{' '}
-                  {/* Added default for unnamed user */}
-                  <TableCell data-label={t('common.actions')} sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.down('sm')]: { textAlign: 'left', paddingLeft: theme.spacing(2) } }}>
-                    <Button className="view-action-button" variant="outlined" color="primary" to={`/answer-quiz/${quiz.id}`} startIcon={<AddCircleIcon />} component={Link}>
-                      {t('myQuizzesPage.answerAction')}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      {(!loading && !error && quizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(quizzes)} data={quizzes} actions={actions} />) ||
+        (isMobile && quizzes.map(quiz => <TableMobile headers={headers} rows={rows(quiz)} data={quiz} actions={actions} />))}
     </Box>
   );
 };
-
-// Helper function for mobile cell styles to keep sx prop cleaner
-const mobileCardCellStyle = theme => ({
-  // No direct translation needed here, but its `data-label` usage is translated above
-  [theme.breakpoints.down('sm')]: {
-    display: 'block',
-    textAlign: 'right',
-    fontSize: '0.875rem', // Adjust font size for mobile if needed
-    paddingLeft: '50%', // Make space for the label
-    position: 'relative',
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    '&:last-of-type': {
-      // Changed from :last-child to :last-of-type for reliability with TableCell
-      borderBottom: 0,
-    },
-    '&::before': {
-      content: 'attr(data-label)',
-      position: 'absolute',
-      left: theme.spacing(2),
-      top: '50%',
-      transform: 'translateY(-50%)',
-      width: 'calc(50% - ${theme.spacing(4)})', // Adjust width considering padding
-      whiteSpace: 'nowrap',
-      textAlign: 'left',
-      fontWeight: 'bold',
-      color: theme.palette.text.secondary,
-    },
-  },
-});
 
 export default Quizzes;

@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import ShareQuizModal from './ShareQuizModal'; // We will create this component
 import TableMobile from './components/TableMobile';
 import TableWeb from './components/TableWeb';
+import { format } from 'date-fns';
 
 const MyQuizzes = () => {
   const [user, setUser] = useState(null);
@@ -34,8 +35,40 @@ const MyQuizzes = () => {
 
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const headers = [t('common.title'), t('common.numSongs'), t('common.created')];
-  const rows = ['title', 'amount', 'createdAt']; // Define the rows for the web table
+  const headers = [t('common.title'), t('common.numSongs'), t('common.created')]; // Define the headers for the web table
+  const rows = data => {
+    if (!Array.isArray(data)) return getRowData(data);
+    return (
+      data &&
+      data.map(quiz => getRowData(quiz))
+    ); // Define the rows for the web table
+  };
+  const getRowData = data => {
+    if (!data || typeof data !== 'object') return ['N/A', 'N/A', 'N/A']; // Handle case where quiz is not an object
+    const createdAt = data.createdAt ? format(data.createdAt, 'dd.MM.yyyy') : 'N/A';
+    return [data.title, data.amount, createdAt];
+  };
+  const actions = quiz => (
+    <ButtonGroup variant="outlined" aria-label="action button group">
+      <Button
+        onClick={() => handleHostQuiz(quiz.id)} // Updated to use handler
+        startIcon={<MediaBluetoothOnIcon />}
+      >
+        {t('myQuizzesPage.hostAction')}
+      </Button>
+      <Button to={`/edit-quiz/${quiz.id}`} startIcon={<EditIcon />} component={Link}>
+        {t('common.edit')}
+      </Button>
+      <Button
+        color="secondary" // Or your preferred color
+        onClick={() => handleOpenShareModal(quiz)}
+        startIcon={<ShareIcon />}
+      >
+        {t('myQuizzesPage.shareAction')}
+      </Button>
+    </ButtonGroup>
+  );
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, currentUser => {
@@ -101,27 +134,7 @@ const MyQuizzes = () => {
     }
   };
 
-  const quizActions = quiz => (
-    <ButtonGroup variant="outlined" aria-label="action button group">
-      <Button
-        onClick={() => handleHostQuiz(quiz.id)} // Updated to use handler
-        startIcon={<MediaBluetoothOnIcon />}
-      >
-        {t('myQuizzesPage.hostAction')}
-      </Button>
-      <Button to={`/edit-quiz/${quiz.id}`} startIcon={<EditIcon />} component={Link}>
-        {t('common.edit')}
-      </Button>
-      <Button
-        color="secondary" // Or your preferred color
-        onClick={() => handleOpenShareModal(quiz)}
-        startIcon={<ShareIcon />}
-      >
-        {t('myQuizzesPage.shareAction')}
-      </Button>
-    </ButtonGroup>
-  );
-
+  
   const handleOpenShareModal = quiz => {
     setQuizToShare(quiz);
     setShareModalOpen(true);
@@ -167,8 +180,8 @@ const MyQuizzes = () => {
           </Link>
         </Typography>
       )}
-      {(myQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows} data={myQuizzes} actions={quizActions} />) ||
-        (isMobile && myQuizzes.map(quiz => <TableMobile headers={headers} rows={rows} data={quiz} actions={quizActions} />))}
+      {(myQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(myQuizzes)} data={myQuizzes} actions={actions} />) ||
+        (isMobile && myQuizzes.map(quiz => <TableMobile headers={headers} rows={rows(quiz)} data={quiz} actions={actions} />))}
 
       {quizToShare && <ShareQuizModal open={shareModalOpen} onClose={handleCloseShareModal} quiz={quizToShare} />}
 
@@ -182,8 +195,8 @@ const MyQuizzes = () => {
         </Typography>
       )}
       {sharedQuizzes.length === 0 && !loadingShared && !errorShared && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('myQuizzesPage.noQuizzesShared')}</Typography>}
-      {(sharedQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows} data={sharedQuizzes} actions={quizActions} />) ||
-        (isMobile && sharedQuizzes.map(quiz => <TableMobile headers={headers} rows={rows} data={quiz} actions={quizActions} />))}
+      {(sharedQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(sharedQuizzes)} data={sharedQuizzes} actions={actions} />) ||
+        (isMobile && sharedQuizzes.map(quiz => <TableMobile headers={headers} rows={rows(quiz)} data={quiz} actions={actions} />))}
     </Box>
   );
 };
