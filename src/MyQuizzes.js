@@ -73,20 +73,20 @@ const MyQuizzes = () => {
   );
 
   useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-            if (currentUser) {
-                fetchUserQuizzes(currentUser.uid);
-                fetchSharedQuizzes(currentUser.uid);
-            } else {
-                setMyQuizzes([]); // Clear quizzes if user logs out
-                setSharedQuizzes([]);
-                setExpandedQuizId(null); // Reset expanded quiz
-                setLoading(false);
-            }
-        });
-        return () => unsubscribe();
-    }, []);
+    const unsubscribe = onAuthStateChanged(auth, currentUser => {
+      setUser(currentUser);
+      if (currentUser) {
+        fetchUserQuizzes(currentUser.uid);
+        fetchSharedQuizzes(currentUser.uid);
+      } else {
+        setMyQuizzes([]); // Clear quizzes if user logs out
+        setSharedQuizzes([]);
+        setExpandedQuizId(null); // Reset expanded quiz
+        setLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const fetchUserQuizzes = async uid => {
     setLoading(true);
