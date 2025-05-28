@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from './firebase';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, doc, deleteDoc, limit } from 'firebase/firestore';
 import EditIcon from '@mui/icons-material/Edit';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box'; // Import Box
 import { ButtonGroup, useMediaQuery } from '@mui/material'; // Import Box
 import MediaBluetoothOnIcon from '@mui/icons-material/MediaBluetoothOn';
 import ShareIcon from '@mui/icons-material/Share'; // Import ShareIcon
+import DeleteIcon from '@mui/icons-material/Delete'; // Import DeleteIcon
 import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { onAuthStateChanged } from 'firebase/auth';
 import Typography from '@mui/material/Typography'; // Import Typography
@@ -63,24 +64,29 @@ const MyQuizzes = () => {
       >
         {t('myQuizzesPage.shareAction')}
       </Button>
+      {!quiz.hasAnswers && (
+        <Button variant="outlined" color="error" onClick={() => handleDeleteQuiz(quiz.id)} startIcon={<DeleteIcon />}>
+          {t('common.delete', 'Delete')}
+        </Button>
+      )}
     </ButtonGroup>
   );
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, currentUser => {
-      setUser(currentUser);
-      if (currentUser) {
-        fetchUserQuizzes(currentUser.uid);
-        fetchSharedQuizzes(currentUser.uid);
-      } else {
-        setMyQuizzes([]); // Clear quizzes if user logs out
-        setSharedQuizzes([]);
-        setExpandedQuizId(null); // Reset expanded quiz
-        setLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            if (currentUser) {
+                fetchUserQuizzes(currentUser.uid);
+                fetchSharedQuizzes(currentUser.uid);
+            } else {
+                setMyQuizzes([]); // Clear quizzes if user logs out
+                setSharedQuizzes([]);
+                setExpandedQuizId(null); // Reset expanded quiz
+                setLoading(false);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
   const fetchUserQuizzes = async uid => {
     setLoading(true);
@@ -90,11 +96,19 @@ const MyQuizzes = () => {
       // Query for quizzes created by the current user, ordered by creation date
       const q = query(quizzesCollectionRef, where('createdBy', '==', uid), orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
-      const userQuizzesData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : null,
-      }));
+      const userQuizzesDataPromises = querySnapshot.docs.map(async quizDoc => {
+        const quizData = {
+          id: quizDoc.id,
+          ...quizDoc.data(),
+          createdAt: quizDoc.data().createdAt ? quizDoc.data().createdAt.toDate() : null,
+        };
+        // Check if this quiz has any answers
+        const answersQuery = query(collection(db, 'quizAnswers'), where('quizId', '==', quizDoc.id), limit(1));
+        const answerSnapshots = await getDocs(answersQuery);
+        quizData.hasAnswers = !answerSnapshots.empty;
+        return quizData;
+      });
+      const userQuizzesData = await Promise.all(userQuizzesDataPromises);
       setMyQuizzes(userQuizzesData);
     } catch (err) {
       console.error('Error fetching user quizzes:', err);
@@ -146,9 +160,30 @@ const MyQuizzes = () => {
     navigate(`/my-quizzes/${quizId}`); // Or a specific hosting route
   };
 
+  const handleDeleteQuiz = async quizIdToDelete => {
+    // The button is only rendered if quiz.hasAnswers is false,
+    // so we can directly proceed with confirmation and deletion.
+    if (window.confirm(t('myQuizzesPage.confirmDeleteQuiz', 'Are you sure you want to delete this quiz? This action cannot be undone.'))) {
+      try {
+        const quizDocRef = doc(db, 'quizzes', quizIdToDelete);
+        await deleteDoc(quizDocRef);
+        // Update local state to remove the quiz
+        setMyQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz.id !== quizIdToDelete));
+        // Optionally, show a success message
+        // setSuccessMessage(t('myQuizzesPage.deleteSuccess', 'Quiz deleted successfully.'));
+      } catch (err) {
+        console.error('Error deleting quiz:', err);
+        setError(t('myQuizzesPage.deleteError', 'Failed to delete quiz. Please try again.'));
+      }
+    }
+  };
+
   if (!user && !loading) {
     return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.pleaseLogin')}</Typography>;
   }
+
+  if (!user && !loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.pleaseLogin')}</Typography>;
+
   if (loading || loadingShared) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.loading')}</Typography>;
 
   return (
@@ -180,7 +215,6 @@ const MyQuizzes = () => {
 
       {quizToShare && <ShareQuizModal open={shareModalOpen} onClose={handleCloseShareModal} quiz={quizToShare} />}
 
-      {/* Quizzes Shared With Me Section */}
       <Typography variant="h4" component="h2" gutterBottom align="center" sx={{ mt: 5, mb: 2 }}>
         {t('myQuizzesPage.sharedWithMeTitle')}
       </Typography>
@@ -192,6 +226,7 @@ const MyQuizzes = () => {
       {sharedQuizzes.length === 0 && !loadingShared && !errorShared && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('myQuizzesPage.noQuizzesShared')}</Typography>}
       {(sharedQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(sharedQuizzes)} data={sharedQuizzes} actions={actions} />) ||
         (isMobile && sharedQuizzes.map((quiz, key) => <TableMobile key={key} headers={headers} rows={rows(quiz)} data={quiz} actions={actions} />))}
+      {quizToShare && <ShareQuizModal open={shareModalOpen} onClose={handleCloseShareModal} quiz={quizToShare} />}
     </Box>
   );
 };

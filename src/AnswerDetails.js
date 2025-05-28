@@ -316,6 +316,8 @@ const AnswerDetails = () => {
                                         <Typography variant="h6" component="h4" gutterBottom>{t('common.song')} {index + 1}</Typography>
                                         <TextField
                                             label={t('editAnswerPage.artistGuess')}
+                                            // Ensure id is unique
+                                            id={`guess-artist-${index}`}
                                             variant="outlined"
                                             fullWidth
                                             margin="dense"
@@ -337,6 +339,8 @@ const AnswerDetails = () => {
                                         />
                                         <TextField
                                             label={t('editAnswerPage.songNameGuess')}
+                                            // Ensure id is unique
+                                            id={`guess-songName-${index}`}
                                             variant="outlined"
                                             fullWidth
                                             margin="dense"
@@ -358,32 +362,49 @@ const AnswerDetails = () => {
                                         />
                                         {/* Correct answer display can be added here if needed, using Typography and MUI Link */}
                                         <FormControl fullWidth margin="dense" variant="outlined" className="manual-score-input" sx={{ mt: 1 }}>
-                                            <InputLabel id={`manual-score-label-${index}`}>{t('common.score')}</InputLabel>
-                                            <Select
-                                                labelId={`manual-score-label-${index}`}
-                                                id={`manual-score-${index}`}
-                                                value={selfAssessedSongScores[index] !== undefined ? selfAssessedSongScores[index] : 0}
-                                                onChange={(e) => handleSelfAssessedScoreChange(index, e.target.value)}
-                                                disabled={!canSelfAssess || quizAnswer.isCompleted || (!guess.artist && !guess.songName)}
-                                                IconComponent={(!canSelfAssess || quizAnswer.isCompleted || (!guess.artist && !guess.songName)) ? () => null : undefined}
-                                                sx={quizAnswer.isCompleted ? {
-                                                    '& .MuiInputBase-input.Mui-disabled': { // Target the input part for text color
-                                                        WebkitTextFillColor: theme.palette.text.secondary,
-                                                        color: theme.palette.text.secondary,
-                                                    },
-                                                    '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: theme.palette.action.disabledBackground,
-                                                    },
-                                                    '& .MuiOutlinedInput-root.Mui-disabled': { // Target MuiOutlinedInput-root for background
-                                                        backgroundColor: theme.palette.action.disabledBackground,
-                                                    },
-                                                } : {}}
-                                                label={t('common.score')}
-                                            >
-                                                <MenuItem value={0}>0</MenuItem>
-                                                <MenuItem value={0.5}>0.5</MenuItem>
-                                                <MenuItem value={1}>1</MenuItem>
-                                            </Select>
+                                            {(() => {
+                                                // Determine the maximum score for this specific quiz, defaulting to 1 if not specified
+                                                const maxScoreForThisQuiz = (typeof correctQuizData?.maxScorePerSong === 'number' && correctQuizData.maxScorePerSong > 0)
+                                                    ? correctQuizData.maxScorePerSong
+                                                    : 1; // Default max score if not found or invalid
+                                                const scoreOptions = [];
+                                                for (let i = 0; i <= maxScoreForThisQuiz; i += 0.5) {
+                                                    scoreOptions.push(i);
+                                                }
+
+                                                return (
+                                                    <>
+                                                        <InputLabel id={`manual-score-label-${index}`}>{t('common.score')}</InputLabel>
+                                                        <Select
+                                                            labelId={`manual-score-label-${index}`}
+                                                            id={`manual-score-${index}`}
+                                                            value={selfAssessedSongScores[index] !== undefined ? selfAssessedSongScores[index] : 0}
+                                                            onChange={(e) => handleSelfAssessedScoreChange(index, e.target.value)}
+                                                            disabled={!canSelfAssess || quizAnswer.isCompleted || (!guess.artist && !guess.songName)}
+                                                            IconComponent={(!canSelfAssess || quizAnswer.isCompleted || (!guess.artist && !guess.songName)) ? () => null : undefined}
+                                                            sx={quizAnswer.isCompleted ? {
+                                                                '& .MuiInputBase-input.Mui-disabled': { // Target the input part for text color
+                                                                    WebkitTextFillColor: theme.palette.text.secondary,
+                                                                    color: theme.palette.text.secondary,
+                                                                },
+                                                                '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                                                                    borderColor: theme.palette.action.disabledBackground,
+                                                                },
+                                                                '& .MuiOutlinedInput-root.Mui-disabled': { // Target MuiOutlinedInput-root for background
+                                                                    backgroundColor: theme.palette.action.disabledBackground,
+                                                                },
+                                                            } : {}}
+                                                            label={t('common.score')}
+                                                        >
+                                                            {scoreOptions.map(scoreValue => (
+                                                                <MenuItem key={scoreValue} value={scoreValue}>
+                                                                    {scoreValue}
+                                                                </MenuItem>
+                                                            ))}
+                                                        </Select>
+                                                    </>
+                                                );
+                                            })()}
                                         </FormControl>
                                     </Paper>
                                 </ListItem>

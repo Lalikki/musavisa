@@ -10,6 +10,8 @@ import Typography from '@mui/material/Typography';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress'; // For loading states in buttons
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const EditAnswer = () => {
@@ -26,6 +28,8 @@ const EditAnswer = () => {
     const [saveError, setSaveError] = useState(null);
     const [markingReady, setMarkingReady] = useState(false);
     const [markReadyError, setMarkReadyError] = useState(null);
+    const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+
 
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
@@ -109,7 +113,12 @@ const EditAnswer = () => {
                 answers: editedAnswers,
                 // Optionally, add a lastEditedAt: serverTimestamp() field
             });
-            navigate('/my-answers'); // Navigate back to My Answers page after saving
+            setShowSuccessAlert(true); // Show success alert
+            setTimeout(() => {
+                setShowSuccessAlert(false);
+            }, 3000); // Hide after 3 seconds
+            // Removed navigation: navigate('/my-answers'); 
+            // User will now stay on the EditAnswer page. You might want to show a success message.
         } catch (err) {
             console.error("Error updating answer:", err);
             setSaveError(t('editAnswerPage.saveError') + " " + err.message);
@@ -247,6 +256,11 @@ const EditAnswer = () => {
                 {saveError && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{saveError}</Typography>}
                 {markReadyError && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{markReadyError}</Typography>}
             </Paper>
+            <Snackbar open={showSuccessAlert} autoHideDuration={3000} onClose={() => setShowSuccessAlert(false)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+                <Alert onClose={() => setShowSuccessAlert(false)} severity="success" sx={{ width: '100%' }}>
+                    {t('common.saveSuccessMessage', 'Changes saved successfully!')}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };
