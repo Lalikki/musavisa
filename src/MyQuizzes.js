@@ -4,8 +4,8 @@ import { collection, query, where, orderBy, getDocs, doc, deleteDoc, limit } fro
 import EditIcon from '@mui/icons-material/Edit';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box'; // Import Box
-import { ButtonGroup, useMediaQuery } from '@mui/material'; // Import Box
-import MediaBluetoothOnIcon from '@mui/icons-material/MediaBluetoothOn';
+import { ButtonGroup, ListItemIcon, ListItemText, MenuItem, MenuList, Paper, Popover, useMediaQuery } from '@mui/material'; // Import Box
+import { MediaBluetoothOn as MediaBluetoothOnIcon, ArrowDropDown as ArrowDropDownIcon } from '@mui/icons-material';
 import ShareIcon from '@mui/icons-material/Share'; // Import ShareIcon
 import DeleteIcon from '@mui/icons-material/Delete'; // Import DeleteIcon
 import { useTheme } from '@mui/material/styles'; // Import useTheme
@@ -31,10 +31,12 @@ const MyQuizzes = () => {
   const theme = useTheme(); // Get the theme object
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [quizToShare, setQuizToShare] = useState(null);
+  const [buttonOptionsAnchorEl, setButtonOptionsAnchorEl] = useState(null);
   const { t } = useTranslation(); // Initialize useTranslation
   const navigate = useNavigate(); // Initialize useNavigate
 
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const openButtonOptions = Boolean(buttonOptionsAnchorEl);
 
   const headers = [{ value: t('common.title') }, { value: t('common.numSongs') }, { value: t('common.created') }]; // Define the headers for the web table as objects with 'column' property
   const rows = data => {
@@ -46,30 +48,69 @@ const MyQuizzes = () => {
     const createdAt = data.createdAt ? format(data.createdAt, 'dd.MM.yyyy') : 'N/A';
     return [{ value: data.title }, { value: data.amount }, { value: createdAt }];
   };
-  const actions = quiz => (
-    <ButtonGroup variant="outlined" aria-label="action button group">
-      <Button
-        onClick={() => handleHostQuiz(quiz.id)} // Updated to use handler
-        startIcon={<MediaBluetoothOnIcon />}
-      >
-        {t('myQuizzesPage.hostAction')}
-      </Button>
-      <Button to={`/edit-quiz/${quiz.id}`} startIcon={<EditIcon />} component={Link}>
-        {t('common.edit')}
-      </Button>
-      <Button
-        color="secondary" // Or your preferred color
-        onClick={() => handleOpenShareModal(quiz)}
-        startIcon={<ShareIcon />}
-      >
-        {t('myQuizzesPage.shareAction')}
-      </Button>
-      {!quiz.hasAnswers && (
-        <Button variant="outlined" color="error" onClick={() => handleDeleteQuiz(quiz.id)} startIcon={<DeleteIcon />}>
-          {t('common.delete', 'Delete')}
+  const myQuizzesActions = quiz => (
+    <Box>
+      <ButtonGroup variant="outlined" aria-label="Button group with a nested menu">
+        <Button onClick={() => handleHostQuiz(quiz.id)} startIcon={<MediaBluetoothOnIcon />}>
+          {t('myQuizzesPage.hostAction')}
         </Button>
-      )}
-    </ButtonGroup>
+        <Button
+          size="small"
+          aria-controls={openButtonOptions ? 'split-button-menu' : undefined}
+          aria-expanded={openButtonOptions ? 'true' : undefined}
+          aria-label="open options"
+          aria-haspopup="menu"
+          onClick={handleOpenButtonOptions}
+        >
+          <ArrowDropDownIcon />
+        </Button>
+      </ButtonGroup>
+      <Popover
+        sx={{ zIndex: 1 }}
+        open={openButtonOptions}
+        anchorEl={buttonOptionsAnchorEl}
+        onClose={handleOpenButtonOptions}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+      >
+        <Paper>
+          <MenuList id="split-button-menu" autoFocusItem>
+            <MenuItem to={`/edit-quiz/${quiz.id}`} component={Link}>
+              <ListItemIcon>
+                <EditIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>{t('common.edit')}</ListItemText>
+            </MenuItem>
+            <MenuItem color="secondary" onClick={() => handleOpenShareModal(quiz)}>
+              <ListItemIcon>
+                <ShareIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>{t('myQuizzesPage.shareAction')}</ListItemText>
+            </MenuItem>
+            {!quiz.hasAnswers && (
+              <MenuItem onClick={() => handleDeleteQuiz(quiz.id)} startIcon={<DeleteIcon />}>
+                <ListItemIcon>
+                  <DeleteIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>{t('common.delete', 'Delete')}</ListItemText>
+              </MenuItem>
+            )}
+          </MenuList>
+        </Paper>
+      </Popover>
+    </Box>
+  );
+
+  const sharedQuizzesActions = quiz => (
+    <Button variant="outlined" to={`/my-quizzes/${quiz.id}`} startIcon={<MediaBluetoothOnIcon />} component={Link}>
+      {t('myQuizzesPage.hostAction')}
+    </Button>
   );
 
   useEffect(() => {
@@ -144,6 +185,15 @@ const MyQuizzes = () => {
     }
   };
 
+  const handleOpenButtonOptions = event => {
+    if (buttonOptionsAnchorEl) {
+      // If the button is already open, close it
+      setButtonOptionsAnchorEl(null);
+      return;
+    }
+    setButtonOptionsAnchorEl(event.currentTarget);
+  };
+
   const handleOpenShareModal = quiz => {
     setQuizToShare(quiz);
     setShareModalOpen(true);
@@ -210,8 +260,8 @@ const MyQuizzes = () => {
           </Link>
         </Typography>
       )}
-      {(myQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(myQuizzes)} data={myQuizzes} actions={actions} />) ||
-        (isMobile && myQuizzes.map(quiz => <TableMobile headers={headers} rows={rows(quiz)} data={quiz} actions={actions} />))}
+      {(myQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(myQuizzes)} data={myQuizzes} actions={myQuizzesActions} />) ||
+        (isMobile && myQuizzes.map(quiz => <TableMobile headers={headers} rows={rows(quiz)} data={quiz} actions={myQuizzesActions} />))}
 
       {quizToShare && <ShareQuizModal open={shareModalOpen} onClose={handleCloseShareModal} quiz={quizToShare} />}
 
@@ -224,8 +274,8 @@ const MyQuizzes = () => {
         </Typography>
       )}
       {sharedQuizzes.length === 0 && !loadingShared && !errorShared && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('myQuizzesPage.noQuizzesShared')}</Typography>}
-      {(sharedQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(sharedQuizzes)} data={sharedQuizzes} actions={actions} />) ||
-        (isMobile && sharedQuizzes.map((quiz, key) => <TableMobile key={key} headers={headers} rows={rows(quiz)} data={quiz} actions={actions} />))}
+      {(sharedQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(sharedQuizzes)} data={sharedQuizzes} actions={sharedQuizzesActions} />) ||
+        (isMobile && sharedQuizzes.map((quiz, key) => <TableMobile key={key} headers={headers} rows={rows(quiz)} data={quiz} actions={sharedQuizzesActions} />))}
       {quizToShare && <ShareQuizModal open={shareModalOpen} onClose={handleCloseShareModal} quiz={quizToShare} />}
     </Box>
   );
