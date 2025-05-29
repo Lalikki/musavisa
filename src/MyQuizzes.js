@@ -27,6 +27,7 @@ const MyQuizzes = () => {
   const [error, setError] = useState(null);
   const [errorShared, setErrorShared] = useState(null);
   const [expandedQuizId, setExpandedQuizId] = useState(null);
+  const [menuQuiz, setMenuQuiz] = useState(null);
   // const [quizAnswers, setQuizAnswers] = useState([]); // This state seems unused here, consider removing if not needed for this component's direct logic
   const theme = useTheme(); // Get the theme object
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -60,16 +61,19 @@ const MyQuizzes = () => {
           aria-expanded={openButtonOptions ? 'true' : undefined}
           aria-label="open options"
           aria-haspopup="menu"
-          onClick={handleOpenButtonOptions}
+          onClick={e => handleOpenButtonOptions(e, quiz)}
         >
           <ArrowDropDownIcon />
         </Button>
       </ButtonGroup>
       <Popover
         sx={{ zIndex: 1 }}
-        open={openButtonOptions}
+        open={openButtonOptions && menuQuiz && menuQuiz.id === quiz.id}
         anchorEl={buttonOptionsAnchorEl}
-        onClose={handleOpenButtonOptions}
+        onClose={() => {
+          setButtonOptionsAnchorEl(null);
+          setMenuQuiz(null);
+        }}
         anchorOrigin={{
           vertical: 'bottom',
           horizontal: 'center',
@@ -80,27 +84,25 @@ const MyQuizzes = () => {
         }}
       >
         <Paper>
-          <MenuList id="split-button-menu" autoFocusItem>
+          <MenuList id="split-button-menu">
             <MenuItem to={`/edit-quiz/${quiz.id}`} component={Link}>
               <ListItemIcon>
                 <EditIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText>{t('common.edit')}</ListItemText>
             </MenuItem>
-            <MenuItem color="secondary" onClick={() => handleOpenShareModal(quiz)}>
+            <MenuItem onClick={() => handleOpenShareModal(quiz)}>
               <ListItemIcon>
                 <ShareIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText>{t('myQuizzesPage.shareAction')}</ListItemText>
             </MenuItem>
-            {!quiz.hasAnswers && (
-              <MenuItem onClick={() => handleDeleteQuiz(quiz.id)} startIcon={<DeleteIcon />}>
-                <ListItemIcon>
-                  <DeleteIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>{t('common.delete', 'Delete')}</ListItemText>
-              </MenuItem>
-            )}
+            <MenuItem onClick={() => handleDeleteQuiz(quiz.id)} disabled={quiz.hasAnswers}>
+              <ListItemIcon>
+                <DeleteIcon color="error" fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>{t('common.delete', 'Delete')}</ListItemText>
+            </MenuItem>
           </MenuList>
         </Paper>
       </Popover>
@@ -185,15 +187,15 @@ const MyQuizzes = () => {
     }
   };
 
-  const handleOpenButtonOptions = event => {
-    if (buttonOptionsAnchorEl) {
-      // If the button is already open, close it
+  const handleOpenButtonOptions = (event, quiz) => {
+    if (buttonOptionsAnchorEl && menuQuiz && menuQuiz.id === quiz.id) {
       setButtonOptionsAnchorEl(null);
+      setMenuQuiz(null);
       return;
     }
     setButtonOptionsAnchorEl(event.currentTarget);
+    setMenuQuiz(quiz);
   };
-
   const handleOpenShareModal = quiz => {
     setQuizToShare(quiz);
     setShareModalOpen(true);
