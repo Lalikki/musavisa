@@ -3,6 +3,7 @@ import axios from 'axios';
 import {
   Avatar,
   Box,
+  Button,
   Card,
   IconButton,
   InputAdornment,
@@ -32,10 +33,6 @@ const YouTubeSearch = ({ handleSelection, handleQuestionChange, value, index }) 
   const [loading, setLoading] = useState({ loadingVideos: false });
 
   const searchYouTube = async () => {
-    if (videos.length > 0) {
-      setVideos([]); // Clear previous results if any
-      return;
-    }
     try {
       setLoading({ loadingVideos: true });
       const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
@@ -43,7 +40,7 @@ const YouTubeSearch = ({ handleSelection, handleQuestionChange, value, index }) 
           part: 'snippet',
           q: value,
           key: API_KEY,
-          maxResults: 5,
+          maxResults: 10,
           type: 'video',
         },
       });
@@ -79,10 +76,10 @@ const YouTubeSearch = ({ handleSelection, handleQuestionChange, value, index }) 
           input: {
             endAdornment: (
               <InputAdornment position="end">
-                <Tooltip title={videos.length ? t('createNewQuizPage.emptyVideoList') : t('createNewQuizPage.searchFromYouTube')}>
+                <Tooltip title={t('createNewQuizPage.searchFromYouTube')}>
                   <span>
                     <IconButton aria-label="youtube search" onClick={searchYouTube} loading={loading.loadingVideos} disabled={!value.length}>
-                      {videos.length ? <ClearAllIcon /> : <YouTubeIcon />}
+                      <YouTubeIcon />
                     </IconButton>
                   </span>
                 </Tooltip>
@@ -105,6 +102,7 @@ const YouTubeSearch = ({ handleSelection, handleQuestionChange, value, index }) 
                 <ListItemText primary={video.snippet.title} secondary={`${video.snippet.channelTitle}`} />
               </ListItemButton>
             ))}
+            <Button variant="text" startIcon={<ClearAllIcon />} onClick={() => setVideos([])} sx={{ml: 1}}>{t('createNewQuizPage.emptyVideoList')}</Button>
           </List>
         </Card>
       )}
