@@ -3,23 +3,12 @@ import { useParams, Link as RouterLink } from 'react-router-dom'; // Renamed Lin
 import { db } from './firebase';
 import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
-import {
-  Typography,
-  Button,
-  Box,
-  Paper,
-  List,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  CircularProgress,
-} from '@mui/material';
+import { Typography, Button, Box, Paper, List, CircularProgress, useMediaQuery } from '@mui/material';
 import MusicPlayer from './components/MusicPlayer';
 import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import TableWeb from './components/TableWeb';
+import TableMobile from './components/TableMobile';
 
 const QuizDetails = () => {
   const { quizId } = useParams();
@@ -31,6 +20,33 @@ const QuizDetails = () => {
   const [answersError, setAnswersError] = useState(null);
   const theme = useTheme(); // Get the theme object
   const { t } = useTranslation(); // Initialize useTranslation
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const headers = [
+    { value: t('quizDetailsPage.answeredBy') },
+    { value: t('common.team') },
+    { value: t('common.score') },
+    { value: t('common.status') },
+    { value: t('common.submitted'), align: 'right' },
+  ]; // Define the headers for the web table
+  const rows = data => {
+    if (!Array.isArray(data)) return getRowData(data);
+    return data && data.map(quiz => getRowData(quiz)); // Define the rows for the web table
+  };
+  const getRowData = data => {
+    if (!data || typeof data !== 'object') return ['N/A', 'N/A', 'N/A']; // Handle case where quiz is not an object
+    const score = `${data.score}/${data.answers && data.answers.length}`;
+    const status = data.isCompleted ? t('answerDetailsPage.statusCompleted') : data.isChecked ? t('answerDetailsPage.statusReadyForReview') : t('answerDetailsPage.statusInProgress');
+    const createdAt = data.submittedAt ? format(data.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A';
+    const createdBy = data.answerCreatorName || t('common.unnamedUser', 'Anonymous'); // Default to 'Unknown' if creatorName is not available
+    return [{ value: createdBy }, { value: getTeamDisplayString(data) }, { value: score }, { value: status }, { value: createdAt, align: 'right' }];
+  };
+
+  // const actions = quiz => {
+  //   return (
+  //     <Button></Button>
+  //   );
+  // };
 
   useEffect(() => {
     const fetchQuizDetails = async () => {
@@ -183,99 +199,10 @@ const QuizDetails = () => {
         </Typography>
       )}
       {!answersLoading && !answersError && answers.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('quizDetailsPage.noSubmissionsYet')}</Typography>}
-      {!answersLoading && !answersError && answers.length > 0 && (
-        <TableContainer
-          component={Paper}
-          className="table-responsive-wrapper"
-          sx={{
-            [theme.breakpoints.down('sm')]: {
-              backgroundColor: 'transparent',
-              boxShadow: 'none',
-              overflowX: 'visible',
-            },
-          }}
-        >
-          <Table className="quizzes-table" aria-label="Submitted Answers Table">
-            <TableHead sx={{ [theme.breakpoints.down('sm')]: { display: 'none' } }}>
-              <TableRow className="quizzes-table-header-row">
-                <TableCell>{t('quizDetailsPage.answeredBy')}</TableCell>
-                <TableCell>{t('common.team')}</TableCell>
-                <TableCell>{t('common.score')}</TableCell>
-                <TableCell>{t('common.status')}</TableCell>
-                <TableCell align="right">{t('common.submitted')}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {answers.map(answer => (
-                <TableRow
-                  key={answer.id}
-                  className="quizzes-table-data-row"
-                  sx={{
-                    [theme.breakpoints.down('sm')]: {
-                      display: 'block',
-                      marginBottom: theme.spacing(2),
-                      border: `1px solid ${theme.palette.divider}`,
-                      backgroundColor: theme.palette.background.paper,
-                      borderRadius: theme.shape.borderRadius,
-                      '&:hover': {
-                        backgroundColor: theme.palette.background.paper,
-                      },
-                      '&:nth-of-type(even)': {
-                        backgroundColor: theme.palette.background.paper,
-                      },
-                    },
-                  }}
-                >
-                  <TableCell data-label={t('quizDetailsPage.answeredBy')} sx={mobileCardCellStyle(theme)}>
-                    {answer.answerCreatorName || t('common.unnamedUser', 'Anonymous')}
-                  </TableCell>
-                  <TableCell data-label={t('common.team')} sx={mobileCardCellStyle(theme)}>
-                    {getTeamDisplayString(answer)}
-                  </TableCell>
-                  <TableCell data-label={t('common.score')} sx={mobileCardCellStyle(theme)}>
-                    {answer.score} / {answer.answers ? answer.answers.length * 1 : 'N/A'}
-                  </TableCell>
-                  <TableCell data-label={t('common.status')} sx={mobileCardCellStyle(theme)}>
-                    {answer.isCompleted ? t('answerDetailsPage.statusCompleted') : answer.isChecked ? t('answerDetailsPage.statusReadyForReview') : t('answerDetailsPage.statusInProgress')}
-                  </TableCell>
-                  <TableCell data-label={t('common.submitted')} sx={{ ...mobileCardCellStyle(theme), [theme.breakpoints.up('sm')]: { textAlign: 'right' } }}>
-                    {answer.submittedAt ? format(answer.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A'}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      {(!answersLoading && !answersError && answers.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(answers)} data={answers} />) ||
+        (isMobile && answers.map((answer, key) => <TableMobile key={key} headers={headers} rows={rows(answer)} data={answer} />))}
     </Box>
   );
 };
-
-// Helper function for mobile cell styles
-const mobileCardCellStyle = theme => ({
-  [theme.breakpoints.down('sm')]: {
-    display: 'block',
-    textAlign: 'right', // Default for value, label will be on left
-    fontSize: '0.875rem',
-    paddingLeft: '50%', // Make space for the label
-    position: 'relative',
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    '&:last-of-type': {
-      borderBottom: 0,
-    },
-    '&::before': {
-      content: 'attr(data-label)',
-      position: 'absolute',
-      left: theme.spacing(2),
-      top: '50%',
-      transform: 'translateY(-50%)',
-      width: `calc(50% - ${theme.spacing(4)})`,
-      whiteSpace: 'nowrap',
-      textAlign: 'left',
-      fontWeight: 'bold',
-      color: theme.palette.primary.main, // Orange color for labels
-    },
-  },
-});
 
 export default QuizDetails;
