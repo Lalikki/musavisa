@@ -4,24 +4,20 @@ import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import EditIcon from '@mui/icons-material/Edit';
 import GradingIcon from '@mui/icons-material/Grading';
-import { Button, useMediaQuery } from '@mui/material';
+import { Button } from '@mui/material';
 import { Link } from 'react-router-dom'; // Import Link
 import { format } from 'date-fns';
-import { useTheme } from '@mui/material/styles'; // Import useTheme
 import Box from '@mui/material/Box'; // Import Box
 import Typography from '@mui/material/Typography'; // Import Typography
 import { useTranslation } from 'react-i18next'; // Import useTranslation
-import TableWeb from './components/TableWeb';
-import TableMobile from './components/TableMobile';
+import CustomTable from './components/CustomTable';
 
 const MyAnswers = () => {
   const [user, setUser] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const theme = useTheme(); // Get the theme object
   const { t } = useTranslation(); // Initialize useTranslation
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const getTeamDisplayString = answer => {
     if (!answer.teamSize || answer.teamSize <= 1) {
@@ -41,16 +37,16 @@ const MyAnswers = () => {
 
   const headers = [{ value: t('common.title') }, { value: t('common.score') }, { value: t('common.created') }, { value: t('common.team') }, { value: t('common.status') }]; // Define the headers for the web table
   const rows = data => {
-    if (!Array.isArray(data)) return getRowData(data); // Ensure data is an array
-    return data && data.map(answer => getRowData(answer)); // Define the rows for the web table
-  };
-  const getRowData = data => {
-    if (!data || typeof data !== 'object') return ['N/A', 'N/A', 'N/A', 'N/A', 'N/A']; // Handle case where data is not an object
-    const team = getTeamDisplayString(data); // Get team display string
-    const score = `${data.score}/${data.answers && data.answers.length}`;
-    const status = data.isCompleted ? t('answerDetailsPage.statusCompleted') : data.isChecked ? t('answerDetailsPage.statusReadyForReview') : t('answerDetailsPage.statusInProgress');
-    return [{ value: data.quizTitle }, { value: score }, { value: data.submittedAt ? format(data.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A' }, { value: team }, { value: status }];
-  };
+    return (
+      data &&
+      data.map((d) => {
+        const team = getTeamDisplayString(d);
+        const score = `${d.score}/${d.answers && d.answers.length}`;
+        const status = d.isCompleted ? t('answerDetailsPage.statusCompleted') : d.isChecked ? t('answerDetailsPage.statusReadyForReview') : t('answerDetailsPage.statusInProgress');
+        return [{ value: d.quizTitle }, { value: score }, { value: d.submittedAt ? format(d.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A' }, { value: team }, { value: status }];
+      })
+    ); 
+  }; // Define the rows for the table
   const actions = answer => {
     return (
       (answer.isChecked && (
@@ -124,8 +120,7 @@ const MyAnswers = () => {
         {t('myAnswersPage.mySubmittedAnswersTitle')}
       </Typography>
       {answers.length === 0 && !loading && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('myAnswersPage.noAnswersSubmitted')}</Typography>}
-      {(answers.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(answers)} data={answers} actions={actions} />) ||
-        (isMobile && answers.map((answer, key) => <TableMobile key={key} headers={headers} rows={rows(answer)} data={answer} actions={actions} />))}
+      {answers.length > 0 && <CustomTable headers={headers} rows={rows(answers)} data={answers} actions={actions} />}
     </Box>
   );
 };

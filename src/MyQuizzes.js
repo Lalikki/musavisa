@@ -8,14 +8,12 @@ import { ButtonGroup, ListItemIcon, ListItemText, MenuItem, MenuList, Paper, Pop
 import { MediaBluetoothOn as MediaBluetoothOnIcon, ArrowDropDown as ArrowDropDownIcon } from '@mui/icons-material';
 import ShareIcon from '@mui/icons-material/Share'; // Import ShareIcon
 import DeleteIcon from '@mui/icons-material/Delete'; // Import DeleteIcon
-import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { onAuthStateChanged } from 'firebase/auth';
 import Typography from '@mui/material/Typography'; // Import Typography
 import { Link, useNavigate } from 'react-router-dom'; // Added useNavigate
 import { useTranslation } from 'react-i18next';
 import ShareQuizModal from './ShareQuizModal'; // We will create this component
-import TableMobile from './components/TableMobile';
-import TableWeb from './components/TableWeb';
+import CustomTable from './components/CustomTable';
 import { format } from 'date-fns';
 
 const MyQuizzes = () => {
@@ -29,26 +27,25 @@ const MyQuizzes = () => {
   const [expandedQuizId, setExpandedQuizId] = useState(null);
   const [menuQuiz, setMenuQuiz] = useState(null);
   // const [quizAnswers, setQuizAnswers] = useState([]); // This state seems unused here, consider removing if not needed for this component's direct logic
-  const theme = useTheme(); // Get the theme object
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [quizToShare, setQuizToShare] = useState(null);
   const [buttonOptionsAnchorEl, setButtonOptionsAnchorEl] = useState(null);
   const { t } = useTranslation(); // Initialize useTranslation
   const navigate = useNavigate(); // Initialize useNavigate
 
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const openButtonOptions = Boolean(buttonOptionsAnchorEl);
 
   const headers = [{ value: t('common.title') }, { value: t('common.numSongs') }, { value: t('common.created') }]; // Define the headers for the web table as objects with 'column' property
   const rows = data => {
-    if (!Array.isArray(data)) return getRowData(data);
-    return data && data.map(quiz => getRowData(quiz)); // Define the rows for the web table
+    return (
+      data &&
+      data.map(d => {
+        const createdAt = d.createdAt ? format(d.createdAt, 'dd.MM.yyyy') : 'N/A';
+        return [{ value: d.title }, { value: d.amount }, { value: createdAt }];
+      })
+    ); // Define the rows for the web table
   };
-  const getRowData = data => {
-    if (!data || typeof data !== 'object') return ['N/A', 'N/A', 'N/A']; // Handle case where quiz is not an object
-    const createdAt = data.createdAt ? format(data.createdAt, 'dd.MM.yyyy') : 'N/A';
-    return [{ value: data.title }, { value: data.amount }, { value: createdAt }];
-  };
+
   const myQuizzesActions = quiz => (
     <Box>
       <ButtonGroup variant="outlined" aria-label="Button group with a nested menu">
@@ -97,12 +94,14 @@ const MyQuizzes = () => {
               </ListItemIcon>
               <ListItemText>{t('myQuizzesPage.shareAction')}</ListItemText>
             </MenuItem>
-            <MenuItem onClick={() => handleDeleteQuiz(quiz.id)} disabled={quiz.hasAnswers}>
-              <ListItemIcon>
-                <DeleteIcon color="error" fontSize="small" />
-              </ListItemIcon>
-              <ListItemText>{t('common.delete', 'Delete')}</ListItemText>
-            </MenuItem>
+            {!quiz.hasAnswers && (
+              <MenuItem onClick={() => handleDeleteQuiz(quiz.id)}>
+                <ListItemIcon>
+                  <DeleteIcon color="error" fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>{t('common.delete', 'Delete')}</ListItemText>
+              </MenuItem>
+            )}
           </MenuList>
         </Paper>
       </Popover>
@@ -262,8 +261,7 @@ const MyQuizzes = () => {
           </Link>
         </Typography>
       )}
-      {(myQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(myQuizzes)} data={myQuizzes} actions={myQuizzesActions} />) ||
-        (isMobile && myQuizzes.map(quiz => <TableMobile headers={headers} rows={rows(quiz)} data={quiz} actions={myQuizzesActions} />))}
+      {myQuizzes.length > 0 && <CustomTable headers={headers} rows={rows(myQuizzes)} data={myQuizzes} actions={myQuizzesActions} />}
 
       {quizToShare && <ShareQuizModal open={shareModalOpen} onClose={handleCloseShareModal} quiz={quizToShare} />}
 
@@ -276,8 +274,7 @@ const MyQuizzes = () => {
         </Typography>
       )}
       {sharedQuizzes.length === 0 && !loadingShared && !errorShared && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('myQuizzesPage.noQuizzesShared')}</Typography>}
-      {(sharedQuizzes.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(sharedQuizzes)} data={sharedQuizzes} actions={sharedQuizzesActions} />) ||
-        (isMobile && sharedQuizzes.map((quiz, key) => <TableMobile key={key} headers={headers} rows={rows(quiz)} data={quiz} actions={sharedQuizzesActions} />))}
+      {sharedQuizzes.length > 0 && <CustomTable headers={headers} rows={rows(sharedQuizzes)} data={sharedQuizzes} actions={sharedQuizzesActions} />}
       {quizToShare && <ShareQuizModal open={shareModalOpen} onClose={handleCloseShareModal} quiz={quizToShare} />}
     </Box>
   );
