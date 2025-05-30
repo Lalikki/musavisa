@@ -61,7 +61,8 @@
         "numSongs": "Kappaleiden määrä",
         "pleaseLogin": "Ole hyvä ja kirjaudu sisään.",
         "notFound": "Ei löytynyt.",
-        "dragToReorder": "Vedä järjestelläksesi"
+        "dragToReorder": "Vedä järjestelläksesi",
+        "done": "Valmis"
     },
     "editAnswerPage": {
         "pageTitle": "{{quizTitle}}",
@@ -120,7 +121,8 @@
         "loginToCreate": "Ole hyvä ja kirjaudu sisään luodaksesi visan.",
         "searchFromYouTube": "Hae YouTubesta",
         "emptyVideoList": "Tyhjennä videolista",
-        "songLinkSearchLabel": "Kappalelinkki / YouTube-haku"
+        "songLinkSearchLabel": "Kappalelinkki / YouTube-haku",
+        "startTimeLabel": "Aloitusaika"
     },
     "editQuizPage": {
         "pageTitle": "Muokkaa visaa: {{quizTitle}}",

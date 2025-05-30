@@ -12,13 +12,19 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import { Tune as TuneIcon, Done as DoneIcon } from '@mui/icons-material';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import { InputLabel } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import YTSearch from './components/YTSearch';
+import YouTube from 'react-youtube';
 
 const emptyQuestion = { songLink: '', artist: '', song: '', hint: '' };
 
@@ -34,7 +40,9 @@ const Quiz = () => {
   const [isReady, setIsReady] = useState(false); // New state for isReady, defaults to false
   const [error, setError] = useState('');
   const [questions, setQuestions] = useState([emptyQuestion]);
+  const [editQuestions, setEditQuestions] = useState([]); // State to track which song is being edited
 
+  const isYTLink = link => /(youtube|youtu\.be)/i.test(link);
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, currentUser => {
       setUser(currentUser);
@@ -177,6 +185,78 @@ const Quiz = () => {
     }
   };
 
+  const SongStartTimeEditor = ({ index, question }) => {
+    const [startTime, setStartTime] = useState(question.startTime || ''); // Initialize with value or empty string
+    const [player, setPlayer] = useState(null); // Initialize with value or empty string
+
+    const checked = editQuestions?.includes(index);
+    const handleEditQuestion = () => {
+      setEditQuestions(prevQ => {
+        if (prevQ.includes(index)) {
+          return prevQ.filter(q => q !== index); // Remove index if already in edit mode
+        } else {
+          return [...prevQ, index]; // Add index to edit mode
+        }
+      });
+    };
+    const videoId = link => {
+      const regex = /(?:youtu\.be\/|youtube\.com\/(?:.*v=|v\/|embed\/|shorts\/))([\w-]{11})/;
+      const match = link.match(regex);
+      return match ? match[1] : null;
+    };
+
+    const handleChange = e => {
+      setStartTime(e.target.value);
+      handleQuestionChange(index, 'startTime', e.target.value); // Update the question's startTime
+    };
+
+    const onPlayerReady = event => {
+      setPlayer(event.target); // Store the player instance
+      if (startTime) {
+        event.target.seekTo(parseFloat(startTime), true); // Seek to the start time if provided
+      }
+    };
+
+    const formatTime = () => {
+      const minutes = Math.floor(startTime / 60);
+      const seconds = Math.floor(startTime % 60);
+      console.log(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
+      return '';
+      return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`; // Format as MM:SS
+    };
+
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        {checked && (
+          <YouTube
+            videoId={videoId(question.songLink)}
+            opts={{
+              playerVars: {
+                autoplay: 0,
+                width: '100%',
+                height: '100%',
+              },
+            }}
+            onReady={onPlayerReady}
+          />
+        )}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DemoContainer components={['TimePicker']}>
+              <TimePicker label={t('createNewQuizPage.startTimeLabel')} />
+            </DemoContainer>
+          </LocalizationProvider>
+          <Button variant="outlined" color={checked ? 'success' : 'primary'} sx={{ ml: 1 }} onClick={handleEditQuestion}>
+            {checked ? <DoneIcon /> : <TuneIcon />}
+            <Typography variant="button" sx={{ ml: 1 }}>
+              {checked ? t('common.done') : t('common.edit')}
+            </Typography>
+          </Button>
+        </Box>
+      </Box>
+    );
+  };
+
   return (
     <Box
       className="quiz-container" // Keep class if any global styles still apply
@@ -202,7 +282,6 @@ const Quiz = () => {
             value={title}
             onChange={e => setTitle(e.target.value)}
             required
-            className="form-input-full-width"
             slotProps={{ inputLabel: { shrink: true } }}
           />
           <TextField
@@ -215,7 +294,6 @@ const Quiz = () => {
             value={rules}
             onChange={e => setRules(e.target.value)}
             required
-            className="form-input-full-width"
             slotProps={{ inputLabel: { shrink: true } }}
           />
           <TextField
@@ -227,11 +305,12 @@ const Quiz = () => {
             value={amount}
             onChange={e => setAmount(e.target.value)}
             required
-            className="form-input-full-width"
             slotProps={{ inputLabel: { shrink: true }, inputProps: { min: 1 } }}
           />
           <FormControl fullWidth margin="dense" required className="form-input-full-width">
-            <InputLabel id="max-score-per-song-label" shrink>{t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}</InputLabel>
+            <InputLabel id="max-score-per-song-label" shrink>
+              {t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}
+            </InputLabel>
             <Select
               labelId="max-score-per-song-label"
               id="max-score-per-song-select"
@@ -244,7 +323,6 @@ const Quiz = () => {
               <MenuItem value="2">2</MenuItem>
             </Select>
           </FormControl>
-
           {Number(amount) > 0 && (
             <Box sx={{ mt: 1, mb: 1 }}>
               {' '}
@@ -259,14 +337,7 @@ const Quiz = () => {
                       {questions.map((q, index) => (
                         <Draggable key={`quiz-question-${index}`} draggableId={`quiz-question-${index}`} index={index}>
                           {provided => (
-                            <Paper
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              elevation={1}
-                              sx={{ p: { xs: 0.5, sm: 1 }, mb: 1 }}
-                              className="question-entry-box"
-                            >
+                            <Paper ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} elevation={1} sx={{ p: { xs: 0.5, sm: 1 }, mb: 1 }}>
                               <Typography variant="subtitle1" component="h4" gutterBottom>
                                 {t('common.songs')} {index + 1} ({t('common.dragToReorder', 'Drag to reorder')})
                               </Typography>
@@ -293,6 +364,7 @@ const Quiz = () => {
                                 required
                                 slotProps={{ inputLabel: { shrink: true } }}
                               />
+                              {isYTLink(q.songLink) && <SongStartTimeEditor index={index} question={q} />}
                               <TextField
                                 type="text"
                                 label={t('createNewQuizPage.hintOptionalLabel')}
@@ -304,7 +376,7 @@ const Quiz = () => {
                                 slotProps={{ inputLabel: { shrink: true } }}
                               />
                               {questions.length > 1 && ( // Only show remove if more than one question
-                                <Button variant="outlined" color="error" startIcon={<RemoveCircleOutlineIcon />} onClick={() => removeQuestion(index)} sx={{ mt: 0.5, mb: 0.5 }}>
+                                <Button variant="outlined" color="error" startIcon={<RemoveCircleOutlineIcon />} onClick={() => removeQuestion(index)}>
                                   {t('createNewQuizPage.removeSong')}
                                 </Button>
                               )}
@@ -317,7 +389,6 @@ const Quiz = () => {
                   )}
                 </Droppable>
               </DragDropContext>
-              {/* "Add Song Entry" button within the Song Entries Box */}
               <Button variant="outlined" startIcon={<AddCircleOutlineIcon />} onClick={addQuestion} className="button-add-question" sx={{ mt: 1, mb: 2 }}>
                 {t('createNewQuizPage.addSongEntry')}
               </Button>
@@ -326,19 +397,18 @@ const Quiz = () => {
           <FormControlLabel
             control={<Checkbox checked={isReady} onChange={e => setIsReady(e.target.checked)} id="isReadyCheckbox" />}
             label={t('createNewQuizPage.markAsReadyLabel')}
-            className="is-ready-checkbox-container"
             sx={{ display: 'block', mt: 1, mb: 1 }} // Reduced margins
           />
-          <Button type="submit" variant="contained" color="primary" fullWidth className="button-submit-quiz">
+          <Button type="submit" variant="contained" color="primary" fullWidth>
             {t('createNewQuizPage.createQuizButton')}
           </Button>
           {success && (
-            <Typography color="success.main" sx={{ mt: 2 }} className="form-message">
+            <Typography color="success.main" sx={{ mt: 2 }}>
               {success}
             </Typography>
           )}
           {error && (
-            <Typography color="error" sx={{ mt: 2 }} className="form-message">
+            <Typography color="error" sx={{ mt: 2 }}>
               {error}
             </Typography>
           )}

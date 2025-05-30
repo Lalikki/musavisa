@@ -58,7 +58,8 @@
         "numSongs": "Number of Songs",
         "pleaseLogin": "Please log in.",
         "notFound": "Not Found.",
-        "dragToReorder": "Drag to reorder"
+        "dragToReorder": "Drag to reorder",
+        "done": "Done"
     },
     "editAnswerPage": {
         "pageTitle": "Edit Your Answers for: {{quizTitle}}",
@@ -117,7 +118,8 @@
         "loginToCreate": "Please log in to create a quiz.",
         "searchFromYouTube": "Search from YouTube",
         "emptyVideoList": "Clear video list",
-        "songLinkSearchLabel": "Song link / YouTube search"
+        "songLinkSearchLabel": "Song link / YouTube search",
+        "startTimeLabel": "Start time"
     },
     "editQuizPage": {
         "pageTitle": "Edit Quiz: {{quizTitle}}",
