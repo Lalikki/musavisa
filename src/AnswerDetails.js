@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { db, auth } from './firebase'; // Import auth
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { compareTwoStrings } from 'string-similarity'; // Import for fuzzy matching
 import { format } from 'date-fns';
@@ -17,6 +17,9 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
+import Rating from '@mui/material/Rating'; // Import Rating
+import Snackbar from '@mui/material/Snackbar'; // Import Snackbar
+import Alert from '@mui/material/Alert'; // Import Alert
 import { TextField } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom'; // For MUI Link component
 import { useTheme } from '@mui/material/styles';
@@ -34,11 +37,12 @@ const AnswerDetails = () => {
     const [error, setError] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
     const [isSavingAssessment, setIsSavingAssessment] = useState(false);
-    const [saveAssessmentError, setSaveAssessmentError] = useState(null);
-    const [saveAssessmentSuccess, setSaveAssessmentSuccess] = useState('');
     const [isCompleting, setIsCompleting] = useState(false);
-    const [completeError, setCompleteError] = useState(null);
     const [isAutoCalculating, setIsAutoCalculating] = useState(false); // Keep this for button text
+    const [quizRating, setQuizRating] = useState(0); // User's rating for the quiz
+    const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+    const [ratingFeedback, setRatingFeedback] = useState({ open: false, message: '', severity: 'info' });
+    const [saveFeedback, setSaveFeedback] = useState({ open: false, message: '', severity: 'info' }); // New state for save feedback
     const theme = useTheme(); // theme is used, keep it
 
     useEffect(() => {
@@ -46,7 +50,7 @@ const AnswerDetails = () => {
             setCurrentUser(user);
         });
         return () => unsubscribe();
-    }, []); // No t needed here
+    }, []);
 
     useEffect(() => {
         const fetchQuizAnswer = async () => {
@@ -78,8 +82,15 @@ const AnswerDetails = () => {
                     // Fetch the corresponding quiz document for correct answers
                     const quizDocRefForAnswers = doc(db, 'quizzes', fetchedQuizAnswer.quizId);
                     const quizDocSnapForAnswers = await getDoc(quizDocRefForAnswers);
+
                     if (quizDocSnapForAnswers.exists()) {
-                        setCorrectQuizData(quizDocSnapForAnswers.data());
+                        const quizDetails = quizDocSnapForAnswers.data();
+                        setCorrectQuizData(quizDetails);
+                        // Check if current user has already rated this quiz
+                        if (currentUser && quizDetails.ratings) {
+                            const userRatingEntry = quizDetails.ratings.find(r => r.userId === currentUser.uid);
+                            if (userRatingEntry) setQuizRating(userRatingEntry.value);
+                        }
                     } else {
                         setError(t('editAnswerPage.originalQuizNotFoundError', "Could not find the original quiz data to display correct answers.")); // Reusing key
                     }
@@ -95,7 +106,7 @@ const AnswerDetails = () => {
         };
 
         fetchQuizAnswer();
-    }, [answerId, t]); // Added t to dependency array
+    }, [answerId, t, currentUser]); // Added currentUser to dependency array
 
     const handleSelfAssessedScoreChange = (index, scoreValue) => {
         const newScores = [...selfAssessedSongScores];
@@ -107,12 +118,11 @@ const AnswerDetails = () => {
 
     const handleSaveAssessment = async () => {
         if (!canSelfAssess) {
-            setSaveAssessmentError(t('answerDetailsPage.cannotSaveAssessmentError', "You cannot save this assessment at this time.")); // New key
+            setSaveFeedback({ open: true, message: t('answerDetailsPage.cannotSaveAssessmentError', "You cannot save this assessment at this time."), severity: 'error' });
             return;
         }
         setIsSavingAssessment(true);
-        setSaveAssessmentError(null);
-        setSaveAssessmentSuccess('');
+        setSaveFeedback({ open: false, message: '', severity: 'info' }); // Clear previous feedback
         try {
             const answerDocRef = doc(db, 'quizAnswers', answerId);
             await updateDoc(answerDocRef, {
@@ -120,7 +130,7 @@ const AnswerDetails = () => {
                 score: totalSelfAssessedScore, // Save total self-assessed score to the main 'score' field
                 lastSelfAssessedAt: serverTimestamp()
             });
-            setSaveAssessmentSuccess(t('answerDetailsPage.saveAssessmentSuccess'));
+            setSaveFeedback({ open: true, message: t('answerDetailsPage.saveAssessmentSuccess'), severity: 'success' });
             // Update local quizAnswer state to reflect the saved score
             setQuizAnswer(prev => ({
                 ...prev,
@@ -129,7 +139,7 @@ const AnswerDetails = () => {
             }));
         } catch (err) {
             console.error("Error saving self-assessment:", err);
-            setSaveAssessmentError(t('answerDetailsPage.saveAssessmentError'));
+            setSaveFeedback({ open: true, message: t('answerDetailsPage.saveAssessmentError'), severity: 'error' });
         } finally {
             setIsSavingAssessment(false);
         }
@@ -137,12 +147,11 @@ const AnswerDetails = () => {
 
     const handleSaveAndCompleteAssessment = async () => {
         if (!canSelfAssess) {
-            setCompleteError(t('answerDetailsPage.cannotCompleteAssessmentError', "You cannot complete this assessment at this time.")); // New key
+            setSaveFeedback({ open: true, message: t('answerDetailsPage.cannotCompleteAssessmentError', "You cannot complete this assessment at this time."), severity: 'error' });
             return;
         }
         setIsCompleting(true);
-        setCompleteError(null);
-        setSaveAssessmentSuccess(''); // Clear success message from regular save
+        setSaveFeedback({ open: false, message: '', severity: 'info' }); // Clear previous feedback
         try {
             const answerDocRef = doc(db, 'quizAnswers', answerId);
             await updateDoc(answerDocRef, {
@@ -152,12 +161,12 @@ const AnswerDetails = () => {
                 isCompleted: true, // Mark as completed
                 // isChecked might remain true, or you could set it to false if needed
             });
-            setSaveAssessmentSuccess(t('answerDetailsPage.saveAndCompleteSuccess', "Your assessment has been saved and marked as completed!")); // New key
+            setSaveFeedback({ open: true, message: t('answerDetailsPage.saveAndCompleteSuccess', "Your assessment has been saved and marked as completed!"), severity: 'success' });
             // Redirect to My Answers page
-            navigate('/my-answers');
+            setTimeout(() => navigate('/my-answers'), 1500); // Delay redirect to show message
         } catch (err) {
             console.error("Error saving and completing assessment:", err);
-            setCompleteError(t('answerDetailsPage.completeError'));
+            setSaveFeedback({ open: true, message: t('answerDetailsPage.completeError'), severity: 'error' });
         } finally {
             setIsCompleting(false);
         }
@@ -165,14 +174,13 @@ const AnswerDetails = () => {
 
     const handleAutoCalculateScore = async () => { // Make it async
         if (!correctQuizData || !quizAnswer || !quizAnswer.answers || !canSelfAssess) {
-            setSaveAssessmentError(t('answerDetailsPage.cannotAutoCalcError', "Cannot auto-calculate score at this time.")); // New key
+            setSaveFeedback({ open: true, message: t('answerDetailsPage.cannotAutoCalcError', "Cannot auto-calculate score at this time."), severity: 'warning' });
             return;
         }
 
         // Use isSavingAssessment for the loading state of this combined calculate & save operation
         setIsSavingAssessment(true);
-        setSaveAssessmentError(null);
-        setSaveAssessmentSuccess('');
+        setSaveFeedback({ open: false, message: '', severity: 'info' });
 
         setIsAutoCalculating(true);
         const similarityThreshold = 0.8; // Or make this configurable
@@ -205,16 +213,65 @@ const AnswerDetails = () => {
             });
             setSelfAssessedSongScores([...newScores]); // Update local state for song scores, ensure new array
             setQuizAnswer(prev => ({ ...prev, score: calculatedTotalScore, selfAssessedSongScores: [...newScores] })); // Update local state for total score
-            setSaveAssessmentSuccess(t('answerDetailsPage.autoCalcSuccess', "Scores auto-calculated and saved successfully!")); // New key
+            setSaveFeedback({ open: true, message: t('answerDetailsPage.autoCalcSuccess', "Scores auto-calculated and saved successfully!"), severity: 'success' });
         } catch (err) {
             console.error("Error auto-calculating and saving score:", err);
-            setSaveAssessmentError(t('answerDetailsPage.autoCalcError', "Failed to auto-calculate and save score. Please try again.")); // New key
-            setSaveAssessmentSuccess('');
+            setSaveFeedback({ open: true, message: t('answerDetailsPage.autoCalcError', "Failed to auto-calculate and save score. Please try again."), severity: 'error' });
         } finally {
             setIsAutoCalculating(false); // Reset this specific flag
             setIsSavingAssessment(false); // Reset the general saving flag
         }
 
+    };
+
+    const handleQuizRatingChange = async (event, newValue) => {
+        if (!currentUser || !quizAnswer || !quizAnswer.quizId) {
+            setRatingFeedback({ open: true, message: t('answerDetailsPage.ratingLoginError', 'You must be logged in to rate.'), severity: 'error' });
+            return;
+        }
+        if (newValue === null) return; // User cleared the rating
+
+        setIsSubmittingRating(true);
+        setRatingFeedback({ open: false, message: '', severity: 'info' }); // Clear previous feedback
+
+        const quizDocRef = doc(db, 'quizzes', quizAnswer.quizId);
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                const quizDoc = await transaction.get(quizDocRef);
+                if (!quizDoc.exists()) {
+                    throw new Error(t('answerDetailsPage.ratingQuizNotFoundError', "Quiz not found for rating."));
+                }
+
+                const quizData = quizDoc.data();
+                let ratings = quizData.ratings || [];
+                const existingRatingIndex = ratings.findIndex(r => r.userId === currentUser.uid);
+
+                if (existingRatingIndex > -1) {
+                    ratings[existingRatingIndex].value = newValue;
+                    ratings[existingRatingIndex].ratedAt = new Date(); // Update timestamp using client time
+                } else {
+                    ratings.push({ userId: currentUser.uid, value: newValue, ratedAt: new Date() }); // Use client time
+                }
+
+                // We are no longer calculating averageRating and ratingCount here.
+                // This will be handled in a view where all ratings are aggregated.
+                transaction.update(quizDocRef, {
+                    ratings: ratings,
+                    // averageRating and ratingCount will be updated by a separate process or view
+                    lastRatedAt: serverTimestamp()
+                });
+
+                // Update local state immediately for better UX
+                setQuizRating(newValue);
+            });
+            setRatingFeedback({ open: true, message: t('answerDetailsPage.ratingSuccess', 'Your rating has been submitted!'), severity: 'success' });
+        } catch (error) {
+            console.error("Error submitting quiz rating:", error);
+            setRatingFeedback({ open: true, message: error.message || t('answerDetailsPage.ratingError', 'Failed to submit rating.'), severity: 'error' });
+        } finally {
+            setIsSubmittingRating(false);
+        }
     };
 
     const getTeamDisplayString = (answer) => {
@@ -264,11 +321,8 @@ const AnswerDetails = () => {
                         quizAnswer.isChecked ? ` ${t('answerDetailsPage.statusReadyForReview')}` :
                             ` ${t('answerDetailsPage.statusInProgress')}`}
                 </Typography>
-                <Typography variant="body1"><strong>{t('answerDetailsPage.currentSavedScore')}:</strong> {quizAnswer.score} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}</Typography>
-                <Typography variant="body1">
-                    <strong>{t('answerDetailsPage.liveScore')}:</strong>
-                    {' '}{totalSelfAssessedScore} / {quizAnswer.answers ? quizAnswer.answers.length * 1 : 'N/A'}
-                </Typography>
+                <Typography variant="body1"><strong>{t('common.score')}:</strong> {quizAnswer.score} / {correctQuizData?.amount ? correctQuizData.amount * (correctQuizData.maxScorePerSong || 1) : 'N/A'}</Typography>
+
                 {/* Moved Auto-Calculate button here */}
                 {canSelfAssess && !quizAnswer.isCompleted && (
                     <Button
@@ -282,6 +336,25 @@ const AnswerDetails = () => {
                     </Button>
                 )}
             </Paper>
+
+            {/* Quiz Rating Section - Show if user is the answer creator */}
+            {currentUser && quizAnswer && correctQuizData && currentUser.uid === quizAnswer.answerCreatorId && (
+                <Paper elevation={1} sx={{ p: { xs: 1.5, sm: 2.5 }, mt: 3, mb: 3, backgroundColor: 'background.paper', textAlign: 'center' }} className="quiz-rating-section">
+                    <Typography variant="h6" component="h3" gutterBottom>
+                        {t('answerDetailsPage.rateThisQuizTitle', 'Rate this Quiz')}
+                    </Typography>
+                    <Rating
+                        name="quiz-rating"
+                        value={quizRating}
+                        onChange={handleQuizRatingChange}
+                        precision={0.5} // Or 1 if you prefer whole stars
+                        size="large"
+                        disabled={isSubmittingRating}
+                    />
+                    {isSubmittingRating && <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>{t('common.saving', 'Saving...')}</Typography>}
+                </Paper>
+            )}
+
 
             <Typography variant="h5" component="h2" gutterBottom align="center">{t('answerDetailsPage.yourGuessesTitle')}</Typography>
             <Paper // New Paper wrapper for the "Your Guesses" section
@@ -448,10 +521,19 @@ const AnswerDetails = () => {
                         {isCompleting ? t('answerDetailsPage.completing') : t('answerDetailsPage.saveAndComplete')}
                     </Button>
                     <Button component={RouterLink} to="/my-answers" variant="text" className="back-link">{t('common.cancel')}</Button>
-                    {completeError && <Typography color="error" sx={{ mt: 1 }} className="error-text form-message">{completeError}</Typography>}
-                    {saveAssessmentError && <Typography color="error" sx={{ mt: 1 }} className="error-text form-message">{saveAssessmentError}</Typography>}
-                    {saveAssessmentSuccess && <Typography color="success.main" sx={{ mt: 1 }} className="success-text form-message">{saveAssessmentSuccess}</Typography>}
                 </Box>
+            )}
+            {/* Snackbar for Rating Feedback */}
+            {ratingFeedback.open && (
+                <Snackbar open={ratingFeedback.open} autoHideDuration={4000} onClose={() => setRatingFeedback(prev => ({ ...prev, open: false }))} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+                    <Alert onClose={() => setRatingFeedback(prev => ({ ...prev, open: false }))} severity={ratingFeedback.severity} sx={{ width: '100%' }}>{ratingFeedback.message}</Alert>
+                </Snackbar>
+            )}
+            {/* Snackbar for Save/Complete/Auto-Calc Feedback */}
+            {saveFeedback.open && (
+                <Snackbar open={saveFeedback.open} autoHideDuration={4000} onClose={() => setSaveFeedback(prev => ({ ...prev, open: false }))} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+                    <Alert onClose={() => setSaveFeedback(prev => ({ ...prev, open: false }))} severity={saveFeedback.severity} sx={{ width: '100%' }}>{saveFeedback.message}</Alert>
+                </Snackbar>
             )}
         </Box>
     );
