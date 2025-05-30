@@ -5,10 +5,8 @@ import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebas
 import { format } from 'date-fns';
 import { Typography, Button, Box, Paper, List, CircularProgress, useMediaQuery } from '@mui/material';
 import MusicPlayer from './components/MusicPlayer';
-import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { useTranslation } from 'react-i18next'; // Import useTranslation
-import TableWeb from './components/TableWeb';
-import TableMobile from './components/TableMobile';
+import CustomTable from './components/CustomTable';
 
 const QuizDetails = () => {
   const { quizId } = useParams();
@@ -18,9 +16,7 @@ const QuizDetails = () => {
   const [answers, setAnswers] = useState([]);
   const [answersLoading, setAnswersLoading] = useState(true);
   const [answersError, setAnswersError] = useState(null);
-  const theme = useTheme(); // Get the theme object
   const { t } = useTranslation(); // Initialize useTranslation
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const headers = [
     { value: t('quizDetailsPage.answeredBy') },
@@ -30,23 +26,17 @@ const QuizDetails = () => {
     { value: t('common.submitted'), align: 'right' },
   ]; // Define the headers for the web table
   const rows = data => {
-    if (!Array.isArray(data)) return getRowData(data);
-    return data && data.map(quiz => getRowData(quiz)); // Define the rows for the web table
-  };
-  const getRowData = data => {
-    if (!data || typeof data !== 'object') return ['N/A', 'N/A', 'N/A']; // Handle case where quiz is not an object
-    const score = `${data.score}/${data.answers && data.answers.length}`;
-    const status = data.isCompleted ? t('answerDetailsPage.statusCompleted') : data.isChecked ? t('answerDetailsPage.statusReadyForReview') : t('answerDetailsPage.statusInProgress');
-    const createdAt = data.submittedAt ? format(data.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A';
-    const createdBy = data.answerCreatorName || t('common.unnamedUser', 'Anonymous'); // Default to 'Unknown' if creatorName is not available
-    return [{ value: createdBy }, { value: getTeamDisplayString(data) }, { value: score }, { value: status }, { value: createdAt, align: 'right' }];
-  };
-
-  // const actions = quiz => {
-  //   return (
-  //     <Button></Button>
-  //   );
-  // };
+    return (
+      data &&
+      data.map(d => {
+        const score = `${d.score}/${d.answers && d.answers.length}`;
+        const status = d.isCompleted ? t('answerDetailsPage.statusCompleted') : d.isChecked ? t('answerDetailsPage.statusReadyForReview') : t('answerDetailsPage.statusInProgress');
+        const createdAt = d.submittedAt ? format(d.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A';
+        const createdBy = d.answerCreatorName || t('common.unnamedUser', 'Anonymous'); // Default to 'Unknown' if creatorName is not available
+        return [{ value: createdBy }, { value: getTeamDisplayString(d) }, { value: score }, { value: status }, { value: createdAt, align: 'right' }];
+      })
+    );
+  }; // Define the rows for the table
 
   useEffect(() => {
     const fetchQuizDetails = async () => {
@@ -199,8 +189,7 @@ const QuizDetails = () => {
         </Typography>
       )}
       {!answersLoading && !answersError && answers.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('quizDetailsPage.noSubmissionsYet')}</Typography>}
-      {(!answersLoading && !answersError && answers.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(answers)} data={answers} />) ||
-        (isMobile && answers.map((answer, key) => <TableMobile key={key} headers={headers} rows={rows(answer)} data={answer} />))}
+      {!answersLoading && !answersError && answers.length > 0 && <CustomTable headers={headers} rows={rows(answers)} data={answers} />}
     </Box>
   );
 };
