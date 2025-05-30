@@ -1,34 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore'; // Added where
-import { useMediaQuery } from '@mui/material';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
-import { useTheme } from '@mui/material/styles'; // Import useTheme
 import { useTranslation } from 'react-i18next'; // Import useTranslation
-import TableWeb from './components/TableWeb';
-import TableMobile from './components/TableMobile';
+import CustomTable from './components/CustomTable';
 
 const Highscores = () => {
   // const [highscores, setHighscores] = useState([]); // Old state
   const [userStats, setUserStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const theme = useTheme(); // Get the theme object
   const { t } = useTranslation(); // Initialize useTranslation
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const headers = [{ value: t('common.rank') }, { value: t('common.player') }, { value: t('highscoresPage.quizzesAnswered') }, { value: t('highscoresPage.overallAccuracy'), align: 'right' }]; // Define the headers for the web table
-  const rows = (data, index) => {
-    if (!Array.isArray(data)) return getRowData(data, index);
-    return data && data.map((item, i) => getRowData(item, i)); // Define the rows for the web table
-  };
-  const getRowData = (data, index) => {
-    const rank = ++index; 
-    const overallPercentage = data.overallPercentage ? `${data.overallPercentage.toFixed(2)}%` : '0%'; // Format percentage
-    const overallPercentageSubText = `${data.totalCorrectAnswers}/${data.totalPossibleAnswers} ${t('highscoresPage.correctAnswers')}`;
-    return [{ value: rank }, { value: data.userName }, { value: data.quizzesAnsweredCount }, { value: overallPercentage, subValue: overallPercentageSubText, align: 'right' }]; // Return an array for the row
+  const rows = data => {
+    return (
+      data &&
+      data.map((d, index) => {
+        const rank = ++index;
+        const overallPercentage = d.overallPercentage ? `${d.overallPercentage.toFixed(2)}%` : '0%'; // Format percentage
+        const overallPercentageSubText = `${d.totalCorrectAnswers}/${d.totalPossibleAnswers} ${t('highscoresPage.correctAnswers')}`;
+        return [{ value: rank }, { value: d.userName }, { value: d.quizzesAnsweredCount }, { value: overallPercentage, subValue: overallPercentageSubText, align: 'right' }];
+      })
+    ); // Define the rows for the web table
   };
 
   useEffect(() => {
@@ -117,8 +113,7 @@ const Highscores = () => {
         {t('highscoresPage.userLeaderboardTitle')}
       </Typography>
       {userStats.length === 0 && !loading && <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('highscoresPage.noHighscores')}</Typography>}
-      {(userStats.length > 0 && !isMobile && <TableWeb headers={headers} rows={rows(userStats)} data={userStats} />) ||
-        (isMobile && userStats.map((user, index) => <TableMobile key={index} headers={headers} rows={rows(user, index)} data={user} />))}
+      {userStats.length > 0 && <CustomTable headers={headers} rows={rows(userStats)} data={userStats} />}
     </Box>
   );
 };
