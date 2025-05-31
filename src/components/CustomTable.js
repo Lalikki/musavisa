@@ -4,6 +4,7 @@ import { useTheme } from '@mui/material/styles'; // Import useTheme
 export default function CustomTable({ headers, rows, data, actions }) {
   const theme = useTheme(); // Get the theme object
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
   return isMobile ? (
     data.map((d, i) => (
@@ -13,14 +14,25 @@ export default function CustomTable({ headers, rows, data, actions }) {
             {headers.map((header, headerIndex) => (
               <TableRow key={headerIndex}>
                 <TableCell variant="head">{header.value}</TableCell>
-                <TableCell>
-                  {rows[i][headerIndex].value || 'N/A'}
-                  {rows[i][headerIndex].subValue && (
-                    <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-                      {rows[i][headerIndex].subValue}
-                    </Typography>
-                  )}
-                </TableCell>
+                {(isObject(rows[i][headerIndex]) && (
+                  <TableCell>
+                    {rows[i][headerIndex].value || 'N/A'}
+                    {rows[i][headerIndex].subValue && (
+                      <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
+                        {rows[i][headerIndex].subValue}
+                      </Typography>
+                    )}
+                  </TableCell>
+                )) || (
+                  <TableCell>
+                    {rows[i][headerIndex][0] || 'N/A'}
+                    {rows[i][headerIndex][2] && (
+                      <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
+                        {rows[i][headerIndex][2]}
+                      </Typography>
+                    )}
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
@@ -44,16 +56,27 @@ export default function CustomTable({ headers, rows, data, actions }) {
         <TableBody>
           {data.map((d, dataIndex) => (
             <TableRow key={dataIndex}>
-              {rows[dataIndex].map((row, rowIndex) => (
-                <TableCell key={rowIndex} align={row.align || 'left'}>
-                  {row.value || 'N/A'}
-                  {row.subValue && (
-                    <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-                      {row.subValue}
-                    </Typography>
-                  )}
-                </TableCell>
-              ))}
+              {rows[dataIndex].map((row, rowIndex) =>
+                isObject(row) ? (
+                  <TableCell key={rowIndex} align={row.align || 'left'}>
+                    {row.value || 'N/A'}
+                    {row.subValue && (
+                      <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
+                        {row.subValue}
+                      </Typography>
+                    )}
+                  </TableCell>
+                ) : (
+                  <TableCell key={rowIndex} align={row[1] || 'left'}>
+                    {row[0] || 'N/A'}
+                    {row[2] && (
+                      <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
+                        {row[2]}
+                      </Typography>
+                    )}
+                  </TableCell>
+                )
+              )}
               {actions && <TableCell>{actions(d)}</TableCell>}
             </TableRow>
           ))}

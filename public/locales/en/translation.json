@@ -92,9 +92,15 @@
         "saveAndComplete": "Save and Mark as Completed",
         "completing": "Completing...",
         "backToMyAnswers": "Back to My Answers",
-        "completeError": "Failed to mark as completed.",
+        "completeError": "Failed to complete assessment.",
         "saveAssessmentError": "Failed to save assessment.",
-        "saveAssessmentSuccess": "Assessment saved successfully."
+        "saveAssessmentSuccess": "Assessment saved.",
+        "rateThisQuizTitle": "Rate this Quiz",
+        "averageRating": "Average: {{avg}} ({{count}} ratings)",
+        "ratingLoginError": "You must be logged in to rate.",
+        "ratingQuizNotFoundError": "Quiz not found for rating.",
+        "ratingSuccess": "Your rating has been submitted!",
+        "ratingError": "Failed to submit rating."
     },
     "createNewQuizPage": {
         "pageTitle": "Create New Quiz",
