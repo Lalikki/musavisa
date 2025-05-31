@@ -50,6 +50,7 @@
         "status": "Status",
         "score": "Pisteet",
         "team": "Tiimi",
+        "rating": "Arvostelu",
         "by": "Tekijä",
         "player": "Pelaaja",
         "rank": "Sija",
