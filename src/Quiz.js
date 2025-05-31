@@ -22,7 +22,8 @@ import { useTranslation } from 'react-i18next'; // Import useTranslation
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { TimeField } from '@mui/x-date-pickers/TimeField';
+import { getSeconds, getMinutes, minutesToSeconds, getMilliseconds } from 'date-fns';
 import YTSearch from './components/YTSearch';
 import YouTube from 'react-youtube';
 
@@ -186,10 +187,11 @@ const Quiz = () => {
   };
 
   const SongStartTimeEditor = ({ index, question }) => {
-    const [startTime, setStartTime] = useState(question.startTime || ''); // Initialize with value or empty string
+    const [startTime, setStartTime] = useState(new Date(question.startTime * 1000 || 0)); // Initialize with question's startTime or 0
     const [player, setPlayer] = useState(null); // Initialize with value or empty string
-
     const checked = editQuestions?.includes(index);
+
+    console.log('starttime', startTime);
     const handleEditQuestion = () => {
       setEditQuestions(prevQ => {
         if (prevQ.includes(index)) {
@@ -205,11 +207,6 @@ const Quiz = () => {
       return match ? match[1] : null;
     };
 
-    const handleChange = e => {
-      setStartTime(e.target.value);
-      handleQuestionChange(index, 'startTime', e.target.value); // Update the question's startTime
-    };
-
     const onPlayerReady = event => {
       setPlayer(event.target); // Store the player instance
       if (startTime) {
@@ -217,12 +214,16 @@ const Quiz = () => {
       }
     };
 
-    const formatTime = () => {
-      const minutes = Math.floor(startTime / 60);
-      const seconds = Math.floor(startTime % 60);
-      console.log(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
-      return '';
-      return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`; // Format as MM:SS
+    const handleStartTimeChange = value => {
+      setStartTime(value); // Update the local state with the new value
+      // const seconds = getSeconds(value);
+      // const minutes = getMinutes(value);
+      // const totalSeconds = minutesToSeconds(minutes) + seconds; // Convert to total seconds
+      // console.log('Total seconds:', totalSeconds);
+      // handleQuestionChange(index, 'startTime', totalSeconds); // Update the question's startTime
+      // if (player) {
+      //   player.seekTo(totalSeconds, true); // Seek to the new start time in the player
+      // }
     };
 
     return (
@@ -242,8 +243,8 @@ const Quiz = () => {
         )}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DemoContainer components={['TimePicker']}>
-              <TimePicker label={t('createNewQuizPage.startTimeLabel')} />
+            <DemoContainer components={['TimeField']}>
+              <TimeField label="Format with seconds" value={startTime} onChange={value => handleStartTimeChange(value)} format="mm:ss" />
             </DemoContainer>
           </LocalizationProvider>
           <Button variant="outlined" color={checked ? 'success' : 'primary'} sx={{ ml: 1 }} onClick={handleEditQuestion}>
