@@ -450,6 +450,36 @@ const AnswerDetails = () => {
                                                 }
                                             }}
                                         />
+                                        {/* Display Extra Question and Answer if it exists */}
+                                        {correctQuizData?.questions?.[index]?.extra && (
+                                            <>
+                                                <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium', textAlign: 'left' }}>
+                                                    {t('answerQuizPage.extraAnswerLabel', 'Extra Question')}: {correctQuizData.questions[index].extra}
+                                                </Typography>
+                                                <TextField
+                                                    label={t('answerQuizPage.extraAnswerLabel', 'Your Answer to Extra Question')}
+                                                    id={`guess-extraAnswer-${index}`}
+                                                    variant="outlined"
+                                                    fullWidth
+                                                    margin="dense"
+                                                    value={guess.extraAnswer || ''}
+                                                    disabled
+                                                    InputLabelProps={{ shrink: true }}
+                                                    sx={{
+                                                        '& .MuiInputBase-input.Mui-disabled': {
+                                                            WebkitTextFillColor: theme.palette.text.secondary,
+                                                            color: theme.palette.text.secondary,
+                                                        },
+                                                        '& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+                                                            borderColor: theme.palette.action.disabledBackground,
+                                                        },
+                                                        '& .MuiInputBase-root.Mui-disabled': {
+                                                            backgroundColor: theme.palette.action.disabledBackground,
+                                                        }
+                                                    }}
+                                                />
+                                            </>
+                                        )}
                                         {/* Correct answer display can be added here if needed, using Typography and MUI Link */}
                                         <FormControl fullWidth margin="dense" variant="outlined" className="manual-score-input" sx={{ mt: 1 }}>
                                             {(() => {

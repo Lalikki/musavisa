@@ -20,7 +20,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import YTSearch from './components/YTSearch';
 
-const emptyQuestion = { songLink: '', artist: '', song: '', hint: '' };
+const emptyQuestion = { songLink: '', artist: '', song: '', extra: '', hint: '' };
 
 const Quiz = () => {
   const { t } = useTranslation(); // Initialize useTranslation
@@ -293,6 +293,18 @@ const Quiz = () => {
                                 required
                                 slotProps={{ inputLabel: { shrink: true } }}
                               />
+                              {Number(maxScorePerSong) >= 1.5 && (
+                                <TextField
+                                  type="text"
+                                  label={t('createNewQuizPage.extraLabel', 'Extra Question (Optional)')}
+                                  variant="outlined"
+                                  fullWidth
+                                  margin="dense"
+                                  value={q.extra || ''} // Ensure value is controlled
+                                  onChange={e => handleQuestionChange(index, 'extra', e.target.value)}
+                                  slotProps={{ inputLabel: { shrink: true } }}
+                                />
+                              )}
                               <TextField
                                 type="text"
                                 label={t('createNewQuizPage.hintOptionalLabel')}

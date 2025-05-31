@@ -66,7 +66,12 @@ const EditAnswer = () => {
                     } else {
                         const fetchedQuizAnswer = { id: answerDocSnap.id, ...data };
                         setQuizAnswer(fetchedQuizAnswer);
-                        setEditedAnswers(data.answers.map(a => ({ ...a }))); // Deep copy
+                        // Ensure each answer object in editedAnswers has an extraAnswer field
+                        setEditedAnswers(data.answers.map(a => ({
+                            artist: a.artist || '',
+                            songName: a.songName || '',
+                            extraAnswer: a.extraAnswer || '' // Initialize if not present
+                        })));
 
                         // Now fetch the corresponding quiz document for correct answers
                         const quizDocRefForAnswers = doc(db, 'quizzes', fetchedQuizAnswer.quizId);
@@ -240,6 +245,26 @@ const EditAnswer = () => {
                             className="songname-input"
                             InputLabelProps={{ shrink: true }}
                         />
+                        {/* Display Extra Question from correctQuizData and Answer Field for editedAnswers */}
+                        {correctQuizData?.questions?.[index]?.extra && (
+                            <>
+                                <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium' }}>
+                                    {correctQuizData.questions[index].extra}
+                                </Typography>
+                                <TextField
+                                    // Use the same label as in AnswerQuiz.js for consistency
+                                    label={t('answerQuizPage.extraAnswerLabel', 'Your Answer to Extra Question')}
+                                    variant="outlined"
+                                    fullWidth
+                                    margin="dense"
+                                    id={`edit-extraAnswer-${index + 1}`}
+                                    value={answer.extraAnswer || ''}
+                                    onChange={(e) => handleAnswerChange(index, 'extraAnswer', e.target.value)}
+                                    className="extra-answer-input" // Optional: for specific styling
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </>
+                        )}
                     </Box>
                 ))}
                 <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'center', gap: 1 }}>

@@ -41,7 +41,11 @@ const Quizzes = () => {
             value: ( // Align items to the start (left) of the column
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                 <Rating name={`quiz-avg-rating-${d.id}`} value={normalizedRating} precision={0.1} max={1} size="medium" readOnly />
-                <Typography variant="caption" sx={{ mt: 0.5 }}>{`${averageRatingValue.toFixed(1)}/5`}</Typography>
+                <Typography variant="caption" sx={{ mt: 0.5 }}>
+                  {Number.isInteger(averageRatingValue)
+                    ? `${averageRatingValue}/5`
+                    : `${averageRatingValue.toFixed(1)}/5`}
+                </Typography>
               </Box>
             ),
             align: 'center'
