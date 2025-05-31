@@ -24,7 +24,8 @@
         "songName": "Kappaleen nimi",
         "submitAnswers": "Tallenna keskeneräisenä",
         "submitAndReview": "Tallenna ja siirry tarkistamaan",
-        "submitting": "Lähetetään...",
+        "submitting": "Tallennetaan...",
+        "extraAnswerLabel": "Vastauksesi lisäkysymykseen",
         "easterEggSure": "Oletko varma?",
         "easterEggOther": "Vai oliko se se toinen?"
     },
@@ -121,6 +122,7 @@
         "artistLabel": "Artisti",
         "songTitleLabel": "Kappaleen nimi",
         "hintOptionalLabel": "Vihje (Vapaaehtoinen)",
+        "extraLabel": "Lisäkysymys (Vapaaehtoinen)",
         "fetchingMetadata": "Haetaan tietoja...",
         "removeSong": "Poista kappale",
         "addSongEntry": "Lisää kappale",

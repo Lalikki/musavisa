@@ -45,8 +45,8 @@ const AnswerQuiz = () => {
                 if (quizDocSnap.exists()) {
                     const quizData = { id: quizDocSnap.id, ...quizDocSnap.data() };
                     setQuiz(quizData);
-                    // Initialize answers array based on the number of songs, including the new hint flag
-                    setAnswers(Array(quizData.amount).fill({ artist: '', songName: '', showEasterEggHint: false }));
+                    // Initialize answers array based on the number of songs
+                    setAnswers(Array(quizData.amount).fill({ artist: '', songName: '', extraAnswer: '', showEasterEggHint: false }));
                 } else {
                     setError(t('common.notFound')); // Or a more specific "Quiz not found" key
                 }
@@ -298,6 +298,25 @@ const AnswerQuiz = () => {
                             className="songname-input"
                             InputLabelProps={{ shrink: true }}
                         />
+                        {/* Display Extra Question and Answer Field if extra question exists */}
+                        {quiz?.questions?.[index]?.extra && (
+                            <>
+                                <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium' }}>
+                                    {quiz.questions[index].extra}
+                                </Typography>
+                                <TextField
+                                    label={t('answerQuizPage.extraAnswerLabel', 'Your Answer to Extra Question')}
+                                    variant="outlined"
+                                    fullWidth
+                                    margin="dense"
+                                    id={`extraAnswer-${index + 1}`}
+                                    value={answer.extraAnswer || ''}
+                                    onChange={(e) => handleAnswerChange(index, 'extraAnswer', e.target.value)}
+                                    className="extra-answer-input"
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                            </>
+                        )}
                     </Box>
                 ))}
 

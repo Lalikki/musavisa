@@ -10,7 +10,6 @@ import { Link } from 'react-router-dom'; // Optional: if you want to link to ind
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import Rating from '@mui/material/Rating'; // Import Rating component
 import CustomTable from './components/CustomTable';
-import { AlignHorizontalRightRounded } from '@mui/icons-material';
 
 const Quizzes = () => {
   const [quizzes, setQuizzes] = useState([]);

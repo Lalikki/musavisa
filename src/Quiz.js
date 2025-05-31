@@ -27,7 +27,7 @@ import { getSeconds, getMinutes, minutesToSeconds, getMilliseconds } from 'date-
 import YTSearch from './components/YTSearch';
 import YouTube from 'react-youtube';
 
-const emptyQuestion = { songLink: '', artist: '', song: '', hint: '' };
+const emptyQuestion = { songLink: '', artist: '', song: '', extra: '', hint: '' };
 
 const Quiz = () => {
   const { t } = useTranslation(); // Initialize useTranslation
@@ -366,6 +366,18 @@ const Quiz = () => {
                                 slotProps={{ inputLabel: { shrink: true } }}
                               />
                               {isYTLink(q.songLink) && <SongStartTimeEditor index={index} question={q} />}
+                              {Number(maxScorePerSong) >= 1.5 && (
+                                <TextField
+                                  type="text"
+                                  label={t('createNewQuizPage.extraLabel', 'Extra Question (Optional)')}
+                                  variant="outlined"
+                                  fullWidth
+                                  margin="dense"
+                                  value={q.extra || ''} // Ensure value is controlled
+                                  onChange={e => handleQuestionChange(index, 'extra', e.target.value)}
+                                  slotProps={{ inputLabel: { shrink: true } }}
+                                />
+                              )}
                               <TextField
                                 type="text"
                                 label={t('createNewQuizPage.hintOptionalLabel')}
