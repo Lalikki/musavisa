@@ -14,7 +14,12 @@ const Highscores = () => {
   const [error, setError] = useState(null);
   const { t } = useTranslation(); // Initialize useTranslation
 
-  const headers = [{ value: t('common.rank') }, { value: t('common.player') }, { value: t('highscoresPage.quizzesAnswered') }, { value: t('highscoresPage.overallAccuracy'), align: 'right' }]; // Define the headers for the web table
+  const headers = [
+    { value: t('common.rank') },
+    { value: t('common.player') },
+    { value: t('highscoresPage.quizzesAnswered'), align: 'center' },
+    { value: t('highscoresPage.overallAccuracy'), align: 'center' },
+  ]; // Define the headers for the web table
   const rows = data => {
     return (
       data &&
@@ -22,7 +27,7 @@ const Highscores = () => {
         const rank = ++index;
         const overallPercentage = d.overallPercentage ? `${d.overallPercentage.toFixed(2)}%` : '0%'; // Format percentage
         const overallPercentageSubText = `${d.totalCorrectAnswers}/${d.totalPossibleAnswers} ${t('highscoresPage.correctAnswers')}`;
-        return [{ value: rank }, { value: d.userName }, { value: d.quizzesAnsweredCount }, { value: overallPercentage, subValue: overallPercentageSubText, align: 'right' }];
+        return [{ value: rank }, { value: d.userName }, { value: d.quizzesAnsweredCount, align: 'center' }, { value: overallPercentage, subValue: overallPercentageSubText, align: 'center' }];
       })
     ); // Define the rows for the web table
   };

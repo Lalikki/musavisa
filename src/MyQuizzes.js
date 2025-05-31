@@ -35,18 +35,18 @@ const MyQuizzes = () => {
 
   const openButtonOptions = Boolean(buttonOptionsAnchorEl);
 
-  const headers = [{ value: t('common.title') }, { value: t('common.numSongs') }, { value: t('common.created') }]; // Define the headers for the web table as objects with 'column' property
+  const headers = [{ value: t('common.title') }, { value: t('common.numSongs'), align: 'center' }, { value: t('common.created') }]; // Define the headers for the web table as objects with 'column' property
   const rows = data => {
     return (
       data &&
       data.map(d => {
         const createdAt = d.createdAt ? format(d.createdAt, 'dd.MM.yyyy') : 'N/A';
-        return [{ value: d.title }, { value: d.amount }, { value: createdAt }];
+        return [{ value: d.title }, { value: d.amount, align: 'center' }, { value: createdAt }];
       })
     ); // Define the rows for the web table
   };
 
-  const myQuizzesActions = quiz => (
+  const actions = quiz => (
     <Box>
       <ButtonGroup variant="outlined" aria-label="Button group with a nested menu">
         <Button onClick={() => handleHostQuiz(quiz.id)} startIcon={<MediaBluetoothOnIcon />}>
@@ -261,7 +261,7 @@ const MyQuizzes = () => {
           </Link>
         </Typography>
       )}
-      {myQuizzes.length > 0 && <CustomTable headers={headers} rows={rows(myQuizzes)} data={myQuizzes} actions={myQuizzesActions} />}
+      {myQuizzes.length > 0 && <CustomTable headers={headers} rows={rows(myQuizzes)} data={myQuizzes} actions={actions} />}
 
       {quizToShare && <ShareQuizModal open={shareModalOpen} onClose={handleCloseShareModal} quiz={quizToShare} />}
 

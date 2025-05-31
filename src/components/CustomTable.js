@@ -11,30 +11,26 @@ export default function CustomTable({ headers, rows, data, actions }) {
       <Card key={i} variant="outlined" sx={{ overflowX: 'auto', mt: 2 }}>
         <Table aria-label="simple table" sx={{ width: '100%' }}>
           <TableBody>
-            {headers.map((header, headerIndex) => (
-              <TableRow key={headerIndex}>
-                <TableCell variant="head">{header.value}</TableCell>
-                {(isObject(rows[i][headerIndex]) && (
-                  <TableCell>
-                    {rows[i][headerIndex].value || 'N/A'}
-                    {rows[i][headerIndex].subValue && (
-                      <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-                        {rows[i][headerIndex].subValue}
-                      </Typography>
-                    )}
-                  </TableCell>
-                )) || (
-                  <TableCell>
-                    {rows[i][headerIndex][0] || 'N/A'}
-                    {rows[i][headerIndex][2] && (
-                      <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-                        {rows[i][headerIndex][2]}
-                      </Typography>
-                    )}
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
+            {headers.map((header, headerIndex) => {
+              const row = rows[i][headerIndex];
+              return (
+                <TableRow key={headerIndex}>
+                  <TableCell variant="head">{header.value}</TableCell>
+                  {isObject(row) && (
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', maxWidth: '100%', width: 'max-content', alignItems: row.subAlign || 'left' }}>
+                        {row.value || 'N/A'}
+                        {row.subValue && (
+                          <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
+                            {row.subValue}
+                          </Typography>
+                        )}
+                      </Box>
+                    </TableCell>
+                  )}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
         {actions && <Box sx={{ m: 1 }}>{actions(d)}</Box>}
@@ -56,26 +52,18 @@ export default function CustomTable({ headers, rows, data, actions }) {
         <TableBody>
           {data.map((d, dataIndex) => (
             <TableRow key={dataIndex}>
-              {rows[dataIndex].map((row, rowIndex) =>
-                isObject(row) ? (
-                  <TableCell key={rowIndex} align={row.align || 'left'}>
-                    {row.value || 'N/A'}
-                    {row.subValue && (
-                      <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-                        {row.subValue}
-                      </Typography>
-                    )}
-                  </TableCell>
-                ) : (
-                  <TableCell key={rowIndex} align={row[1] || 'left'}>
-                    {row[0] || 'N/A'}
-                    {row[2] && (
-                      <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-                        {row[2]}
-                      </Typography>
-                    )}
-                  </TableCell>
-                )
+              {rows[dataIndex].map(
+                (row, rowIndex) =>
+                  isObject(row) && (
+                    <TableCell key={rowIndex} align={row.align || 'left'}>
+                      {row.value || 'N/A'}
+                      {row.subValue && (
+                        <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
+                          {row.subValue}
+                        </Typography>
+                      )}
+                    </TableCell>
+                  )
               )}
               {actions && <TableCell>{actions(d)}</TableCell>}
             </TableRow>

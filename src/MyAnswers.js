@@ -35,17 +35,17 @@ const MyAnswers = () => {
     return members.join(', ');
   };
 
-  const headers = [{ value: t('common.title') }, { value: t('common.score') }, { value: t('common.created') }, { value: t('common.team') }, { value: t('common.status') }]; // Define the headers for the web table
+  const headers = [{ value: t('common.title') }, { value: t('common.score'), align: 'center' }, { value: t('common.created') }, { value: t('common.team') }, { value: t('common.status') }]; // Define the headers for the web table
   const rows = data => {
     return (
       data &&
-      data.map((d) => {
+      data.map(d => {
         const team = getTeamDisplayString(d);
         const score = `${d.score}/${d.answers && d.answers.length}`;
         const status = d.isCompleted ? t('answerDetailsPage.statusCompleted') : d.isChecked ? t('answerDetailsPage.statusReadyForReview') : t('answerDetailsPage.statusInProgress');
-        return [{ value: d.quizTitle }, { value: score }, { value: d.submittedAt ? format(d.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A' }, { value: team }, { value: status }];
+        return [{ value: d.quizTitle }, { value: score, align: 'center' }, { value: d.submittedAt ? format(d.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A' }, { value: team }, { value: status }];
       })
-    ); 
+    );
   }; // Define the rows for the table
   const actions = answer => {
     return (

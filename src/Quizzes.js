@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom'; // Optional: if you want to link to ind
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import Rating from '@mui/material/Rating'; // Import Rating component
 import CustomTable from './components/CustomTable';
+import { AlignHorizontalRightRounded } from '@mui/icons-material';
 
 const Quizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -17,13 +18,7 @@ const Quizzes = () => {
   const [error, setError] = useState(null);
   const { t } = useTranslation(); // Initialize the t function
 
-  const headers = [
-    { value: t('common.title') },
-    { value: t('common.rating', 'Rating'), },
-    { value: t('common.numSongs') },
-    { value: t('common.created') },
-    { value: t('common.by') }
-  ];
+  const headers = [{ value: t('common.title') }, { value: t('common.rating', 'Rating'), align: 'center' }, { value: t('common.numSongs'), align: 'center' }, { value: t('common.created') }, { value: t('common.by') }];
 
   const rows = data => {
     return (
@@ -37,18 +32,17 @@ const Quizzes = () => {
 
         return [
           { value: d.title },
-          { // Rating cell
-            value: ( // Align items to the start (left) of the column
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <Rating name={`quiz-avg-rating-${d.id}`} value={normalizedRating} precision={0.1} max={1} size="medium" readOnly />
-                <Typography variant="caption" sx={{ mt: 0.5 }}>{`${averageRatingValue.toFixed(1)}/5`}</Typography>
-              </Box>
-            ),
-            align: 'center'
+          {
+            // Rating cell
+            // Align items to the start (left) of the column
+            value: <Rating name={`quiz-avg-rating-${d.id}`} value={normalizedRating} precision={0.1} max={1} size="medium" readOnly />,
+            align: 'center',
+            subValue: `${averageRatingValue.toFixed(1)}/5`,
+            subAlign: 'center', // Align subValue to the left
           },
-          { value: d.amount },
+          { value: d.amount, align: 'center' }, // Assuming 'amount' is the number of songs
           { value: createdAt },
-          { value: createdBy }
+          { value: createdBy },
         ];
       })
     );
