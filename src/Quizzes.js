@@ -8,8 +8,8 @@ import { Button } from '@mui/material';
 import { format } from 'date-fns'; // Import date-fns for formatting dates
 import { Link } from 'react-router-dom'; // Optional: if you want to link to individual quizzes later
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import Rating from '@mui/material/Rating'; // Import Rating component
 import CustomTable from './components/CustomTable';
-import { Star as StarIcon } from '@mui/icons-material';
 
 const Quizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -17,15 +17,39 @@ const Quizzes = () => {
   const [error, setError] = useState(null);
   const { t } = useTranslation(); // Initialize the t function
 
-  const headers = [{ value: t('common.title') }, { value: 'Tähtiluokitus', align: 'center' }, { value: t('common.numSongs') }, { value: t('common.created') }, { value: t('common.by') }]; // Define the headers for the web table
+  const headers = [
+    { value: t('common.title') },
+    { value: t('common.rating', 'Rating'), },
+    { value: t('common.numSongs') },
+    { value: t('common.created') },
+    { value: t('common.by') }
+  ];
+
   const rows = data => {
     return (
       data &&
       data.map(d => {
         const createdAt = d.createdAt ? format(d.createdAt, 'dd.MM.yyyy') : 'N/A';
         const createdBy = d.creatorName || t('common.unnamedUser', 'Unknown'); // Default to 'Unknown' if creatorName is not available
-        // Remember to match the header order. Set values inside objects and set components inside arrays. Second element is alignment, third is subValue if needed.
-        return [{ value: d.title }, [<StarIcon />, 'center', '6/5'], { value: d.amount }, { value: createdAt }, { value: createdBy }];
+        const averageRatingValue = d.averageRating || 0; // Get averageRating, default to 0
+        // Normalize the 0-5 rating to a 0-1 scale for a single star display
+        const normalizedRating = averageRatingValue / 5;
+
+        return [
+          { value: d.title },
+          { // Rating cell
+            value: ( // Align items to the start (left) of the column
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <Rating name={`quiz-avg-rating-${d.id}`} value={normalizedRating} precision={0.1} max={1} size="medium" readOnly />
+                <Typography variant="caption" sx={{ mt: 0.5 }}>{`${averageRatingValue.toFixed(1)}/5`}</Typography>
+              </Box>
+            ),
+            align: 'center'
+          },
+          { value: d.amount },
+          { value: createdAt },
+          { value: createdBy }
+        ];
       })
     );
   }; // Define the rows for the table

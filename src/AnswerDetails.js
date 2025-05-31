@@ -234,6 +234,7 @@ const AnswerDetails = () => {
         setIsSubmittingRating(true);
         setRatingFeedback({ open: false, message: '', severity: 'info' }); // Clear previous feedback
 
+        console.log('[RatingDebug] Attempting to rate quizId:', quizAnswer?.quizId, 'by user:', currentUser?.uid, 'with value:', newValue);
         const quizDocRef = doc(db, 'quizzes', quizAnswer.quizId);
 
         try {
@@ -244,29 +245,45 @@ const AnswerDetails = () => {
                 }
 
                 const quizData = quizDoc.data();
-                let ratings = quizData.ratings || [];
-                const existingRatingIndex = ratings.findIndex(r => r.userId === currentUser.uid);
+                const initialRatings = quizData.ratings || [];
+                console.log('[RatingDebug] Existing quizData.ratings:', JSON.parse(JSON.stringify(initialRatings)));
+
+                let updatedRatingsArray;
+                const existingRatingIndex = initialRatings.findIndex(r => r.userId === currentUser.uid);
 
                 if (existingRatingIndex > -1) {
-                    ratings[existingRatingIndex].value = newValue;
-                    ratings[existingRatingIndex].ratedAt = new Date(); // Update timestamp using client time
+                    console.log('[RatingDebug] Updating existing rating for user.');
+                    updatedRatingsArray = initialRatings.map((rating, index) => {
+                        if (index === existingRatingIndex) {
+                            return { ...rating, value: newValue, ratedAt: new Date() };
+                        }
+                        return rating;
+                    });
                 } else {
-                    ratings.push({ userId: currentUser.uid, value: newValue, ratedAt: new Date() }); // Use client time
+                    console.log('[RatingDebug] Adding new rating for user.');
+                    updatedRatingsArray = [...initialRatings, { userId: currentUser.uid, value: newValue, ratedAt: new Date() }];
                 }
 
-                // We are no longer calculating averageRating and ratingCount here.
-                // This will be handled in a view where all ratings are aggregated.
+                console.log('[RatingDebug] Modified ratings array (updatedRatingsArray) before update:', JSON.parse(JSON.stringify(updatedRatingsArray)));
+                // Re-calculate averageRating and ratingCount
+                const totalRatingSum = updatedRatingsArray.reduce((sum, r) => sum + r.value, 0);
+                const newAverageRating = updatedRatingsArray.length > 0 ? parseFloat((totalRatingSum / updatedRatingsArray.length).toFixed(1)) : 0;
+                const newRatingCount = updatedRatingsArray.length;
+
                 transaction.update(quizDocRef, {
-                    ratings: ratings,
-                    // averageRating and ratingCount will be updated by a separate process or view
+                    ratings: updatedRatingsArray,
+                    averageRating: newAverageRating, // Add averageRating to the update
+                    ratingCount: newRatingCount,     // Add ratingCount to the update
                     lastRatedAt: serverTimestamp()
                 });
 
                 // Update local state immediately for better UX
                 setQuizRating(newValue);
             });
+            console.log('[RatingDebug] Transaction successful.');
             setRatingFeedback({ open: true, message: t('answerDetailsPage.ratingSuccess', 'Your rating has been submitted!'), severity: 'success' });
         } catch (error) {
+            console.error('[RatingDebug] Error submitting quiz rating:', error, 'Message:', error.message);
             console.error("Error submitting quiz rating:", error);
             setRatingFeedback({ open: true, message: error.message || t('answerDetailsPage.ratingError', 'Failed to submit rating.'), severity: 'error' });
         } finally {
