@@ -18,6 +18,12 @@ import Snackbar from '@mui/material/Snackbar'; // Added
 import Alert from '@mui/material/Alert'; // Added
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
+// Helper function to capitalize the first letter of a string
+const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
 const AnswerQuiz = () => {
     const { t } = useTranslation(); // Initialize useTranslation
     const { quizId } = useParams();
@@ -125,6 +131,7 @@ const AnswerQuiz = () => {
             const answerData = {
                 quizId: quiz.id,
                 quizTitle: quiz.title,
+                calculatedMaxScore: quiz.calculatedMaxScore !== undefined ? quiz.calculatedMaxScore : null, // Store max score
                 answers: answers, // The array of { artist: '', songName: '' }
                 answerCreatorId: user.uid, // No translation needed
                 answerCreatorName: user.displayName || t('common.unnamedUser', 'Anonymous'),
@@ -185,6 +192,7 @@ const AnswerQuiz = () => {
             const answerData = {
                 quizId: quiz.id,
                 quizTitle: quiz.title,
+                calculatedMaxScore: quiz.calculatedMaxScore !== undefined ? quiz.calculatedMaxScore : null, // Store max score
                 answers: answers,
                 answerCreatorId: user.uid, // No translation needed
                 answerCreatorName: user.displayName || t('common.unnamedUser', 'Anonymous'),
@@ -301,11 +309,12 @@ const AnswerQuiz = () => {
                         {/* Display Extra Question and Answer Field if extra question exists */}
                         {quiz?.questions?.[index]?.extra && (
                             <>
-                                <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium' }}>
+                                {/* <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium' }}>
                                     {quiz.questions[index].extra}
-                                </Typography>
+                                </Typography> */}
                                 <TextField
-                                    label={t('answerQuizPage.extraAnswerLabel', 'Your Answer to Extra Question')}
+                                    // label={t('answerQuizPage.extraAnswerLabel', 'Your Answer to Extra Question')}
+                                    label={capitalizeFirstLetter(quiz.questions[index].extra)}
                                     variant="outlined"
                                     fullWidth
                                     margin="dense"

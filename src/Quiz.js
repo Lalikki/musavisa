@@ -20,7 +20,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import YTSearch from './components/YTSearch';
 
-const emptyQuestion = { songLink: '', artist: '', song: '', extra: '', hint: '' };
+const emptyQuestion = { songLink: '', artist: '', song: '', extra: '', correctExtraAnswer: '', hint: '' };
 
 const Quiz = () => {
   const { t } = useTranslation(); // Initialize useTranslation
@@ -150,6 +150,17 @@ const Quiz = () => {
       }
     }
     try {
+      // Calculate the maximum possible score
+      let calculatedMaxScore = 0;
+      questions.forEach(q => {
+        calculatedMaxScore += 0.5; // For artist
+        calculatedMaxScore += 0.5; // For song
+        // Only add points for extra if both the question and its correct answer are present
+        if (q.extra && q.extra.trim() !== '' && q.correctExtraAnswer && q.correctExtraAnswer.trim() !== '') {
+          calculatedMaxScore += 0.5; // For extra question
+        }
+      });
+
       await addDoc(collection(db, 'quizzes'), {
         title,
         rules, // Changed from description
@@ -159,7 +170,8 @@ const Quiz = () => {
         creatorName: user ? user.displayName : t('common.unnamedUser', 'Unknown'), // Store display name
         createdAt: serverTimestamp(),
         questions,
-        isReady, // Add isReady field to Firestore document
+        isReady,
+        calculatedMaxScore,
       });
       setSuccess(t('createNewQuizPage.createQuizSuccess'));
       // Instead of resetting fields, navigate to My Quizzes page
@@ -294,16 +306,29 @@ const Quiz = () => {
                                 slotProps={{ inputLabel: { shrink: true } }}
                               />
                               {Number(maxScorePerSong) >= 1.5 && (
-                                <TextField
-                                  type="text"
-                                  label={t('createNewQuizPage.extraLabel', 'Extra Question (Optional)')}
-                                  variant="outlined"
-                                  fullWidth
-                                  margin="dense"
-                                  value={q.extra || ''} // Ensure value is controlled
-                                  onChange={e => handleQuestionChange(index, 'extra', e.target.value)}
-                                  slotProps={{ inputLabel: { shrink: true } }}
-                                />
+                                <>
+                                  <TextField
+                                    type="text"
+                                    label={t('createNewQuizPage.extraLabel', 'Extra Question (Optional)')}
+                                    variant="outlined"
+                                    fullWidth
+                                    margin="dense"
+                                    value={q.extra || ''} // Ensure value is controlled
+                                    onChange={e => handleQuestionChange(index, 'extra', e.target.value)}
+                                    slotProps={{ inputLabel: { shrink: true } }}
+                                  />
+
+                                  <TextField
+                                    type="text"
+                                    label={t('createNewQuizPage.correctExtraAnswerLabel', 'Correct Answer to Extra Question')}
+                                    variant="outlined"
+                                    fullWidth
+                                    margin="dense"
+                                    value={q.correctExtraAnswer || ''} // Ensure value is controlled
+                                    onChange={e => handleQuestionChange(index, 'correctExtraAnswer', e.target.value)}
+                                    slotProps={{ inputLabel: { shrink: true } }}
+                                  />
+                                </>
                               )}
                               <TextField
                                 type="text"

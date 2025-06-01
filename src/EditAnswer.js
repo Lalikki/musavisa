@@ -14,6 +14,12 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
+// Helper function to capitalize the first letter of a string
+const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
 const EditAnswer = () => {
     const { t } = useTranslation(); // Initialize useTranslation
     const { answerId } = useParams();
@@ -248,12 +254,13 @@ const EditAnswer = () => {
                         {/* Display Extra Question from correctQuizData and Answer Field for editedAnswers */}
                         {correctQuizData?.questions?.[index]?.extra && (
                             <>
-                                <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium' }}>
+                                {/* <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium' }}>
                                     {correctQuizData.questions[index].extra}
-                                </Typography>
+                                </Typography> */}
                                 <TextField
                                     // Use the same label as in AnswerQuiz.js for consistency
-                                    label={t('answerQuizPage.extraAnswerLabel', 'Your Answer to Extra Question')}
+                                    label={capitalizeFirstLetter(correctQuizData.questions[index].extra)}
+                                    // label={t('}
                                     variant="outlined"
                                     fullWidth
                                     margin="dense"

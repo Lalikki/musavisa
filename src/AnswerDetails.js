@@ -25,6 +25,11 @@ import { Link as RouterLink } from 'react-router-dom'; // For MUI Link component
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
+// Helper function to capitalize the first letter of a string
+const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
 
 const AnswerDetails = () => {
     const { t } = useTranslation(); // Initialize useTranslation
@@ -192,12 +197,22 @@ const AnswerDetails = () => {
                 const correctArtist = (correctAnswer.artist || "").toLowerCase().trim();
                 const submittedSongName = (submittedAnswer.songName || "").toLowerCase().trim();
                 const correctSongName = (correctAnswer.song || "").toLowerCase().trim();
+                const submittedExtraAnswer = (submittedAnswer.extraAnswer || "").toLowerCase().trim();
+                // Assuming 'correctExtraAnswer' is the field where you store the correct answer
+                // to the extra question in your quiz data.
+                const correctExtra = (correctAnswer.correctExtraAnswer || "").toLowerCase().trim();
 
                 if (compareTwoStrings(submittedArtist, correctArtist) >= similarityThreshold) {
                     songScore += 0.5;
                 }
                 if (compareTwoStrings(submittedSongName, correctSongName) >= similarityThreshold) {
                     songScore += 0.5;
+                }
+                // Check if an extra question was defined and if there's a correct answer for it
+                if (correctAnswer.extra && correctAnswer.extra.trim() !== '' && correctExtra.trim() !== '') {
+                    if (compareTwoStrings(submittedExtraAnswer, correctExtra) >= similarityThreshold) {
+                        songScore += 0.5;
+                    }
                 }
             }
             return songScore;
@@ -338,7 +353,18 @@ const AnswerDetails = () => {
                         quizAnswer.isChecked ? ` ${t('answerDetailsPage.statusReadyForReview')}` :
                             ` ${t('answerDetailsPage.statusInProgress')}`}
                 </Typography>
-                <Typography variant="body1"><strong>{t('common.score')}:</strong> {quizAnswer.score} / {correctQuizData?.amount ? correctQuizData.amount * (correctQuizData.maxScorePerSong || 1) : 'N/A'}</Typography>
+                <Typography variant="body1"><strong>{t('common.score')}:</strong> {quizAnswer.score} / {(() => {
+                    if (!correctQuizData || !correctQuizData.questions) return 'N/A';
+                    let maxTotalScore = 0;
+                    correctQuizData.questions.forEach(q => {
+                        maxTotalScore += 0.5; // For artist
+                        maxTotalScore += 0.5; // For song
+                        if (q.extra && q.extra.trim() !== '') {
+                            maxTotalScore += 0.5; // For extra question
+                        }
+                    });
+                    return maxTotalScore;
+                })()}</Typography>
 
                 {/* Moved Auto-Calculate button here */}
                 {canSelfAssess && !quizAnswer.isCompleted && (
@@ -453,11 +479,11 @@ const AnswerDetails = () => {
                                         {/* Display Extra Question and Answer if it exists */}
                                         {correctQuizData?.questions?.[index]?.extra && (
                                             <>
-                                                <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium', textAlign: 'left' }}>
+                                                {/* <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium', textAlign: 'left' }}>
                                                     {t('answerQuizPage.extraAnswerLabel', 'Extra Question')}: {correctQuizData.questions[index].extra}
-                                                </Typography>
+                                                </Typography> */}
                                                 <TextField
-                                                    label={t('answerQuizPage.extraAnswerLabel', 'Your Answer to Extra Question')}
+                                                    label={capitalizeFirstLetter(correctQuizData.questions[index].extra)}
                                                     id={`guess-extraAnswer-${index}`}
                                                     variant="outlined"
                                                     fullWidth
@@ -484,11 +510,17 @@ const AnswerDetails = () => {
                                         <FormControl fullWidth margin="dense" variant="outlined" className="manual-score-input" sx={{ mt: 1 }}>
                                             {(() => {
                                                 // Determine the maximum score for this specific quiz, defaulting to 1 if not specified
-                                                const maxScoreForThisQuiz = (typeof correctQuizData?.maxScorePerSong === 'number' && correctQuizData.maxScorePerSong > 0)
-                                                    ? correctQuizData.maxScorePerSong
-                                                    : 1; // Default max score if not found or invalid
+                                                const currentQuestionData = correctQuizData?.questions?.[index];
+                                                let maxScoreForThisSong = 0;
+                                                if (currentQuestionData) {
+                                                    maxScoreForThisSong += 0.5; // Artist
+                                                    maxScoreForThisSong += 0.5; // Song
+                                                    if (currentQuestionData.extra && currentQuestionData.extra.trim() !== '') {
+                                                        maxScoreForThisSong += 0.5; // Extra
+                                                    }
+                                                }
                                                 const scoreOptions = [];
-                                                for (let i = 0; i <= maxScoreForThisQuiz; i += 0.5) {
+                                                for (let i = 0; i <= maxScoreForThisSong; i += 0.5) {
                                                     scoreOptions.push(i);
                                                 }
 

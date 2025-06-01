@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "musavisa-d7d74",
+  "private_key_id": "189ab6cea06ff94df5b652d08fb7888e35816f3e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDAp6Se6wK56e0C\nU01VHxU02g++6juoEZKgh5PDzcS3oBI/wrbKIZd1kDs3KoecdjhAHEVU8jENR4CG\neXKi2idU9WrhaywSDI5qp3ife1klhYia/hHnt3Oq44v06WE7X3WCdaFaeI4Dj/J/\nFDmv0ardxQUFWQCSCE0UWiT4WTYwIZbN9kgu++zcj/ZnP61vT4l2WhJaw+xZrzH8\nYxbDiRk2zDh8SuRY76aDYuKuc4/gebwOvPRivK+4XNDUAN6nGAaNTxaeEjXmdjcx\n45GOzACD7ww36ieRuPA3JvlzHuaQMtFBJgC7MuWGIjyEkJ2aonNvrqSV/5UQQKuD\nZNhQuIBjAgMBAAECggEADC6Nij7x/S99fRgnW6qLfLwNItVM0GPMEbqA7XClb7b/\ncGivhjh5i0WDeQmHaa1QAT3IZIar81sCFX64cPO6aPTbvUU5lCqXFsdgKTVzfZvj\n92j5WN2Qws2AnAvlygtPMuCdQ0s8L516h+6Pdz6av0sl9iCamKFNvmu0yr9ZXdGl\njaLdrHakGXPRcPVixpMwXd/R3Lurl53ijAo95Q0Aycs7zZCWYFfeeu/Wf1wU9EQn\nmNrT1cG/uTv7XsQYn82lYfYyxy43LckJVSJqJ7q4FK95BEtH4i/tPMpqjuHrDalf\nZAfj49Ev9aL8ZGdlmeRPB0QMM6jUvbu5HDZfmMp0gQKBgQD+zPxzF01cynQr0LS9\nsSruyJMXcg5RSQZ9m+LhP9kpX9dkaeNIbA643DNN0T63uuJ0/NAnq5GCWFQpqY0B\nFLAJFgEdPght4zKonDiE+x3Qq/witFxxWWVT23X1geMB/MQ5kwRdcoAbsL6Tgb9r\n19O26CEegCjPGOO87kPpFBWEBQKBgQDBj8a5dVCg3jjFWdPZQjjuoOqUU5xhiKkQ\nrM6rLgKaannrQBhK0U+0Jsupq6BQtlNVF7SqFbY0mp2emDMpcGmlhWpYbNOFDCV2\n+cLQpSu6Qjs1Y6iim6yalYkGVUgg5TJ7LS/5ipvSTshaeDRoC1aWQS9o8fHuFfmq\n4UTGw23HRwKBgQCw+BKGpTKYNg0FuYkvDvQwsKJo8FC9aCjX6QNlSwE7WVOybFDt\npg97mYUQkTosReKvOkAgrWr8yvh5j0dd7s5tIRlZBBK6r8gpj4c55WfJ3Qnb2MUz\n/NEBszV0dOgEI1juXAv2E2ai1Nkofj9DWb20Ffmaw4yUekcCm8ITCl3/OQKBgGqF\n2KTJ9lSB15ZsiBUhx7kz38U/emmGzxw5Lgew64fVn0EjZfsO1CFd1GmM5U5l+Nh0\nkl2kU0EB8kqMkmN01P9dvBfr1EB9XcTrURaIP9diibkpHm5W5BeywdU1a9uGp1B4\nntVjPbvw1XxMePLlgoJwX0oPFMilWWB8VuBYPvsTAoGBALzXtucMFUDiR51+NDzV\nGHEhNC3LCpRnq8TJsjJpY/u5qIRkarpDTDTNcHDyHOaMfSsBKgR0Scejc8aMJZmH\ntfzsGqEIDDMo/lFo5TLDqc5ceCd0g8ydTOMTicycIidentmF6Z6614855u15kxlV\nfHN97bR7KI0paD34n7ojUHOe\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@musavisa-d7d74.iam.gserviceaccount.com",
+  "client_id": "116132197231623497797",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40musavisa-d7d74.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
