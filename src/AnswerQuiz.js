@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from './firebase'; // Import auth
-import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -35,9 +35,10 @@ const AnswerQuiz = () => {
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState('');
-    const [isReadyForReview, setIsReadyForReview] = useState(false); // New state for the checkbox
+    // const [isReadyForReview, setIsReadyForReview] = useState(false); // This state will be removed
     const [submitError, setSubmitError] = useState('');
     const [teamSize, setTeamSize] = useState(1);
+    const [draftAnswerId, setDraftAnswerId] = useState(null); // For auto-save
     const [teamMembers, setTeamMembers] = useState([]); // Stores names of additional members
 
     useEffect(() => {
@@ -112,115 +113,122 @@ const AnswerQuiz = () => {
         setTeamMembers(newTeamMembers);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!user) {
-            setSubmitError(t('common.pleaseLogin')); // Or a more specific "must be logged in to submit"
+    // Auto-save logic
+    const performAutoSave = useCallback(async () => {
+        if (!user || !quiz || submitting || !answers || answers.length === 0) {
+            // console.log('[AutoSave] Skipped: Conditions not met (user, quiz, not submitting, answers exist). User:', !!user, 'Quiz:', !!quiz, 'Submitting:', submitting, 'Answers Length:', answers?.length);
             return;
         }
-        if (!quiz) {
-            setSubmitError(t('answerQuizPage.quizNotLoadedError', 'Quiz data is not loaded yet.'));
-            return;
+        // Optional: Check if there are actual changes to save to avoid unnecessary writes
+        // For simplicity, we'll save if the function is called and conditions are met.
+
+        // console.log('[AutoSave] Attempting to auto-save...');
+
+        // Base data for both new drafts and updates
+        const baseAutoSaveData = {
+            quizId: quiz.id,
+            quizTitle: quiz.title,
+            calculatedMaxScore: quiz.calculatedMaxScore !== undefined ? quiz.calculatedMaxScore : null,
+            answers: answers,
+            answerCreatorId: user.uid,
+            answerCreatorName: user.displayName || t('common.unnamedUser', 'Anonymous'),
+            score: 0, // Default score for a draft
+            teamSize: teamSize,
+            teamMembers: teamMembers.filter(name => name && name.trim() !== ''), // Ensure name exists before trimming
+            isChecked: false, // Auto-saved drafts are not yet ready for review
+            isCompleted: false, // Auto-saved drafts are not completed
+            lastAutoSavedAt: serverTimestamp(),
+            // Do not set 'submittedAt' for auto-save, only for manual submission
+        };
+
+
+        try {
+            if (draftAnswerId) {
+                // Updating an existing draft - only update lastAutoSavedAt, not submittedAt
+                const draftDocRef = doc(db, "quizAnswers", draftAnswerId);
+                await updateDoc(draftDocRef, baseAutoSaveData);
+                // console.log('[AutoSave] Draft updated:', draftAnswerId, 'Data:', baseAutoSaveData);
+            } else {
+                // Creating a new draft for the first time in this session
+                // Add submittedAt for the very first auto-save of this new draft
+                const newDraftData = { ...baseAutoSaveData, submittedAt: serverTimestamp() };
+                const newDraftRef = await addDoc(collection(db, "quizAnswers"), newDraftData);
+                setDraftAnswerId(newDraftRef.id);
+                // console.log('[AutoSave] New draft created:', newDraftRef.id, 'Data:', newDraftData);
+            }
+        } catch (err) {
+            console.error("Error during auto-save:", err); // Log error silently
+        }
+    }, [user, quiz, answers, teamSize, teamMembers, draftAnswerId, submitting, t]); // Ensure all dependencies used in autoSaveData are here
+
+    useEffect(() => {
+        if (!user || !quiz || submitting) {
+            return; // Don't start interval if user/quiz not loaded or a submission is in progress
         }
 
+        const intervalId = setInterval(() => {
+            performAutoSave();
+        }, 300000); // 300000ms = 5 minutes
+
+        return () => clearInterval(intervalId); // Cleanup interval on unmount or when dependencies change
+    }, [user, quiz, submitting, performAutoSave]);
+
+    // Modified handleSubmit to use draftAnswerId if available
+    const handleManualSubmit = async (isReview) => {
+        if (!user || !quiz) {
+            setSubmitError(isReview ? t('answerQuizPage.quizNotLoadedError', 'Quiz data is not loaded yet.') : t('common.pleaseLogin'));
+            return;
+        }
         setSubmitting(true);
         setSubmitSuccess('');
         setSubmitError('');
 
+        const finalAnswerData = {
+            quizId: quiz.id,
+            quizTitle: quiz.title,
+            calculatedMaxScore: quiz.calculatedMaxScore !== undefined ? quiz.calculatedMaxScore : null,
+            answers: answers,
+            answerCreatorId: user.uid,
+            answerCreatorName: user.displayName || t('common.unnamedUser', 'Anonymous'),
+            score: 0, // Score will be calculated upon review
+            teamSize: teamSize,
+            teamMembers: teamMembers.filter(name => name && name.trim() !== ''), // Ensure name exists before trimming
+            isChecked: isReview, // True if "Submit and Review", false otherwise
+            submittedAt: serverTimestamp(),
+            // Clear lastAutoSavedAt if you want, or leave it as a record
+        };
+
         try {
-            const answerData = {
-                quizId: quiz.id,
-                quizTitle: quiz.title,
-                calculatedMaxScore: quiz.calculatedMaxScore !== undefined ? quiz.calculatedMaxScore : null, // Store max score
-                answers: answers, // The array of { artist: '', songName: '' }
-                answerCreatorId: user.uid, // No translation needed
-                answerCreatorName: user.displayName || t('common.unnamedUser', 'Anonymous'),
-                submittedAt: serverTimestamp(),
-                score: 0,
-                teamSize: teamSize,
-                teamMembers: teamMembers.filter(name => name.trim() !== ''), // Store only non-empty names
-                isChecked: isReadyForReview // Set isChecked based on the checkbox state
-            };
+            let docRefId;
+            if (draftAnswerId) {
+                const draftDocRef = doc(db, "quizAnswers", draftAnswerId);
+                await updateDoc(draftDocRef, finalAnswerData);
+                docRefId = draftAnswerId;
+            } else {
+                const newDocRef = await addDoc(collection(db, "quizAnswers"), finalAnswerData);
+                docRefId = newDocRef.id;
+            }
+            setDraftAnswerId(null); // Clear draft ID after successful manual submission
 
-            const docRef = await addDoc(collection(db, "quizAnswers"), answerData); // Capture the DocumentReference
             setSubmitSuccess(t('common.saveSuccessMessage'));
-            // Clear success message after a delay, slightly longer than Snackbar duration if needed
-            setTimeout(() => {
-                setSubmitSuccess('');
-            }, 2500); // e.g., 2.5 seconds
+            setTimeout(() => setSubmitSuccess(''), 2500);
 
-            // Delay navigation for 2 seconds to show success message
             setTimeout(() => {
-                if (isReadyForReview) {
-                    navigate(`/my-answers/${docRef.id}`); // Redirect to Answer Details page
+                if (isReview) { // Navigate to details if "Submit and Review" was clicked
+                    navigate(`/my-answers/${docRefId}`);
                 } else {
-                    // If not ready for review, but still submitted, redirect to My Answers
-                    // Form clearing can happen if user stays, but here we navigate
-                    // setAnswers(Array(quiz.amount).fill({ artist: '', songName: '', showEasterEggHint: false }));
-                    // setIsReadyForReview(false);
-                    // setTeamSize(1);
-                    // setTeamMembers([]);
                     navigate('/my-answers');
                 }
-            }, 2000); // 2000 milliseconds = 2 seconds
-
+            }, 2000);
 
         } catch (err) {
-            console.error("Error submitting answers:", err);
-            setSubmitError(t('answerQuizPage.submitError') + " " + err.message);
+            console.error(`Error submitting answers (manual, isReview: ${isReview}):`, err);
+            setSubmitError((isReview ? t('common.saveErrorMessage') : t('answerQuizPage.submitError')) + " " + err.message);
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleSubmitAndReview = async (e) => {
-        e.preventDefault(); // Prevent default if it's part of a form, though Button onClick won't by default
-        if (!user) {
-            setSubmitError(t('common.pleaseLogin'));
-            return;
-        }
-        if (!quiz) {
-            setSubmitError(t('answerQuizPage.quizNotLoadedError', 'Quiz data is not loaded yet.'));
-            return;
-        }
-
-        setSubmitting(true);
-        setSubmitSuccess('');
-        setSubmitError('');
-
-        try {
-            const answerData = {
-                quizId: quiz.id,
-                quizTitle: quiz.title,
-                calculatedMaxScore: quiz.calculatedMaxScore !== undefined ? quiz.calculatedMaxScore : null, // Store max score
-                answers: answers,
-                answerCreatorId: user.uid, // No translation needed
-                answerCreatorName: user.displayName || t('common.unnamedUser', 'Anonymous'),
-                submittedAt: serverTimestamp(),
-                score: 0,
-                teamSize: teamSize,
-                teamMembers: teamMembers.filter(name => name.trim() !== ''),
-                isChecked: true // Always true for this action
-            };
-
-            const docRef = await addDoc(collection(db, "quizAnswers"), answerData);
-            setSubmitSuccess(t('common.saveSuccessMessage'));
-            // Clear success message after a delay
-            setTimeout(() => {
-                setSubmitSuccess('');
-            }, 2500);
-            // Delay navigation for 2 seconds
-            setTimeout(() => {
-                navigate(`/my-answers/${docRef.id}`); // Redirect to Answer Details page
-            }, 2000); // 2000 milliseconds = 2 seconds
-
-        } catch (err) {
-            console.error("Error submitting answers for review:", err);
-            setSubmitError(t('common.saveErrorMessage') + " " + err.message);
-        } finally {
-            setSubmitting(false);
-        }
-    };
 
     if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.loading')}</Typography>;
     if (error) return <Typography color="error" sx={{ textAlign: 'center', mt: 3 }} className="error-text">{error || t('common.error')}</Typography>;
@@ -244,7 +252,7 @@ const AnswerQuiz = () => {
                     {quiz.rules}
                 </Typography>
             )}
-            <Paper component="form" onSubmit={handleSubmit} sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }} className="answer-quiz-form">
+            <Paper component="form" onSubmit={(e) => { e.preventDefault(); handleManualSubmit(false); }} sx={{ p: { xs: 1.5, sm: 2.5 }, backgroundColor: 'transparent', boxShadow: 'none' }} className="answer-quiz-form">
                 <FormControl fullWidth margin="normal">
                     <InputLabel id="team-size-label">{t('answerQuizPage.teamSize')}</InputLabel>
                     <Select
@@ -338,7 +346,7 @@ const AnswerQuiz = () => {
                         color="primary"
                         fullWidth
                         disabled={submitting}
-                        onClick={handleSubmitAndReview} // Use the new handler
+                        onClick={() => handleManualSubmit(true)} // Directly call with isReview = true
                         className="button-submit-review"
                     >
                         {submitting ? t('answerQuizPage.submitting') : t('answerQuizPage.submitAndReview')}
