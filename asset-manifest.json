@@ -1,17 +1,17 @@
 {
   "files": {
     "main.css": "/musavisa/static/css/main.fd246655.css",
-    "main.js": "/musavisa/static/js/main.f364426d.js",
+    "main.js": "/musavisa/static/js/main.c59c3d78.js",
     "static/js/453.b5217617.chunk.js": "/musavisa/static/js/453.b5217617.chunk.js",
     "static/js/38.2659b252.chunk.js": "/musavisa/static/js/38.2659b252.chunk.js",
     "index.html": "/musavisa/index.html",
     "main.fd246655.css.map": "/musavisa/static/css/main.fd246655.css.map",
-    "main.f364426d.js.map": "/musavisa/static/js/main.f364426d.js.map",
+    "main.c59c3d78.js.map": "/musavisa/static/js/main.c59c3d78.js.map",
     "453.b5217617.chunk.js.map": "/musavisa/static/js/453.b5217617.chunk.js.map",
     "38.2659b252.chunk.js.map": "/musavisa/static/js/38.2659b252.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.fd246655.css",
-    "static/js/main.f364426d.js"
+    "static/js/main.c59c3d78.js"
   ]
 }
