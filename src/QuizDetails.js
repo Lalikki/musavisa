@@ -3,7 +3,7 @@ import { useParams, Link as RouterLink } from 'react-router-dom'; // Renamed Lin
 import { db } from './firebase';
 import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
-import { Typography, Button, Box, Paper, List, CircularProgress, useMediaQuery } from '@mui/material';
+import { Typography, Button, Box, Paper, List, CircularProgress, useMediaQuery, FormControlLabel, Checkbox } from '@mui/material';
 import MusicPlayer from './components/MusicPlayer';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import CustomTable from './components/CustomTable';
@@ -158,6 +158,23 @@ const QuizDetails = () => {
         <Typography variant="body1">
           <strong>{t('common.created')}:</strong> {quiz.createdAt ? format(quiz.createdAt, 'dd.MM.yyyy') : 'N/A'}
         </Typography>
+        <Typography variant="body1">
+          <strong>{t('quizDetailsPage.maxScoreLabel', 'Maximum Score')}:</strong> {quiz.calculatedMaxScore !== undefined ? quiz.calculatedMaxScore : 'N/A'}
+        </Typography>
+      </Paper>
+
+      {/* Features Section */}
+      <Typography variant="h6" component="h3" sx={{ mt: 3, mb: 1, textAlign: 'center', color: 'white' }}>
+        {t('createNewQuizPage.featuresLabel', 'Features')}
+      </Typography>
+      <Paper elevation={1} sx={{ p: { xs: 1.5, sm: 2 }, mb: 3, backgroundColor: '#2a2a2a' }}>
+        <FormControlLabel
+          control={<Checkbox checked={quiz.enableExtraQuestions || false} disabled />}
+          label={t('createNewQuizPage.enableExtraQuestionsLabel', 'Enable Extra Questions (adds 0.5 points per song)')}
+          sx={{ display: 'block' }} // Ensure it takes full width if needed or adjust styling
+        />
+        {/* If you plan to add more features, you can list them similarly here */}
+        {/* For example: <FormControlLabel control={<Checkbox checked={quiz.anotherFeature || false} disabled />} label="Another Feature" /> */}
       </Paper>
 
       <Typography variant="h5" component="h2" gutterBottom align="center" sx={{ mb: 2 }}>
@@ -167,7 +184,16 @@ const QuizDetails = () => {
         {quiz.questions && quiz.questions.length > 0 ? (
           <List className="quiz-questions-list" dense>
             {quiz.questions.map((q, index) => (
-              <MusicPlayer key={index} artist={q.artist} song={q.song} songNumber={index + 1} songLink={q.songLink} hint={q.hint} />
+              <MusicPlayer
+                key={index}
+                artist={q.artist}
+                song={q.song}
+                songNumber={index + 1}
+                songLink={q.songLink}
+                hint={q.hint}
+                extraQuestion={q.extra} // Pass the extra question
+                correctExtraAnswer={q.correctExtraAnswer} // Pass the correct answer to the extra question
+              />
             ))}
           </List>
         ) : (

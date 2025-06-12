@@ -58,7 +58,9 @@
         "numSongs": "Number of Songs",
         "pleaseLogin": "Please log in.",
         "notFound": "Not Found.",
-        "dragToReorder": "Drag to reorder"
+        "dragToReorder": "Drag to reorder",
+        "enabled": "Enabled",
+        "disabled": "Disabled"
     },
     "editAnswerPage": {
         "pageTitle": "Edit Your Answers for: {{quizTitle}}",
@@ -114,6 +116,8 @@
         "fetchingMetadata": "Fetching metadata...",
         "removeSong": "Remove Song",
         "addSongEntry": "Add Song Entry",
+        "featuresLabel": "Features",
+        "enableExtraQuestionsLabel": "Enable Extra Questions (adds 0.5 points per song)",
         "maxScorePerSongLabel": "Max score per song",
         "markAsReadyLabel": "Mark as Ready",
         "createQuizButton": "Create Quiz",
@@ -141,6 +145,7 @@
         "noRulesProvided": "No rules provided.",
         "songsInThisQuiz": "Songs in this quiz:",
         "noLinkProvided": "No link provided for this song.",
+        "maxScoreLabel": "Maximum Score",
         "submittedAnswersTitle": "Submitted Answers",
         "answeredBy": "Answered By",
         "noSubmissionsYet": "No one has submitted answers for this quiz yet."

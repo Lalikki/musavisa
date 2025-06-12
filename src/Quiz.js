@@ -29,10 +29,11 @@ const Quiz = () => {
   const [title, setTitle] = useState('');
   const [rules, setRules] = useState('');
   const [amount, setAmount] = useState('');
-  const [maxScorePerSong, setMaxScorePerSong] = useState('1'); // Default to 1
+  const [maxScorePerSong, setMaxScorePerSong] = useState('1'); // Will be dynamically set
   const [success, setSuccess] = useState('');
   const [isReady, setIsReady] = useState(false); // New state for isReady, defaults to false
   const [error, setError] = useState('');
+  const [enableExtraQuestions, setEnableExtraQuestions] = useState(false); // State for enabling extra questions
   const [questions, setQuestions] = useState([emptyQuestion]);
 
   useEffect(() => {
@@ -41,6 +42,15 @@ const Quiz = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Effect to update maxScorePerSong based on enableExtraQuestions
+  useEffect(() => {
+    if (enableExtraQuestions) {
+      setMaxScorePerSong('1.5');
+    } else {
+      setMaxScorePerSong('1');
+    }
+  }, [enableExtraQuestions]);
 
   const onDragEnd = result => {
     // dropped outside the list
@@ -155,8 +165,8 @@ const Quiz = () => {
       questions.forEach(q => {
         calculatedMaxScore += 0.5; // For artist
         calculatedMaxScore += 0.5; // For song
-        // Only add points for extra if both the question and its correct answer are present
-        if (q.extra && q.extra.trim() !== '' && q.correctExtraAnswer && q.correctExtraAnswer.trim() !== '') {
+        // Only add points for extra if enabled and both the question and its correct answer are present
+        if (enableExtraQuestions && q.extra && q.extra.trim() !== '' && q.correctExtraAnswer && q.correctExtraAnswer.trim() !== '') {
           calculatedMaxScore += 0.5; // For extra question
         }
       });
@@ -171,6 +181,7 @@ const Quiz = () => {
         createdAt: serverTimestamp(),
         questions,
         isReady,
+        enableExtraQuestions, // Save the state
         calculatedMaxScore,
       });
       setSuccess(t('createNewQuizPage.createQuizSuccess'));
@@ -183,11 +194,17 @@ const Quiz = () => {
       // setMaxScorePerSong('1'); // Reset to initial default
       // setQuestions([emptyQuestion]);
       // setIsReady(false);
+      // setEnableExtraQuestions(false); // Reset if needed
       navigate('/my-quizzes'); // Redirect to My Quizzes page
     } catch (err) {
       setError(t('createNewQuizPage.createQuizError') + ': ' + err.message);
     }
   };
+
+  // Determine if the "Enable Extra Questions" checkbox should be disabled from being unchecked
+  const disableExtraQuestionsToggle =
+    enableExtraQuestions &&
+    questions.some(q => (q.extra && q.extra.trim() !== '') || (q.correctExtraAnswer && q.correctExtraAnswer.trim() !== ''));
 
   return (
     <Box
@@ -242,20 +259,26 @@ const Quiz = () => {
             className="form-input-full-width"
             slotProps={{ inputLabel: { shrink: true }, inputProps: { min: 1 } }}
           />
-          <FormControl fullWidth margin="dense" required className="form-input-full-width">
-            <InputLabel id="max-score-per-song-label" shrink>{t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}</InputLabel>
-            <Select
-              labelId="max-score-per-song-label"
-              id="max-score-per-song-select"
-              value={maxScorePerSong}
-              label={t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')} // Label for accessibility and when not shrunk
-              onChange={e => setMaxScorePerSong(e.target.value)}
-            >
-              <MenuItem value="1">1</MenuItem>
-              <MenuItem value="1.5">1.5</MenuItem>
-              <MenuItem value="2">2</MenuItem>
-            </Select>
-          </FormControl>
+          {/* Features Section */}
+          <Typography variant="h6" component="h3" sx={{ mt: 2, mb: 1 }}>
+            {t('createNewQuizPage.featuresLabel', 'Features')}
+          </Typography>
+          <Box sx={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: 1, p: 1.5, mb: 1 }}>
+            <FormControlLabel
+              control={<Checkbox checked={enableExtraQuestions} onChange={e => setEnableExtraQuestions(e.target.checked)} id="enableExtraQuestionsCheckbox" disabled={disableExtraQuestionsToggle} />}
+              label={t('createNewQuizPage.enableExtraQuestionsLabel', 'Enable Extra Questions (adds 0.5 points per song)')}
+              sx={{ display: 'block' }}
+            />
+          </Box>
+          <TextField
+            label={t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}
+            variant="outlined"
+            fullWidth
+            margin="dense"
+            value={maxScorePerSong}
+            InputProps={{ readOnly: true }} // Make it read-only
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
 
           {Number(amount) > 0 && (
             <Box sx={{ mt: 1, mb: 1 }}>
@@ -305,7 +328,7 @@ const Quiz = () => {
                                 required
                                 slotProps={{ inputLabel: { shrink: true } }}
                               />
-                              {Number(maxScorePerSong) >= 1.5 && (
+                              {enableExtraQuestions && (
                                 <>
                                   <TextField
                                     type="text"

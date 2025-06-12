@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Typography, Slider, Fab, CircularProgress, Popover, useTheme, useMediaQuery, LinearProgress } from '@mui/material';
+import { Box, Card, CardContent, Typography, Slider, Fab, CircularProgress, Popover, useTheme, useMediaQuery, LinearProgress, IconButton } from '@mui/material';
 import {
   PlayArrow as PlayArrowIcon,
   Pause as PauseIcon,
@@ -7,23 +7,30 @@ import {
   Replay as ReplayIcon,
   OpenInNew as OpenInNewIcon,
   HelpOutlineOutlined as HelpOutlineOutlinedIcon,
+  Quiz as QuizIcon, // Icon for the extra question
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
-import * as React from 'react';
 import YouTube from 'react-youtube';
+import { useTranslation } from 'react-i18next'; // For translating "Answer"
 
-export default function MusicPlayer({ artist, song, songNumber, songLink, hint }) {
+export default function MusicPlayer({ artist, song, songNumber, songLink, hint, extraQuestion, correctExtraAnswer }) {
+  const { t } = useTranslation();
   const [play, setPlay] = useState(false);
   const [volume, setVolume] = useState(50); // Default volume level
   const [duration, setDuration] = useState(0); // Default volume level
   const [player, setPlayer] = useState(null); // Store the YouTube player instance
   const [popoverHintAnchorEl, setPopoverHintAnchorEl] = useState(null);
+  const [popoverExtraAnchorEl, setPopoverExtraAnchorEl] = useState(null); // State for extra question popover
   const [progress, setProgress] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const popoverHintOpen = Boolean(popoverHintAnchorEl);
   const popoverHintId = popoverHintOpen ? 'simple-popover' : undefined;
+
+  const popoverExtraOpen = Boolean(popoverExtraAnchorEl);
+  const popoverExtraId = popoverExtraOpen ? 'extra-question-popover' : undefined;
+
 
   const videoId = () => {
     const regex = /(?:youtu\.be\/|youtube\.com\/(?:.*v=|v\/|embed\/|shorts\/))([\w-]{11})/;
@@ -78,6 +85,14 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
     }
   };
 
+  const handleExtraPopoverOpen = (event) => {
+    setPopoverExtraAnchorEl(event.currentTarget);
+  };
+
+  const handleExtraPopoverClose = () => {
+    setPopoverExtraAnchorEl(null);
+  };
+
   const onPlayerReady = event => {
     setPlayer(event.target);
     setDuration(event.target.getDuration());
@@ -130,7 +145,33 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
           <Box sx={{ mr: 1 }}>
             <Typography component="div" variant="h6">
               {song}
-              {hint && <HelpOutlineOutlinedIcon fontSize="small" color="disabled" onClick={e => setPopoverHintAnchorEl(e.currentTarget)} sx={{ ml: 0.5 }} />}
+              {hint && (
+                <IconButton size="small" onClick={e => setPopoverHintAnchorEl(e.currentTarget)} aria-describedby={popoverHintId} sx={{ ml: 0.5, p: 0.25 }}>
+                  <HelpOutlineOutlinedIcon fontSize="small" color="disabled" />
+                </IconButton>
+              )}
+              {extraQuestion && correctExtraAnswer && (
+                <>
+                  <IconButton size="small" onClick={handleExtraPopoverOpen} aria-describedby={popoverExtraId} sx={{ ml: 0.5, p: 0.25 }}>
+                    <QuizIcon fontSize="small" color="disabled" />
+                  </IconButton>
+                  <Popover
+                    id={popoverExtraId}
+                    open={popoverExtraOpen}
+                    anchorEl={popoverExtraAnchorEl}
+                    onClose={handleExtraPopoverClose}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                    transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                    sx={{ width: isMobile ? '100svw' : '70svw' }}
+                    disableEnforceFocus
+                  >
+                    <Box sx={{ p: 1 }}>
+                      <Typography variant="subtitle2" gutterBottom><strong style={{ color: theme.palette.primary.main }}>{extraQuestion}</strong></Typography>
+                      <Typography variant="body2">{correctExtraAnswer}</Typography>
+                    </Box>
+                  </Popover>
+                </>
+              )}
             </Typography>
             <Popover
               id={popoverHintId}
