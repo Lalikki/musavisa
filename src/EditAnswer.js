@@ -141,7 +141,7 @@ const EditAnswer = () => {
 
     useEffect(() => {
         // Setup interval for auto-save
-        const intervalId = setInterval(performAutoSave, 300000); // 300000ms = 5 minutes
+        const intervalId = setInterval(performAutoSave, 180000); // 180000ms = 3 minutes
         return () => clearInterval(intervalId); // Cleanup interval on unmount
     }, [performAutoSave]); // Re-run effect if performAutoSave changes
 

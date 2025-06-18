@@ -286,7 +286,7 @@ const QuizDetails = () => {
         {t('quizDetailsPage.songsInThisQuiz')}
       </Typography>
 
-      <Box sx={{ mb: 3, position: 'relative' }}> {/* Wrapper for Slider and potential custom arrows */}
+      <Box sx={{ mb: 0, position: 'relative' }}> {/* Removed bottom margin */}
         {quiz.questions && quiz.questions.length > 0 ? (
           <Slider ref={sliderRef} {...sliderSettings}>
             {quiz.questions.map((q, index) => (
@@ -314,21 +314,29 @@ const QuizDetails = () => {
         <PaginationControls items={paginationItems} />
       )}
 
-      <Typography variant="h5" component="h2" gutterBottom align="center" className="section-heading" sx={{ mb: 2 }}>
-        {t('quizDetailsPage.submittedAnswersTitle')}
-      </Typography>
-      {answersLoading && (
-        <Typography sx={{ textAlign: 'center', mt: 2 }}>
-          {t('common.loading')} <CircularProgress size={20} />
-        </Typography>
+      {/* Conditionally render the Submitted Answers section */}
+      {(answersLoading || answersError || (answers && answers.length > 0)) && (
+        <>
+          <Typography variant="h5" component="h2" gutterBottom align="center" className="section-heading" sx={{ mb: 2 }}>
+            {t('quizDetailsPage.submittedAnswersTitle')}
+          </Typography>
+          {answersLoading && (
+            <Typography sx={{ textAlign: 'center', mt: 2 }}>
+              {t('common.loading')} <CircularProgress size={20} />
+            </Typography>
+          )}
+          {answersError && (
+            <Typography color="error" sx={{ textAlign: 'center', mt: 2 }} className="error-text">
+              {answersError || t('common.error')}
+            </Typography>
+          )}
+          {/* The table is shown only if not loading, no error, and answers exist */}
+          {!answersLoading && !answersError && answers.length > 0 && (
+            <CustomTable headers={headers} rows={rows(answers)} data={answers} />
+          )}
+          {/* The "No submissions yet" message is implicitly handled: if answers.length is 0 and no loading/error, the whole section is hidden. */}
+        </>
       )}
-      {answersError && (
-        <Typography color="error" sx={{ textAlign: 'center', mt: 2 }} className="error-text">
-          {answersError || t('common.error')}
-        </Typography>
-      )}
-      {!answersLoading && !answersError && answers.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('quizDetailsPage.noSubmissionsYet')}</Typography>}
-      {!answersLoading && !answersError && answers.length > 0 && <CustomTable headers={headers} rows={rows(answers)} data={answers} />}
     </Box>
   );
 };
@@ -339,7 +347,7 @@ const PaginationControls = ({ items }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'nowrap', gap: isMobile ? 0.25 : 0.5, mb: 2, mt: 2, overflowX: 'auto', pb: 0.5 }}>
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexWrap: 'nowrap', gap: isMobile ? 0.25 : 0.5, mb: 2, mt: { xs: 1, sm: 1.5 }, overflowX: 'auto', pb: 0.5 }}> {/* Reduced margin-top */}
       {items.map((item, index) => {
         if (item.type === 'prev' || item.type === 'next') {
           return (
@@ -348,7 +356,7 @@ const PaginationControls = ({ items }) => {
               onClick={item.action}
               disabled={item.disabled}
               size={isMobile ? "small" : "medium"} // Adjust size for mobile
-              sx={{ p: isMobile ? '4px' : '8px' }} // Adjust padding for mobile
+              sx={{ p: isMobile ? '4px' : '8px', mx: isMobile ? 0.25 : 0.5 }} // Adjust padding and add horizontal margin
             >
               {item.type === 'prev' ? <ArrowBackIosNew fontSize="inherit" /> : <ArrowForwardIos fontSize="inherit" />}
             </MuiIconButton>

@@ -149,14 +149,14 @@ const AnswerQuiz = () => {
                 // Updating an existing draft - only update lastAutoSavedAt, not submittedAt
                 const draftDocRef = doc(db, "quizAnswers", draftAnswerId);
                 await updateDoc(draftDocRef, baseAutoSaveData);
-                // console.log('[AutoSave] Draft updated:', draftAnswerId, 'Data:', baseAutoSaveData);
+                console.log('[AutoSave] Draft updated:', draftAnswerId, 'Data:', baseAutoSaveData);
             } else {
                 // Creating a new draft for the first time in this session
                 // Add submittedAt for the very first auto-save of this new draft
                 const newDraftData = { ...baseAutoSaveData, submittedAt: serverTimestamp() };
                 const newDraftRef = await addDoc(collection(db, "quizAnswers"), newDraftData);
                 setDraftAnswerId(newDraftRef.id);
-                // console.log('[AutoSave] New draft created:', newDraftRef.id, 'Data:', newDraftData);
+                console.log('[AutoSave] New draft created:', newDraftRef.id, 'Data:', newDraftData);
             }
         } catch (err) {
             console.error("Error during auto-save:", err); // Log error silently
@@ -170,7 +170,7 @@ const AnswerQuiz = () => {
 
         const intervalId = setInterval(() => {
             performAutoSave();
-        }, 300000); // 300000ms = 5 minutes
+        }, 180000); // 180000ms = 3 minutes
 
         return () => clearInterval(intervalId); // Cleanup interval on unmount or when dependencies change
     }, [user, quiz, submitting, performAutoSave]);
