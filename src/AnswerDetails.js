@@ -427,10 +427,10 @@ const AnswerDetails = () => {
                                     <Paper // This is the Paper for each individual guess item
                                         elevation={0}
                                         sx={{
-                                            p: { xs: 1, sm: 2 },
+                                            p: { xs: 2, sm: 2.5 }, // Increased padding
                                             width: '100%',
                                             backgroundColor: 'transparent', // Individual guess items are also transparent
-                                            boxShadow: 'none',
+                                            boxShadow: 'none', // No shadow for individual items if parent has gradient
                                             // border: `1px solid ${theme.palette.divider}`, // Keep border for individual items
                                             // borderRadius: theme.shape.borderRadius,
                                         }}
@@ -447,6 +447,7 @@ const AnswerDetails = () => {
                                             value={guess.artist || ''}
                                             disabled // Keep disabled prop
                                             InputLabelProps={{ shrink: true }}
+                                            // Adjusted sx for disabled state for better visibility if needed
                                             sx={{
                                                 '& .MuiInputBase-input.Mui-disabled': {
                                                     WebkitTextFillColor: theme.palette.text.secondary, // Ensures text color is applied correctly in WebKit browsers
@@ -458,6 +459,7 @@ const AnswerDetails = () => {
                                                 '& .MuiInputBase-root.Mui-disabled': {
                                                     backgroundColor: theme.palette.action.disabledBackground, // Subtle background change
                                                 },
+                                                mb: 1.5, // Added margin-bottom
                                             }}
                                         />
                                         <TextField
@@ -470,6 +472,7 @@ const AnswerDetails = () => {
                                             value={guess.songName || ''}
                                             disabled // Keep disabled prop
                                             InputLabelProps={{ shrink: true }}
+                                            // Adjusted sx for disabled state
                                             sx={{
                                                 '& .MuiInputBase-input.Mui-disabled': {
                                                     WebkitTextFillColor: theme.palette.text.secondary,
@@ -480,7 +483,8 @@ const AnswerDetails = () => {
                                                 },
                                                 '& .MuiInputBase-root.Mui-disabled': {
                                                     backgroundColor: theme.palette.action.disabledBackground,
-                                                }
+                                                },
+                                                mb: 1.5, // Added margin-bottom
                                             }}
                                         />
                                         {/* Display Extra Question and Answer if it exists */}
@@ -498,6 +502,7 @@ const AnswerDetails = () => {
                                                     value={guess.extraAnswer || ''}
                                                     disabled
                                                     InputLabelProps={{ shrink: true }}
+                                                    // Adjusted sx for disabled state
                                                     sx={{
                                                         '& .MuiInputBase-input.Mui-disabled': {
                                                             WebkitTextFillColor: theme.palette.text.secondary,
@@ -508,13 +513,14 @@ const AnswerDetails = () => {
                                                         },
                                                         '& .MuiInputBase-root.Mui-disabled': {
                                                             backgroundColor: theme.palette.action.disabledBackground,
-                                                        }
+                                                        },
+                                                        mb: 1.5, // Added margin-bottom
                                                     }}
                                                 />
                                             </>
                                         )}
                                         {/* Correct answer display can be added here if needed, using Typography and MUI Link */}
-                                        <FormControl fullWidth margin="dense" variant="outlined" className="manual-score-input" sx={{ mt: 1 }}>
+                                        <FormControl fullWidth margin="dense" variant="outlined" className="manual-score-input" sx={{ mt: 1.5, maxWidth: '150px', alignSelf: 'center' }}>
                                             {(() => {
                                                 // Determine the maximum score for this specific quiz, defaulting to 1 if not specified
                                                 const currentQuestionData = correctQuizData?.questions?.[index];

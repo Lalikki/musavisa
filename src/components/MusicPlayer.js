@@ -7,30 +7,24 @@ import {
   Replay as ReplayIcon,
   OpenInNew as OpenInNewIcon,
   HelpOutlineOutlined as HelpOutlineOutlinedIcon,
-  Quiz as QuizIcon, // Icon for the extra question
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import YouTube from 'react-youtube';
 import { useTranslation } from 'react-i18next'; // For translating "Answer"
 
-export default function MusicPlayer({ artist, song, songNumber, songLink, hint, extraQuestion, correctExtraAnswer }) {
+export default function MusicPlayer({ artist, song, songNumber, songLink, hint, extraQuestion, correctExtraAnswer, isActive }) {
   const { t } = useTranslation();
   const [play, setPlay] = useState(false);
   const [volume, setVolume] = useState(50); // Default volume level
   const [duration, setDuration] = useState(0); // Default volume level
   const [player, setPlayer] = useState(null); // Store the YouTube player instance
   const [popoverHintAnchorEl, setPopoverHintAnchorEl] = useState(null);
-  const [popoverExtraAnchorEl, setPopoverExtraAnchorEl] = useState(null); // State for extra question popover
   const [progress, setProgress] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const popoverHintOpen = Boolean(popoverHintAnchorEl);
   const popoverHintId = popoverHintOpen ? 'simple-popover' : undefined;
-
-  const popoverExtraOpen = Boolean(popoverExtraAnchorEl);
-  const popoverExtraId = popoverExtraOpen ? 'extra-question-popover' : undefined;
-
 
   const videoId = () => {
     const regex = /(?:youtu\.be\/|youtube\.com\/(?:.*v=|v\/|embed\/|shorts\/))([\w-]{11})/;
@@ -58,6 +52,16 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
 
       return () => clearInterval(interval);
     }
+  }, [player, duration, play, isActive]); // Added isActive
+
+  useEffect(() => {
+    if (!isActive && player && play) {
+      player.pauseVideo();
+      setPlay(false); // Update play state
+    }
+    // Note: We are not auto-playing when isActive becomes true.
+    // User needs to click play. If auto-play is desired, add logic here.
+    // Be cautious with auto-play as it can be disruptive.
   }, [player, duration, play]);
 
   const handlePlay = () => {
@@ -85,14 +89,6 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
     }
   };
 
-  const handleExtraPopoverOpen = (event) => {
-    setPopoverExtraAnchorEl(event.currentTarget);
-  };
-
-  const handleExtraPopoverClose = () => {
-    setPopoverExtraAnchorEl(null);
-  };
-
   const onPlayerReady = event => {
     setPlayer(event.target);
     setDuration(event.target.getDuration());
@@ -107,71 +103,51 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
   };
 
   return (
-    <Card sx={{ mb: 1 }} elevation={3}>
-      <Typography
-        variant="h1"
+    <Card sx={{ mb: 2, p: 2, position: 'relative', overflow: 'hidden' }} elevation={3}>
+      {/* Top row for song number and hint icon */}
+      <Box
         sx={{
-          ml: 1,
-          fontSize: '6.5rem',
-          position: 'absolute', // Position it absolutely within the card
-          fontWeight: 'bold', // Make it bold for emphasis
-          zIndex: 0, // Ensure it stays in the background
-          pointerEvents: 'none', // Prevent it from interfering with interactions
-          whiteSpace: 'nowrap', // Prevent text wrapping
-          opacity: 0.1,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 1, // Add some margin below this row
+          position: 'relative', // For zIndex context if needed later
+          zIndex: 2, // Ensure it's above the large background number if we re-add it
         }}
       >
-        {songNumber}
-      </Typography>
+        <Typography variant="h6" component="div" sx={{ fontWeight: 'medium', opacity: 0.7 }}>
+          {songNumber}
+        </Typography>
+        {hint && (
+          <IconButton size="small" onClick={e => setPopoverHintAnchorEl(e.currentTarget)} aria-describedby={popoverHintId} sx={{ p: 0.25 }}>
+            <HelpOutlineOutlinedIcon sx={{ fontSize: '1.5rem' }} color="disabled" />
+          </IconButton>
+        )}
+      </Box>
+
       <Box
         id="main-box"
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          zIndex: 1,
+          alignItems: 'center', // Center content within the main box
+          position: 'relative',
         }}
       >
         <CardContent
           id="card-content"
           sx={{
-            ml: 3,
             display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
+            flexDirection: 'column', // Stack content vertically
+            alignItems: 'center', // Center items horizontally
             width: '100%',
+            p: 0, // Remove default CardContent padding, using Card's padding
+            '&:last-child': { pb: 0 }, // Remove padding-bottom from last child if CardContent adds it
           }}
         >
-          <Box sx={{ mr: 1 }}>
-            <Typography component="div" variant="h6">
+          <Box sx={{ textAlign: 'center', mb: 2, width: '100%', minHeight: theme.spacing(16) /* Approx 128px */ }}>
+            <Typography component="div" variant="h5"> {/* Increased size for song title */}
               {song}
-              {hint && (
-                <IconButton size="small" onClick={e => setPopoverHintAnchorEl(e.currentTarget)} aria-describedby={popoverHintId} sx={{ ml: 0.5, p: 0.25 }}>
-                  <HelpOutlineOutlinedIcon fontSize="small" color="disabled" />
-                </IconButton>
-              )}
-              {extraQuestion && correctExtraAnswer && (
-                <>
-                  <IconButton size="small" onClick={handleExtraPopoverOpen} aria-describedby={popoverExtraId} sx={{ ml: 0.5, p: 0.25 }}>
-                    <QuizIcon fontSize="small" color="disabled" />
-                  </IconButton>
-                  <Popover
-                    id={popoverExtraId}
-                    open={popoverExtraOpen}
-                    anchorEl={popoverExtraAnchorEl}
-                    onClose={handleExtraPopoverClose}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                    transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                    sx={{ width: isMobile ? '100svw' : '70svw' }}
-                    disableEnforceFocus
-                  >
-                    <Box sx={{ p: 1 }}>
-                      <Typography variant="subtitle2" gutterBottom><strong style={{ color: theme.palette.primary.main }}>{extraQuestion}</strong></Typography>
-                      <Typography variant="body2">{correctExtraAnswer}</Typography>
-                    </Box>
-                  </Popover>
-                </>
-              )}
             </Typography>
             <Popover
               id={popoverHintId}
@@ -187,9 +163,18 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
             >
               <Typography sx={{ p: 1 }}>{hint}</Typography>
             </Popover>
-            <Typography variant="subtitle1" component="div" sx={{ color: 'text.secondary' }}>
+            <Typography variant="h6" component="div" sx={{ color: 'text.secondary' }}> {/* Increased size for artist */}
               {artist}
             </Typography>
+            {/* Display Extra Question and Answer directly */}
+            {extraQuestion && correctExtraAnswer && (
+              <Box sx={{ mt: 1.5, width: '100%' }}>
+                <Typography variant="subtitle1" component="div" sx={{ color: theme.palette.primary.main, fontWeight: 'medium' }}>
+                  {extraQuestion}
+                </Typography>
+                <Typography variant="body2" component="div" sx={{ color: 'text.secondary' }}>{correctExtraAnswer}</Typography>
+              </Box>
+            )}
           </Box>
           {videoId() && (
             <Box
@@ -197,12 +182,12 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                alignSelf: 'center',
-                marginLeft: 'auto',
-                mr: 1,
+                alignItems: 'center', // Center controls
+                width: '100%', // Take full width
+                mt: 1, // Add some margin top
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1.5 }}>
                 <Fab color="secondary" aria-label="replay" size="small" sx={{ justifySelf: 'center', mr: 1 }} onClick={handleReplay} disabled={disableControls}>
                   {(!player && <CircularProgress size="50%" color="inherit" />) || <ReplayIcon />}
                 </Fab>
@@ -225,13 +210,14 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
                   alignItems: 'center',
                   display: 'flex',
                   flexDirection: 'row',
-                  width: '100%',
+                  width: '80%', // Limit width of volume slider
+                  maxWidth: '250px', // Max width for the slider
                   mt: 1,
                 }}
               >
-                <VolumeDownIcon />
+                <VolumeDownIcon sx={{ mr: 1 }} />
                 <Slider aria-label="Volume" value={volume} onChange={handleVolumeChange} disabled={disableControls} />
-                <VolumeUpIcon />
+                <VolumeUpIcon sx={{ ml: 1 }} />
               </Box>
             </Box>
           )}
