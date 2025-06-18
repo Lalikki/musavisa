@@ -65,6 +65,7 @@
         "notFound": "Ei löytynyt.",
         "dragToReorder": "Vedä järjestelläksesi",
         "answer": "Vastaus",
+        "confirmation": "Vahvistus",
         "enabled": "Käytössä",
         "disabled": "Ei käytössä"
     },
@@ -111,7 +112,9 @@
         "ratingLoginError": "Sinun täytyy olla kirjautuneena arvostellaksesi.",
         "ratingQuizNotFoundError": "Visaa ei löytynyt arvostelua varten.",
         "ratingSuccess": "Arvostelusi on tallennettu!",
-        "ratingError": "Arvostelun tallennus epäonnistui."
+        "ratingError": "Arvostelun tallennus epäonnistui.",
+        "confirmCompleteMessage": "Ookko ny aivan varma?",
+        "complete": "Merkitse valmiiksi"
     },
     "createNewQuizPage": {
         "pageTitle": "Luo uusi visa",

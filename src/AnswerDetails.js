@@ -20,6 +20,7 @@ import InputLabel from '@mui/material/InputLabel';
 import Rating from '@mui/material/Rating'; // Import Rating
 import Snackbar from '@mui/material/Snackbar'; // Import Snackbar
 import Alert from '@mui/material/Alert'; // Import Alert
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'; // Import Dialog components
 import { TextField } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom'; // For MUI Link component
 import { useTheme } from '@mui/material/styles';
@@ -48,6 +49,7 @@ const AnswerDetails = () => {
     const [isSubmittingRating, setIsSubmittingRating] = useState(false);
     const [ratingFeedback, setRatingFeedback] = useState({ open: false, message: '', severity: 'info' });
     const [saveFeedback, setSaveFeedback] = useState({ open: false, message: '', severity: 'info' }); // New state for save feedback
+    const [confirmationOpen, setConfirmationOpen] = useState(false); // State for the confirmation dialog
     const theme = useTheme(); // theme is used, keep it
 
     useEffect(() => {
@@ -155,6 +157,11 @@ const AnswerDetails = () => {
             setSaveFeedback({ open: true, message: t('answerDetailsPage.cannotCompleteAssessmentError', "You cannot complete this assessment at this time."), severity: 'error' });
             return;
         }
+        setConfirmationOpen(true); // Open the confirmation dialog
+    };
+
+    const confirmSaveAndComplete = async () => {
+        setConfirmationOpen(false); // Close the dialog
         setIsCompleting(true);
         setSaveFeedback({ open: false, message: '', severity: 'info' }); // Clear previous feedback
         try {
@@ -600,6 +607,29 @@ const AnswerDetails = () => {
                         {isCompleting ? t('answerDetailsPage.completing') : t('answerDetailsPage.saveAndComplete')}
                     </Button>
                     <Button component={RouterLink} to="/my-answers" variant="text" className="back-link">{t('common.cancel')}</Button>
+                    {/* Confirmation Dialog */}
+                    <Dialog
+                        open={confirmationOpen}
+                        onClose={() => setConfirmationOpen(false)}
+                        aria-labelledby="alert-dialog-title"
+                        aria-describedby="alert-dialog-description"
+                    >
+                        <DialogTitle id="alert-dialog-title">{t('common.confirmation', 'Confirmation')}</DialogTitle>
+                        {/* Use a translation key for the content */}
+                        {/* Removed HTML tags */}
+                        <DialogContent>
+                            <Typography>{t('answerDetailsPage.confirmCompleteMessage', 'Are you sure you want to mark this assessment as completed?')}</Typography>
+                        </DialogContent>
+
+                        <DialogActions>
+                            <Button onClick={() => setConfirmationOpen(false)} color="primary">
+                                {t('common.cancel', 'Cancel')}
+                            </Button>
+                            <Button onClick={confirmSaveAndComplete} color="primary" autoFocus>
+                                {t('answerDetailsPage.complete')}
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
                 </Box>
             )}
             {/* Snackbar for Rating Feedback */}

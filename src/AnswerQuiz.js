@@ -17,6 +17,7 @@ import InputLabel from '@mui/material/InputLabel';
 import Snackbar from '@mui/material/Snackbar'; // Added
 import Alert from '@mui/material/Alert'; // Added
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useTheme } from '@mui/material/styles'; // Import useTheme
 
 // Helper function to capitalize the first letter of a string
 const capitalizeFirstLetter = (string) => {
@@ -40,6 +41,7 @@ const AnswerQuiz = () => {
     const [teamSize, setTeamSize] = useState(1);
     const [draftAnswerId, setDraftAnswerId] = useState(null); // For auto-save
     const [teamMembers, setTeamMembers] = useState([]); // Stores names of additional members
+    const theme = useTheme(); // Initialize theme
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -278,7 +280,13 @@ const AnswerQuiz = () => {
                         margin="dense"
                         value={memberName}
                         onChange={(e) => handleTeamMemberNameChange(index, e.target.value)}
-                        sx={{ mb: 1 }}
+                        sx={{
+                            mb: 1,
+                            '& input:-webkit-autofill': { // Styles to override browser autofill
+                                WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.paper} inset`,
+                                WebkitTextFillColor: theme.palette.text.primary,
+                            },
+                        }}
                     />
                 ))}
 
@@ -302,6 +310,12 @@ const AnswerQuiz = () => {
                             onChange={(e) => handleAnswerChange(index, 'artist', e.target.value)}
                             className="artist-input"
                             InputLabelProps={{ shrink: true }}
+                            sx={{
+                                '& input:-webkit-autofill': {
+                                    WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.paper} inset`,
+                                    WebkitTextFillColor: theme.palette.text.primary,
+                                },
+                            }}
                         />
                         <TextField
                             label={t('answerQuizPage.songName')}
@@ -313,6 +327,12 @@ const AnswerQuiz = () => {
                             onChange={(e) => handleAnswerChange(index, 'songName', e.target.value)}
                             className="songname-input"
                             InputLabelProps={{ shrink: true }}
+                            sx={{
+                                '& input:-webkit-autofill': {
+                                    WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.paper} inset`,
+                                    WebkitTextFillColor: theme.palette.text.primary,
+                                },
+                            }}
                         />
                         {/* Display Extra Question and Answer Field if extra question exists */}
                         {quiz?.questions?.[index]?.extra && (
@@ -331,6 +351,12 @@ const AnswerQuiz = () => {
                                     onChange={(e) => handleAnswerChange(index, 'extraAnswer', e.target.value)}
                                     className="extra-answer-input"
                                     InputLabelProps={{ shrink: true }}
+                                    sx={{
+                                        '& input:-webkit-autofill': {
+                                            WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.paper} inset`,
+                                            WebkitTextFillColor: theme.palette.text.primary,
+                                        },
+                                    }}
                                 />
                             </>
                         )}
