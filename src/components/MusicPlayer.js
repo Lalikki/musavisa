@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Typography, Slider, Fab, CircularProgress, Popover, useTheme, useMediaQuery, LinearProgress, IconButton } from '@mui/material';
+import { Box, Card, CardContent, Typography, Slider as MuiSlider, Fab, CircularProgress, Popover, useTheme, useMediaQuery, IconButton } from '@mui/material';
 import {
   PlayArrow as PlayArrowIcon,
   Pause as PauseIcon,
@@ -12,14 +12,23 @@ import { useState, useEffect } from 'react';
 import YouTube from 'react-youtube';
 import { useTranslation } from 'react-i18next'; // For translating "Answer"
 
+const formatTime = (timeInSeconds) => {
+  if (isNaN(timeInSeconds) || timeInSeconds === 0) return '0:00';
+  const minutes = Math.floor(timeInSeconds / 60);
+  const seconds = Math.floor(timeInSeconds % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+
 export default function MusicPlayer({ artist, song, songNumber, songLink, hint, extraQuestion, correctExtraAnswer, isActive }) {
   const { t } = useTranslation();
   const [play, setPlay] = useState(false);
   const [volume, setVolume] = useState(50); // Default volume level
   const [duration, setDuration] = useState(0); // Default volume level
+  const [currentTime, setCurrentTime] = useState(0);
   const [player, setPlayer] = useState(null); // Store the YouTube player instance
+  const [isSeeking, setIsSeeking] = useState(false);
   const [popoverHintAnchorEl, setPopoverHintAnchorEl] = useState(null);
-  const [progress, setProgress] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -40,33 +49,25 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
   };
 
   useEffect(() => {
-    if (player && play) {
+    if (player && play && !isSeeking) {
       const interval = setInterval(() => {
         const curTime = player.getCurrentTime();
-        setProgress((curTime / duration) * 100);
-      }, 100);
-
-      if (!play) {
-        clearInterval(interval); // Clear the interval if not playing
-      }
+        setCurrentTime(curTime);
+      }, 250); // Update every 250ms
 
       return () => clearInterval(interval);
     }
-  }, [player, duration, play, isActive]); // Added isActive
+  }, [player, play, isSeeking, isActive]);
 
   useEffect(() => {
     if (!isActive && player && play) {
       player.pauseVideo();
       setPlay(false); // Update play state
     }
-    // Note: We are not auto-playing when isActive becomes true.
-    // User needs to click play. If auto-play is desired, add logic here.
-    // Be cautious with auto-play as it can be disruptive.
-  }, [player, duration, play]);
+  }, [isActive, player, play]);
 
   const handlePlay = () => {
     if (!player) return;
-    player.setVolume(volume); // Prevent play if player is not ready
     if (play) {
       player.pauseVideo();
     } else {
@@ -89,17 +90,37 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
     }
   };
 
+  const handleSeek = (event, newValue) => {
+    setCurrentTime(newValue);
+  };
+
+  const handleSeekCommitted = (event, newValue) => {
+    if (player) {
+      player.seekTo(newValue, true);
+    }
+    setIsSeeking(false);
+  };
+  const handleSeekMouseDown = () => {
+    setIsSeeking(true);
+  };
+
   const onPlayerReady = event => {
     setPlayer(event.target);
     setDuration(event.target.getDuration());
+    event.target.setVolume(volume); // Set initial volume when player is ready
   };
 
   const onPlayerStateChange = event => {
     if (event.data === YouTube.PlayerState.ENDED) {
       setPlay(false); // Stop playback when the video ends
-      setProgress(0); // Reset progress
+      setCurrentTime(0);
       player.stopVideo(); // Stop the video
     }
+  };
+
+  const onPlayerError = (event) => {
+    console.error(`YouTube Player Error for videoId: ${videoId()}`, event.data);
+    // TODO: Optionally set an error state here to show a message to the user
   };
 
   return (
@@ -187,7 +208,7 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
                 mt: 1, // Add some margin top
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Fab color="secondary" aria-label="replay" size="small" sx={{ justifySelf: 'center', mr: 1 }} onClick={handleReplay} disabled={disableControls}>
                   {(!player && <CircularProgress size="50%" color="inherit" />) || <ReplayIcon />}
                 </Fab>
@@ -202,6 +223,7 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
                   opts={opts}
                   onReady={onPlayerReady}
                   onStateChange={onPlayerStateChange}
+                  onError={onPlayerError}
                   style={{ display: 'none' }} // Hide the YouTube player
                 />
               </Box>
@@ -210,21 +232,41 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint, 
                   alignItems: 'center',
                   display: 'flex',
                   flexDirection: 'row',
-                  width: '80%', // Limit width of volume slider
-                  maxWidth: '250px', // Max width for the slider
+                  width: { xs: '60%', sm: '80%' }, // Make it narrower on mobile
+                  maxWidth: { xs: '180px', sm: '250px' }, // And have a smaller max-width on mobile
                   mt: 1,
                 }}
+                onMouseDown={e => e.stopPropagation()} // Stop drag events from propagating to the carousel
+                onTouchStart={e => e.stopPropagation()} // Stop touch events from propagating to the carousel
               >
                 <VolumeDownIcon sx={{ mr: 1 }} />
-                <Slider aria-label="Volume" value={volume} onChange={handleVolumeChange} disabled={disableControls} />
+                <MuiSlider aria-label="Volume" value={volume} onChange={handleVolumeChange} disabled={disableControls} />
                 <VolumeUpIcon sx={{ ml: 1 }} />
+              </Box>
+              <Box
+                sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 2, px: { xs: 0, sm: 1 }, mt: 1.5 }}
+                onMouseDown={e => e.stopPropagation()} // Stop drag events from propagating to the carousel
+                onTouchStart={e => e.stopPropagation()} // Stop touch events from propagating to the carousel
+              >
+                <Typography variant="body2" sx={{ color: 'text.secondary', minWidth: '40px' }}>{formatTime(currentTime)}</Typography>
+                <MuiSlider
+                  aria-label="time-indicator"
+                  size="small"
+                  value={currentTime}
+                  min={0}
+                  step={1}
+                  max={duration > 0 ? duration : 0}
+                  onChange={handleSeek}
+                  onChangeCommitted={handleSeekCommitted}
+                  onMouseDown={handleSeekMouseDown}
+                  disabled={disableControls || duration === 0}
+                  sx={{ height: 6, '& .MuiSlider-thumb': { width: 14, height: 14 } }}
+                />
+                <Typography variant="body2" sx={{ color: 'text.secondary', minWidth: '40px' }}>{formatTime(duration)}</Typography>
               </Box>
             </Box>
           )}
         </CardContent>
-        <Box sx={{ width: '100%' }}>
-          <LinearProgress variant="determinate" value={progress} />
-        </Box>
       </Box>
     </Card>
   );
