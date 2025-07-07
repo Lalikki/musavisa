@@ -25,7 +25,7 @@
         "submitAnswers": "Tallenna keskeneräisenä",
         "submitAndReview": "Tallenna ja siirry tarkistamaan",
         "submitting": "Tallennetaan...",
-        "extraAnswerLabel": "Vastauksesi lisäkysymykseen",
+        "extraAnswerLabel": "Vastaus lisäkysymykseen",
         "easterEggSure": "Oletko varma?",
         "easterEggOther": "Vai oliko se se toinen?"
     },
@@ -47,7 +47,7 @@
         "review": "Tarkista",
         "actions": "Toiminnot",
         "title": "Otsikko",
-        "rules": "Säännöt",
+        "rules": "Kuvaus",
         "status": "Status",
         "score": "Pisteet",
         "team": "Tiimi",
@@ -64,7 +64,10 @@
         "pleaseLogin": "Ole hyvä ja kirjaudu sisään.",
         "notFound": "Ei löytynyt.",
         "dragToReorder": "Vedä järjestelläksesi",
-        "done": "Valmis"
+        "answer": "Vastaus",
+        "confirmation": "Vahvistus",
+        "enabled": "Käytössä",
+        "disabled": "Ei käytössä"
     },
     "editAnswerPage": {
         "pageTitle": "{{quizTitle}}",
@@ -109,23 +112,28 @@
         "ratingLoginError": "Sinun täytyy olla kirjautuneena arvostellaksesi.",
         "ratingQuizNotFoundError": "Visaa ei löytynyt arvostelua varten.",
         "ratingSuccess": "Arvostelusi on tallennettu!",
-        "ratingError": "Arvostelun tallennus epäonnistui."
+        "ratingError": "Arvostelun tallennus epäonnistui.",
+        "confirmCompleteMessage": "Ookko ny aivan varma?",
+        "complete": "Merkitse valmiiksi"
     },
     "createNewQuizPage": {
         "pageTitle": "Luo uusi visa",
         "quizTitleLabel": "Visan otsikko",
-        "rulesOptionalLabel": "Säännöt",
+        "rulesOptionalLabel": "Kuvaus",
         "amountOfSongsLabel": "Kappaleiden määrä",
         "songEntriesTitle": "Kappaleet",
         "maxScorePerSongLabel": "Maksimipisteet / kappale",
         "songLinkLabel": "Kappalelinkki (esim. YouTube)",
         "artistLabel": "Artisti",
         "songTitleLabel": "Kappaleen nimi",
-        "hintOptionalLabel": "Vihje (Vapaaehtoinen)",
-        "extraLabel": "Lisäkysymys (Vapaaehtoinen)",
+        "hintOptionalLabel": "Vihje",
+        "extraLabel": "Lisäkysymys",
+        "correctExtraAnswerLabel": "Vastaus lisäkysymykseen",
         "fetchingMetadata": "Haetaan tietoja...",
         "removeSong": "Poista kappale",
         "addSongEntry": "Lisää kappale",
+        "featuresLabel": "Ominaisuudet",
+        "enableExtraQuestionsLabel": "Lisäkysymykset",
         "markAsReadyLabel": "Merkitse valmiiksi",
         "createQuizButton": "Luo visa",
         "creatingQuiz": "Luodaan visaa...",
@@ -150,9 +158,10 @@
     "quizDetailsPage": {
         "pageTitle": "{{quizTitle}}",
         "loadingError": "Visan tietojen lataus epäonnistui.",
-        "noRulesProvided": "Sääntöjä ei annettu.",
+        "noRulesProvided": "Kuvausta ei annettu.",
         "songsInThisQuiz": "Kappaleet:",
         "noLinkProvided": "Tälle kappaleelle ei ole annettu linkkiä.",
+        "maxScoreLabel": "Maksimipisteet",
         "submittedAnswersTitle": "Vastaukset",
         "answeredBy": "Vastaaja",
         "noSubmissionsYet": "Kukaan ei ole vielä vastannut tähän visaan."
@@ -176,6 +185,7 @@
     "allQuizzesPage": {
         "allQuizzesTitle": "Kaikki visat",
         "loadingError": "Visojen lataus epäonnistui.",
+        "searchPlaceholder": "Hae otsikolla tai tekijän nimellä",
         "noReadyQuizzes": "Valmiita visoja ei löytynyt."
     },
     "highscoresPage": {

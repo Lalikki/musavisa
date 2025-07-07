@@ -41,9 +41,15 @@ const MyAnswers = () => {
       data &&
       data.map(d => {
         const team = getTeamDisplayString(d);
-        const score = `${d.score}/${d.answers && d.answers.length}`;
+        const scoreDisplay = `${d.score} / ${d.calculatedMaxScore !== undefined && d.calculatedMaxScore !== null ? d.calculatedMaxScore : 'N/A'}`;
         const status = d.isCompleted ? t('answerDetailsPage.statusCompleted') : d.isChecked ? t('answerDetailsPage.statusReadyForReview') : t('answerDetailsPage.statusInProgress');
-        return [{ value: d.quizTitle }, { value: score, align: 'center' }, { value: d.submittedAt ? format(d.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A' }, { value: team }, { value: status }];
+        return [
+          { value: d.quizTitle },
+          { value: scoreDisplay }, // Correctly display user score / max score
+          { value: d.submittedAt ? format(d.submittedAt, 'dd.MM.yyyy HH:mm') : 'N/A' },
+          { value: team },
+          { value: status }
+        ];
       })
     );
   }; // Define the rows for the table

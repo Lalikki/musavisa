@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { db } from './firebase'; // Import your Firestore instance
+import { db, auth } from './firebase'; // Import your Firestore instance and auth
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth'; // Import onAuthStateChanged
 import Box from '@mui/material/Box'; // Import Box
 import Typography from '@mui/material/Typography'; // Import Typography
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import TextField from '@mui/material/TextField'; // Import TextField
 import { Button } from '@mui/material';
 import { format } from 'date-fns'; // Import date-fns for formatting dates
 import { Link } from 'react-router-dom'; // Optional: if you want to link to individual quizzes later
@@ -15,6 +17,8 @@ const Quizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null); // State to hold the current user
+  const [searchTerm, setSearchTerm] = useState(''); // State for the search term
   const { t } = useTranslation(); // Initialize the t function
 
   const headers = [{ value: t('common.title') }, { value: t('common.rating', 'Rating'), align: 'center' }, { value: t('common.numSongs'), align: 'center' }, { value: t('common.created') }, { value: t('common.by') }];
@@ -47,14 +51,21 @@ const Quizzes = () => {
     );
   }; // Define the rows for the table
   const actions = quiz => {
-    return (
-      <Button variant="outlined" to={`/answer-quiz/${quiz.id}`} startIcon={<AddCircleIcon />} component={Link}>
-        {t('myQuizzesPage.answerAction')}
-      </Button>
-    );
+    // Only show the Answer button if a user is logged in
+    if (currentUser) {
+      return (
+        <Button variant="outlined" to={`/answer-quiz/${quiz.id}`} startIcon={<AddCircleIcon />} component={Link}>
+          {t('myQuizzesPage.answerAction')}
+        </Button>
+      );
+    }
+    return null; // Return null if no user is logged in, so no button is rendered
   };
 
   useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
     const fetchQuizzes = async () => {
       try {
         setLoading(true);
@@ -83,8 +94,21 @@ const Quizzes = () => {
     };
 
     fetchQuizzes();
-  }, []);
+    return () => {
+      unsubscribeAuth(); // Cleanup the auth subscription
+    };
+  }, [t]); // t is a dependency for error messages, keep it. currentUser is not needed as a direct dependency for fetchQuizzes.
 
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const filteredQuizzes = quizzes.filter(quiz => {
+    const term = searchTerm.toLowerCase();
+    const titleMatch = quiz.title.toLowerCase().includes(term);
+    const creatorNameMatch = quiz.creatorName && quiz.creatorName.toLowerCase().includes(term);
+    return titleMatch || creatorNameMatch;
+  });
   return (
     <Box
       className="my-quizzes-container" // You can keep this if you have specific global styles not yet migrated
@@ -98,14 +122,34 @@ const Quizzes = () => {
       <Typography variant="h4" component="h1" gutterBottom align="center">
         {t('allQuizzesPage.allQuizzesTitle')}
       </Typography>
+
+      <TextField
+        fullWidth
+        label={t('allQuizzesPage.searchPlaceholder', 'Search by title or creator...')}
+        variant="outlined"
+        value={searchTerm}
+        onChange={handleSearchChange}
+        sx={{ mb: 3, mt: 1 }} // Add some margin
+        className="quizzes-search-bar"
+      />
+
       {loading && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('common.loading')}</Typography>}
       {error && (
         <Typography color="error" sx={{ textAlign: 'center', mt: 2 }} className="error-text">
           {error}
         </Typography>
       )}
-      {!loading && !error && quizzes.length === 0 && <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('allQuizzesPage.noReadyQuizzes')}</Typography>}
-      {!loading && !error && quizzes.length > 0 && <CustomTable headers={headers} rows={rows(quizzes)} data={quizzes} actions={actions} />}
+      {!loading && !error && (
+        <>
+          {quizzes.length === 0 ? (
+            <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('allQuizzesPage.noReadyQuizzes')}</Typography>
+          ) : filteredQuizzes.length === 0 ? (
+            <Typography sx={{ textAlign: 'center', mt: 2 }}>{t('allQuizzesPage.noQuizzesMatchSearch', `No quizzes found matching "${searchTerm}"`)}</Typography>
+          ) : (
+            <CustomTable headers={headers} rows={rows(filteredQuizzes)} data={filteredQuizzes} actions={actions} />
+          )}
+        </>
+      )}
     </Box>
   );
 };

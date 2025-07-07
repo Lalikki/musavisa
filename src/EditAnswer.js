@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, auth } from './firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { compareTwoStrings } from 'string-similarity'; // Import the library
 import { onAuthStateChanged } from 'firebase/auth';
 import TextField from '@mui/material/TextField';
@@ -13,6 +13,12 @@ import CircularProgress from '@mui/material/CircularProgress'; // For loading st
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+
+// Helper function to capitalize the first letter of a string
+const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
 
 const EditAnswer = () => {
     const { t } = useTranslation(); // Initialize useTranslation
@@ -103,6 +109,42 @@ const EditAnswer = () => {
         setEditedAnswers(newAnswers);
     };
 
+    // Auto-save logic
+    const performAutoSave = useCallback(async () => {
+        // Conditions to skip auto-save:
+        // - No user logged in
+        // - No quizAnswer data loaded
+        // - Quiz answer is already checked/completed (no further edits allowed)
+        // - A manual save/mark ready operation is in progress
+        // - No edited answers to save
+        if (!user || !quizAnswer || quizAnswer.isChecked || quizAnswer.isCompleted || saving || markingReady || !editedAnswers || editedAnswers.length === 0) {
+            // console.log('[AutoSave EditAnswer] Skipped: Conditions not met.');
+            return;
+        }
+
+        // console.log('[AutoSave EditAnswer] Attempting to auto-save...');
+
+        const autoSaveData = {
+            answers: editedAnswers, // Save the currently edited answers
+            lastAutoSavedAt: serverTimestamp(), // Timestamp the auto-save
+            // We do NOT update isChecked, score, or submittedAt during auto-save
+        };
+
+        try {
+            const answerDocRef = doc(db, 'quizAnswers', answerId);
+            await updateDoc(answerDocRef, autoSaveData);
+            // console.log('[AutoSave EditAnswer] Draft updated:', answerId);
+        } catch (err) {
+            console.error("Error during auto-save in EditAnswer:", err); // Log error silently
+        }
+    }, [user, quizAnswer, editedAnswers, answerId, saving, markingReady, t]); // Dependencies
+
+    useEffect(() => {
+        // Setup interval for auto-save
+        const intervalId = setInterval(performAutoSave, 180000); // 180000ms = 3 minutes
+        return () => clearInterval(intervalId); // Cleanup interval on unmount
+    }, [performAutoSave]); // Re-run effect if performAutoSave changes
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!quizAnswer || !correctQuizData || quizAnswer.isChecked || quizAnswer.answerCreatorId !== user?.uid) {
@@ -116,7 +158,7 @@ const EditAnswer = () => {
             const answerDocRef = doc(db, 'quizAnswers', answerId);
             await updateDoc(answerDocRef, {
                 answers: editedAnswers,
-                // Optionally, add a lastEditedAt: serverTimestamp() field
+                lastEditedAt: serverTimestamp() // Mark manual edit time
             });
             setShowSuccessAlert(true); // Show success alert
             setTimeout(() => {
@@ -169,7 +211,7 @@ const EditAnswer = () => {
             await updateDoc(answerDocRef, {
                 answers: editedAnswers, // Save current answers
                 isChecked: true,
-                // score: calculatedScore,
+                markedReadyAt: serverTimestamp() // Mark when it was set to ready
                 // Optionally, add a 'markedReadyAt': serverTimestamp() field
             });
             navigate(`/my-answers/${answerId}`); // Navigate to the details page of this answer
@@ -248,12 +290,13 @@ const EditAnswer = () => {
                         {/* Display Extra Question from correctQuizData and Answer Field for editedAnswers */}
                         {correctQuizData?.questions?.[index]?.extra && (
                             <>
-                                <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium' }}>
+                                {/* <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium' }}>
                                     {correctQuizData.questions[index].extra}
-                                </Typography>
+                                </Typography> */}
                                 <TextField
                                     // Use the same label as in AnswerQuiz.js for consistency
-                                    label={t('answerQuizPage.extraAnswerLabel', 'Your Answer to Extra Question')}
+                                    label={capitalizeFirstLetter(correctQuizData.questions[index].extra)}
+                                    // label={t('}
                                     variant="outlined"
                                     fullWidth
                                     margin="dense"

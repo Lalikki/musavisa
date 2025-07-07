@@ -27,7 +27,7 @@ import { getSeconds, getMinutes, minutesToSeconds, getMilliseconds } from 'date-
 import YTSearch from './components/YTSearch';
 import YouTube from 'react-youtube';
 
-const emptyQuestion = { songLink: '', artist: '', song: '', extra: '', hint: '' };
+const emptyQuestion = { songLink: '', artist: '', song: '', extra: '', correctExtraAnswer: '', hint: '' };
 
 const Quiz = () => {
   const { t } = useTranslation(); // Initialize useTranslation
@@ -36,10 +36,11 @@ const Quiz = () => {
   const [title, setTitle] = useState('');
   const [rules, setRules] = useState('');
   const [amount, setAmount] = useState('');
-  const [maxScorePerSong, setMaxScorePerSong] = useState('1'); // Default to 1
+  const [maxScorePerSong, setMaxScorePerSong] = useState('1'); // Will be dynamically set
   const [success, setSuccess] = useState('');
   const [isReady, setIsReady] = useState(false); // New state for isReady, defaults to false
   const [error, setError] = useState('');
+  const [enableExtraQuestions, setEnableExtraQuestions] = useState(false); // State for enabling extra questions
   const [questions, setQuestions] = useState([emptyQuestion]);
   const [editQuestions, setEditQuestions] = useState([]); // State to track which song is being edited
 
@@ -50,6 +51,15 @@ const Quiz = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Effect to update maxScorePerSong based on enableExtraQuestions
+  useEffect(() => {
+    if (enableExtraQuestions) {
+      setMaxScorePerSong('1.5');
+    } else {
+      setMaxScorePerSong('1');
+    }
+  }, [enableExtraQuestions]);
 
   const onDragEnd = result => {
     // dropped outside the list
@@ -159,6 +169,17 @@ const Quiz = () => {
       }
     }
     try {
+      // Calculate the maximum possible score
+      let calculatedMaxScore = 0;
+      questions.forEach(q => {
+        calculatedMaxScore += 0.5; // For artist
+        calculatedMaxScore += 0.5; // For song
+        // Only add points for extra if enabled and both the question and its correct answer are present
+        if (enableExtraQuestions && q.extra && q.extra.trim() !== '' && q.correctExtraAnswer && q.correctExtraAnswer.trim() !== '') {
+          calculatedMaxScore += 0.5; // For extra question
+        }
+      });
+
       await addDoc(collection(db, 'quizzes'), {
         title,
         rules, // Changed from description
@@ -168,7 +189,9 @@ const Quiz = () => {
         creatorName: user ? user.displayName : t('common.unnamedUser', 'Unknown'), // Store display name
         createdAt: serverTimestamp(),
         questions,
-        isReady, // Add isReady field to Firestore document
+        isReady,
+        enableExtraQuestions, // Save the state
+        calculatedMaxScore,
       });
       setSuccess(t('createNewQuizPage.createQuizSuccess'));
       // Instead of resetting fields, navigate to My Quizzes page
@@ -180,6 +203,7 @@ const Quiz = () => {
       // setMaxScorePerSong('1'); // Reset to initial default
       // setQuestions([emptyQuestion]);
       // setIsReady(false);
+      // setEnableExtraQuestions(false); // Reset if needed
       navigate('/my-quizzes'); // Redirect to My Quizzes page
     } catch (err) {
       setError(t('createNewQuizPage.createQuizError') + ': ' + err.message);
@@ -257,6 +281,8 @@ const Quiz = () => {
       </Box>
     );
   };
+  // Determine if the "Enable Extra Questions" checkbox should be disabled from being unchecked
+  const disableExtraQuestionsToggle = enableExtraQuestions && questions.some(q => (q.extra && q.extra.trim() !== '') || (q.correctExtraAnswer && q.correctExtraAnswer.trim() !== ''));
 
   return (
     <Box
@@ -324,6 +350,26 @@ const Quiz = () => {
               <MenuItem value="2">2</MenuItem>
             </Select>
           </FormControl>
+          {/* Features Section */}
+          <Typography variant="h6" component="h3" sx={{ mt: 2, mb: 1 }}>
+            {t('createNewQuizPage.featuresLabel', 'Features')}
+          </Typography>
+          <Box sx={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: 1, p: 1.5, mb: 1 }}>
+            <FormControlLabel
+              control={<Checkbox checked={enableExtraQuestions} onChange={e => setEnableExtraQuestions(e.target.checked)} id="enableExtraQuestionsCheckbox" disabled={disableExtraQuestionsToggle} />}
+              label={t('createNewQuizPage.enableExtraQuestionsLabel', 'Enable Extra Questions (adds 0.5 points per song)')}
+              sx={{ display: 'block' }}
+            />
+          </Box>
+          <TextField
+            label={t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}
+            variant="outlined"
+            fullWidth
+            margin="dense"
+            value={maxScorePerSong}
+            InputProps={{ readOnly: true }} // Make it read-only
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
           {Number(amount) > 0 && (
             <Box sx={{ mt: 1, mb: 1 }}>
               {' '}
@@ -377,6 +423,31 @@ const Quiz = () => {
                                   onChange={e => handleQuestionChange(index, 'extra', e.target.value)}
                                   slotProps={{ inputLabel: { shrink: true } }}
                                 />
+                              )}
+                              {enableExtraQuestions && (
+                                <div>
+                                  <TextField
+                                    type="text"
+                                    label={t('createNewQuizPage.extraLabel', 'Extra Question (Optional)')}
+                                    variant="outlined"
+                                    fullWidth
+                                    margin="dense"
+                                    value={q.extra || ''} // Ensure value is controlled
+                                    onChange={e => handleQuestionChange(index, 'extra', e.target.value)}
+                                    slotProps={{ inputLabel: { shrink: true } }}
+                                  />
+
+                                  <TextField
+                                    type="text"
+                                    label={t('createNewQuizPage.correctExtraAnswerLabel', 'Correct Answer to Extra Question')}
+                                    variant="outlined"
+                                    fullWidth
+                                    margin="dense"
+                                    value={q.correctExtraAnswer || ''} // Ensure value is controlled
+                                    onChange={e => handleQuestionChange(index, 'correctExtraAnswer', e.target.value)}
+                                    slotProps={{ inputLabel: { shrink: true } }}
+                                  />
+                                </div>
                               )}
                               <TextField
                                 type="text"

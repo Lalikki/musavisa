@@ -19,9 +19,11 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import { InputLabel } from '@mui/material';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
+import Snackbar from '@mui/material/Snackbar'; // Added for success message
+import Alert from '@mui/material/Alert'; // Added for success message
 import YTSearch from './components/YTSearch';
 
-const emptyQuestion = { songLink: "", artist: "", song: "", hint: "" }; // Default question structure
+const emptyQuestion = { songLink: "", artist: "", song: "", extra: "", correctExtraAnswer: "", hint: "" }; // Default question structure
 
 const EditQuiz = () => {
     const { t } = useTranslation(); // Initialize useTranslation
@@ -38,6 +40,7 @@ const EditQuiz = () => {
     const [maxScorePerSong, setMaxScorePerSong] = useState("1"); // New state, default to 1
     const [questions, setQuestions] = useState([emptyQuestion]);
     const [isReady, setIsReady] = useState(false); // New state for isReady
+    const [enableExtraQuestions, setEnableExtraQuestions] = useState(false); // New state
 
     // UI state
     const [loading, setLoading] = useState(true);
@@ -51,6 +54,14 @@ const EditQuiz = () => {
         });
         return () => unsubscribe();
     }, []); // No t needed here
+
+    useEffect(() => {
+        if (enableExtraQuestions) {
+            setMaxScorePerSong('1.5');
+        } else {
+            setMaxScorePerSong('1');
+        }
+    }, [enableExtraQuestions]);
 
     useEffect(() => {
         if (!quizId || !user) {
@@ -76,10 +87,18 @@ const EditQuiz = () => {
                         setTitle(data.title || "");
                         setRules(data.rules || "");
                         setAmount(data.amount ? String(data.amount) : "");
-                        setMaxScorePerSong(data.maxScorePerSong ? String(data.maxScorePerSong) : "1.5"); // Populate maxScorePerSong
-                        // Ensure each loaded question has a hint field, defaulting to empty string if not present
-                        const loadedQuestions = data.questions ? data.questions.map(q => ({ ...q, hint: q.hint || "" })) : [emptyQuestion];
+                        setEnableExtraQuestions(data.enableExtraQuestions || false); // Load this state
+                        // Ensure each loaded question has hint and extra fields, defaulting to empty string if not present
+                        const loadedQuestions = data.questions ? data.questions.map(q => ({
+                            ...emptyQuestion, // Start with defaults to ensure all fields exist
+                            ...q, // Spread loaded question data, overwriting defaults
+                            extra: q.extra || "", // Explicitly ensure extra exists and defaults
+                            correctExtraAnswer: q.correctExtraAnswer || "", // Explicitly ensure correctExtraAnswer exists and defaults
+                            hint: q.hint || ""  // Explicitly ensure hint exists
+                        })) : [emptyQuestion];
                         setQuestions(loadedQuestions);
+                        // Set maxScorePerSong based on loaded enableExtraQuestions
+                        setMaxScorePerSong(data.enableExtraQuestions ? "1.5" : "1");
                         setIsReady(data.isReady || false); // Populate isReady state
                     }
                 } else {
@@ -178,7 +197,7 @@ const EditQuiz = () => {
         if (!title.trim()) { setError(t('common.error') + ": " + t('createNewQuizPage.quizTitleLabel') + " " + t('common.isRequired', 'is required')); return; }
         if (!amount || isNaN(amount) || Number(amount) <= 0) { setError(t('common.error') + ": " + t('createNewQuizPage.amountOfSongsLabel') + " " + t('common.mustBePositive', 'must be a positive number')); return; }
         if (!maxScorePerSong || isNaN(maxScorePerSong) || Number(maxScorePerSong) <= 0) { setError(t('common.error') + ": " + t('createNewQuizPage.maxScorePerSongLabel', 'Max score per song') + " " + t('common.mustBePositive', 'must be a positive number')); return; }
-        if (questions.length !== Number(amount)) { setError(t('common.error') + ": " + t('createNewQuizPage.songEntriesErrorMismatch', { count: questions.length, amount: amount })); return; }
+        // if (questions.length !== Number(amount)) { setError(t('common.error') + ": " + t('createNewQuizPage.songEntriesErrorMismatch', { count: questions.length, amount: amount })); return; }
         for (const q of questions) {
             if (!q.artist.trim() || !q.song.trim()) { setError(t('common.error') + ": " + t('createNewQuizPage.songEntryFieldsRequired')); return; }
         }
@@ -186,23 +205,46 @@ const EditQuiz = () => {
         setSaving(true);
         try {
             const quizDocRef = doc(db, 'quizzes', quizId);
+
+            // Calculate the maximum possible score
+            let calculatedMaxScore = 0;
+            questions.forEach(q => {
+                calculatedMaxScore += 0.5; // For artist
+                calculatedMaxScore += 0.5; // For song
+                // Only add points for extra if enabled and both the question and its correct answer are present
+                if (enableExtraQuestions && q.extra && q.extra.trim() !== '' && q.correctExtraAnswer && q.correctExtraAnswer.trim() !== '') {
+                    calculatedMaxScore += 0.5; // For extra question
+                }
+            });
+
             await updateDoc(quizDocRef, {
                 title,
                 rules,
                 amount: Number(amount),
                 maxScorePerSong: Number(maxScorePerSong), // Add maxScorePerSong to the update
-                questions,
+                questions, // Ensure questions are properly stringified if they contain complex objects not directly supported by Firestore if any
                 isReady, // Add isReady to the update
-                updatedAt: serverTimestamp() // Optional: track updates
+                updatedAt: serverTimestamp(), // Optional: track updates
+                enableExtraQuestions, // Save this state
+                calculatedMaxScore // Store the calculated max score
             });
             setSuccess(t('editQuizPage.updateSuccess'));
-            setTimeout(() => navigate('/my-quizzes'), 1500); // Redirect after a short delay
+            // Clear success message and navigate after a delay
+            setTimeout(() => {
+                setSuccess(""); // Clear message so Snackbar closes if user navigates back quickly
+                navigate('/my-quizzes');
+            }, 2000); // Delay navigation slightly longer than Snackbar duration
         } catch (err) {
             setError(t('editQuizPage.updateError') + " " + err.message);
         } finally {
             setSaving(false);
         }
     };
+
+    // Determine if the "Enable Extra Questions" checkbox should be disabled from being unchecked
+    const disableExtraQuestionsToggle =
+        enableExtraQuestions &&
+        questions.some(q => (q.extra && q.extra.trim() !== '') || (q.correctExtraAnswer && q.correctExtraAnswer.trim() !== ''));
 
     if (loading) return <Typography sx={{ textAlign: 'center', mt: 3 }}>{t('common.loading')}</Typography>;
     if (error && !originalQuizData) return (
@@ -267,20 +309,26 @@ const EditQuiz = () => {
                     className="form-input-full-width"
                     InputLabelProps={{ shrink: true }}
                 />
-                <FormControl fullWidth margin="dense" required className="form-input-full-width">
-                    <InputLabel id="edit-max-score-per-song-label" shrink>{t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}</InputLabel>
-                    <Select
-                        labelId="edit-max-score-per-song-label"
-                        id="edit-max-score-per-song-select"
-                        value={maxScorePerSong}
-                        label={t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}
-                        onChange={e => setMaxScorePerSong(e.target.value)}
-                    >
-                        <MenuItem value="1">1</MenuItem>
-                        <MenuItem value="1.5">1.5</MenuItem>
-                        <MenuItem value="2">2</MenuItem>
-                    </Select>
-                </FormControl>
+                {/* Features Section */}
+                <Typography variant="h6" component="h3" sx={{ mt: 2, mb: 1 }}>
+                    {t('createNewQuizPage.featuresLabel', 'Features')}
+                </Typography>
+                <Box sx={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: 1, p: 1.5, mb: 1 }}>
+                    <FormControlLabel
+                        control={<Checkbox checked={enableExtraQuestions} onChange={e => setEnableExtraQuestions(e.target.checked)} id="editEnableExtraQuestionsCheckbox" disabled={disableExtraQuestionsToggle} />}
+                        label={t('createNewQuizPage.enableExtraQuestionsLabel', 'Enable Extra Questions (adds 0.5 points per song)')}
+                        sx={{ display: 'block' }}
+                    />
+                </Box>
+                <TextField
+                    label={t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}
+                    variant="outlined"
+                    fullWidth
+                    margin="dense"
+                    value={maxScorePerSong}
+                    InputProps={{ readOnly: true }} // Make it read-only
+                    InputLabelProps={{ shrink: true }}
+                />
 
 
                 <Typography variant="h6" component="h3" gutterBottom sx={{ mt: 2, mb: 1 }}>
@@ -327,6 +375,30 @@ const EditQuiz = () => {
                                                     className="form-input-question"
                                                     InputLabelProps={{ shrink: true }}
                                                 />
+                                                {enableExtraQuestions && (
+                                                    <>
+                                                        <TextField
+                                                            label={t('createNewQuizPage.extraLabel', 'Extra Question (Optional)')}
+                                                            variant="outlined"
+                                                            fullWidth
+                                                            margin="dense"
+                                                            value={q.extra || ''}
+                                                            onChange={e => handleQuestionChange(index, "extra", e.target.value)}
+                                                            className="form-input-question"
+                                                            InputLabelProps={{ shrink: true }}
+                                                        />
+                                                        <TextField
+                                                            label={t('createNewQuizPage.correctExtraAnswerLabel', 'Correct Answer to Extra Question')}
+                                                            variant="outlined"
+                                                            fullWidth
+                                                            margin="dense"
+                                                            value={q.correctExtraAnswer || ''}
+                                                            onChange={e => handleQuestionChange(index, "correctExtraAnswer", e.target.value)}
+                                                            className="form-input-question"
+                                                            InputLabelProps={{ shrink: true }}
+                                                        />
+                                                    </>
+                                                )}
                                                 <TextField
                                                     label={t('createNewQuizPage.hintOptionalLabel')}
                                                     variant="outlined"
@@ -377,9 +449,14 @@ const EditQuiz = () => {
                 <Button type="submit" variant="contained" color="primary" fullWidth disabled={saving} className="button-submit-quiz" startIcon={saving ? <CircularProgress size={20} color="inherit" /> : null}>
                     {saving ? t('common.saving') : t('editQuizPage.updateQuizButton')}
                 </Button>
-                {success && <Typography color="success.main" sx={{ mt: 2, textAlign: 'center' }} className="success-text form-message">{success}</Typography>}
                 {error && <Typography color="error" sx={{ mt: 2, textAlign: 'center' }} className="error-text form-message">{error}</Typography>}
             </Paper>
+            {/* Snackbar for Success Message */}
+            <Snackbar open={!!success} autoHideDuration={2000} onClose={() => setSuccess('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+                <Alert onClose={() => setSuccess('')} severity="success" sx={{ width: '100%' }}>
+                    {success}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

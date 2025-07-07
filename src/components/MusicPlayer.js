@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Typography, Slider, Fab, CircularProgress, Popover, useTheme, useMediaQuery, LinearProgress } from '@mui/material';
+import { Box, Card, CardContent, Typography, Slider as MuiSlider, Fab, CircularProgress, Popover, useTheme, useMediaQuery, IconButton } from '@mui/material';
 import {
   PlayArrow as PlayArrowIcon,
   Pause as PauseIcon,
@@ -9,16 +9,26 @@ import {
   HelpOutlineOutlined as HelpOutlineOutlinedIcon,
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
-import * as React from 'react';
 import YouTube from 'react-youtube';
+import { useTranslation } from 'react-i18next'; // For translating "Answer"
 
-export default function MusicPlayer({ artist, song, songNumber, songLink, hint }) {
+const formatTime = (timeInSeconds) => {
+  if (isNaN(timeInSeconds) || timeInSeconds === 0) return '0:00';
+  const minutes = Math.floor(timeInSeconds / 60);
+  const seconds = Math.floor(timeInSeconds % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+
+export default function MusicPlayer({ artist, song, songNumber, songLink, hint, extraQuestion, correctExtraAnswer, isActive }) {
+  const { t } = useTranslation();
   const [play, setPlay] = useState(false);
   const [volume, setVolume] = useState(50); // Default volume level
   const [duration, setDuration] = useState(0); // Default volume level
+  const [currentTime, setCurrentTime] = useState(0);
   const [player, setPlayer] = useState(null); // Store the YouTube player instance
+  const [isSeeking, setIsSeeking] = useState(false);
   const [popoverHintAnchorEl, setPopoverHintAnchorEl] = useState(null);
-  const [progress, setProgress] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -39,23 +49,25 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
   };
 
   useEffect(() => {
-    if (player && play) {
+    if (player && play && !isSeeking) {
       const interval = setInterval(() => {
         const curTime = player.getCurrentTime();
-        setProgress((curTime / duration) * 100);
-      }, 100);
-
-      if (!play) {
-        clearInterval(interval); // Clear the interval if not playing
-      }
+        setCurrentTime(curTime);
+      }, 250); // Update every 250ms
 
       return () => clearInterval(interval);
     }
-  }, [player, duration, play]);
+  }, [player, play, isSeeking, isActive]);
+
+  useEffect(() => {
+    if (!isActive && player && play) {
+      player.pauseVideo();
+      setPlay(false); // Update play state
+    }
+  }, [isActive, player, play]);
 
   const handlePlay = () => {
     if (!player) return;
-    player.setVolume(volume); // Prevent play if player is not ready
     if (play) {
       player.pauseVideo();
     } else {
@@ -78,59 +90,85 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
     }
   };
 
+  const handleSeek = (event, newValue) => {
+    setCurrentTime(newValue);
+  };
+
+  const handleSeekCommitted = (event, newValue) => {
+    if (player) {
+      player.seekTo(newValue, true);
+    }
+    setIsSeeking(false);
+  };
+  const handleSeekMouseDown = () => {
+    setIsSeeking(true);
+  };
+
   const onPlayerReady = event => {
     setPlayer(event.target);
     setDuration(event.target.getDuration());
+    event.target.setVolume(volume); // Set initial volume when player is ready
   };
 
   const onPlayerStateChange = event => {
     if (event.data === YouTube.PlayerState.ENDED) {
       setPlay(false); // Stop playback when the video ends
-      setProgress(0); // Reset progress
+      setCurrentTime(0);
       player.stopVideo(); // Stop the video
     }
   };
 
+  const onPlayerError = (event) => {
+    console.error(`YouTube Player Error for videoId: ${videoId()}`, event.data);
+    // TODO: Optionally set an error state here to show a message to the user
+  };
+
   return (
-    <Card sx={{ mb: 1 }} elevation={3}>
-      <Typography
-        variant="h1"
+    <Card sx={{ mb: 2, p: 2, position: 'relative', overflow: 'hidden' }} elevation={3}>
+      {/* Top row for song number and hint icon */}
+      <Box
         sx={{
-          ml: 1,
-          fontSize: '6.5rem',
-          position: 'absolute', // Position it absolutely within the card
-          fontWeight: 'bold', // Make it bold for emphasis
-          zIndex: 0, // Ensure it stays in the background
-          pointerEvents: 'none', // Prevent it from interfering with interactions
-          whiteSpace: 'nowrap', // Prevent text wrapping
-          opacity: 0.1,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 1, // Add some margin below this row
+          position: 'relative', // For zIndex context if needed later
+          zIndex: 2, // Ensure it's above the large background number if we re-add it
         }}
       >
-        {songNumber}
-      </Typography>
+        <Typography variant="h6" component="div" sx={{ fontWeight: 'medium', opacity: 0.7 }}>
+          {songNumber}
+        </Typography>
+        {hint && (
+          <IconButton size="small" onClick={e => setPopoverHintAnchorEl(e.currentTarget)} aria-describedby={popoverHintId} sx={{ p: 0.25 }}>
+            <HelpOutlineOutlinedIcon sx={{ fontSize: '1.5rem' }} color="disabled" />
+          </IconButton>
+        )}
+      </Box>
+
       <Box
         id="main-box"
         sx={{
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          zIndex: 1,
+          alignItems: 'center', // Center content within the main box
+          position: 'relative',
         }}
       >
         <CardContent
           id="card-content"
           sx={{
-            ml: 3,
             display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
+            flexDirection: 'column', // Stack content vertically
+            alignItems: 'center', // Center items horizontally
             width: '100%',
+            p: 0, // Remove default CardContent padding, using Card's padding
+            '&:last-child': { pb: 0 }, // Remove padding-bottom from last child if CardContent adds it
           }}
         >
-          <Box sx={{ mr: 1 }}>
-            <Typography component="div" variant="h6">
+          <Box sx={{ textAlign: 'center', mb: 2, width: '100%', minHeight: theme.spacing(16) /* Approx 128px */ }}>
+            <Typography component="div" variant="h5"> {/* Increased size for song title */}
               {song}
-              {hint && <HelpOutlineOutlinedIcon fontSize="small" color="disabled" onClick={e => setPopoverHintAnchorEl(e.currentTarget)} sx={{ ml: 0.5 }} />}
             </Typography>
             <Popover
               id={popoverHintId}
@@ -146,9 +184,18 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
             >
               <Typography sx={{ p: 1 }}>{hint}</Typography>
             </Popover>
-            <Typography variant="subtitle1" component="div" sx={{ color: 'text.secondary' }}>
+            <Typography variant="h6" component="div" sx={{ color: 'text.secondary' }}> {/* Increased size for artist */}
               {artist}
             </Typography>
+            {/* Display Extra Question and Answer directly */}
+            {extraQuestion && correctExtraAnswer && (
+              <Box sx={{ mt: 1.5, width: '100%' }}>
+                <Typography variant="subtitle1" component="div" sx={{ color: theme.palette.primary.main, fontWeight: 'medium' }}>
+                  {extraQuestion}
+                </Typography>
+                <Typography variant="body2" component="div" sx={{ color: 'text.secondary' }}>{correctExtraAnswer}</Typography>
+              </Box>
+            )}
           </Box>
           {videoId() && (
             <Box
@@ -156,12 +203,12 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                alignSelf: 'center',
-                marginLeft: 'auto',
-                mr: 1,
+                alignItems: 'center', // Center controls
+                width: '100%', // Take full width
+                mt: 1, // Add some margin top
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Fab color="secondary" aria-label="replay" size="small" sx={{ justifySelf: 'center', mr: 1 }} onClick={handleReplay} disabled={disableControls}>
                   {(!player && <CircularProgress size="50%" color="inherit" />) || <ReplayIcon />}
                 </Fab>
@@ -176,6 +223,7 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
                   opts={opts}
                   onReady={onPlayerReady}
                   onStateChange={onPlayerStateChange}
+                  onError={onPlayerError}
                   style={{ display: 'none' }} // Hide the YouTube player
                 />
               </Box>
@@ -184,20 +232,41 @@ export default function MusicPlayer({ artist, song, songNumber, songLink, hint }
                   alignItems: 'center',
                   display: 'flex',
                   flexDirection: 'row',
-                  width: '100%',
+                  width: { xs: '60%', sm: '80%' }, // Make it narrower on mobile
+                  maxWidth: { xs: '180px', sm: '250px' }, // And have a smaller max-width on mobile
                   mt: 1,
                 }}
+                onMouseDown={e => e.stopPropagation()} // Stop drag events from propagating to the carousel
+                onTouchStart={e => e.stopPropagation()} // Stop touch events from propagating to the carousel
               >
-                <VolumeDownIcon />
-                <Slider aria-label="Volume" value={volume} onChange={handleVolumeChange} disabled={disableControls} />
-                <VolumeUpIcon />
+                <VolumeDownIcon sx={{ mr: 1 }} />
+                <MuiSlider aria-label="Volume" value={volume} onChange={handleVolumeChange} disabled={disableControls} />
+                <VolumeUpIcon sx={{ ml: 1 }} />
+              </Box>
+              <Box
+                sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 2, px: { xs: 0, sm: 1 }, mt: 1.5 }}
+                onMouseDown={e => e.stopPropagation()} // Stop drag events from propagating to the carousel
+                onTouchStart={e => e.stopPropagation()} // Stop touch events from propagating to the carousel
+              >
+                <Typography variant="body2" sx={{ color: 'text.secondary', minWidth: '40px' }}>{formatTime(currentTime)}</Typography>
+                <MuiSlider
+                  aria-label="time-indicator"
+                  size="small"
+                  value={currentTime}
+                  min={0}
+                  step={1}
+                  max={duration > 0 ? duration : 0}
+                  onChange={handleSeek}
+                  onChangeCommitted={handleSeekCommitted}
+                  onMouseDown={handleSeekMouseDown}
+                  disabled={disableControls || duration === 0}
+                  sx={{ height: 6, '& .MuiSlider-thumb': { width: 14, height: 14 } }}
+                />
+                <Typography variant="body2" sx={{ color: 'text.secondary', minWidth: '40px' }}>{formatTime(duration)}</Typography>
               </Box>
             </Box>
           )}
         </CardContent>
-        <Box sx={{ width: '100%' }}>
-          <LinearProgress variant="determinate" value={progress} />
-        </Box>
       </Box>
     </Card>
   );

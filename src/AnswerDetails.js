@@ -20,11 +20,17 @@ import InputLabel from '@mui/material/InputLabel';
 import Rating from '@mui/material/Rating'; // Import Rating
 import Snackbar from '@mui/material/Snackbar'; // Import Snackbar
 import Alert from '@mui/material/Alert'; // Import Alert
+import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material'; // Import Dialog components
 import { TextField } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom'; // For MUI Link component
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
+// Helper function to capitalize the first letter of a string
+const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
 
 const AnswerDetails = () => {
     const { t } = useTranslation(); // Initialize useTranslation
@@ -43,6 +49,7 @@ const AnswerDetails = () => {
     const [isSubmittingRating, setIsSubmittingRating] = useState(false);
     const [ratingFeedback, setRatingFeedback] = useState({ open: false, message: '', severity: 'info' });
     const [saveFeedback, setSaveFeedback] = useState({ open: false, message: '', severity: 'info' }); // New state for save feedback
+    const [confirmationOpen, setConfirmationOpen] = useState(false); // State for the confirmation dialog
     const theme = useTheme(); // theme is used, keep it
 
     useEffect(() => {
@@ -150,6 +157,11 @@ const AnswerDetails = () => {
             setSaveFeedback({ open: true, message: t('answerDetailsPage.cannotCompleteAssessmentError', "You cannot complete this assessment at this time."), severity: 'error' });
             return;
         }
+        setConfirmationOpen(true); // Open the confirmation dialog
+    };
+
+    const confirmSaveAndComplete = async () => {
+        setConfirmationOpen(false); // Close the dialog
         setIsCompleting(true);
         setSaveFeedback({ open: false, message: '', severity: 'info' }); // Clear previous feedback
         try {
@@ -192,12 +204,22 @@ const AnswerDetails = () => {
                 const correctArtist = (correctAnswer.artist || "").toLowerCase().trim();
                 const submittedSongName = (submittedAnswer.songName || "").toLowerCase().trim();
                 const correctSongName = (correctAnswer.song || "").toLowerCase().trim();
+                const submittedExtraAnswer = (submittedAnswer.extraAnswer || "").toLowerCase().trim();
+                // Assuming 'correctExtraAnswer' is the field where you store the correct answer
+                // to the extra question in your quiz data.
+                const correctExtra = (correctAnswer.correctExtraAnswer || "").toLowerCase().trim();
 
                 if (compareTwoStrings(submittedArtist, correctArtist) >= similarityThreshold) {
                     songScore += 0.5;
                 }
                 if (compareTwoStrings(submittedSongName, correctSongName) >= similarityThreshold) {
                     songScore += 0.5;
+                }
+                // Check if an extra question was defined and if there's a correct answer for it
+                if (correctAnswer.extra && correctAnswer.extra.trim() !== '' && correctExtra.trim() !== '') {
+                    if (compareTwoStrings(submittedExtraAnswer, correctExtra) >= similarityThreshold) {
+                        songScore += 0.5;
+                    }
                 }
             }
             return songScore;
@@ -338,7 +360,18 @@ const AnswerDetails = () => {
                         quizAnswer.isChecked ? ` ${t('answerDetailsPage.statusReadyForReview')}` :
                             ` ${t('answerDetailsPage.statusInProgress')}`}
                 </Typography>
-                <Typography variant="body1"><strong>{t('common.score')}:</strong> {quizAnswer.score} / {correctQuizData?.amount ? correctQuizData.amount * (correctQuizData.maxScorePerSong || 1) : 'N/A'}</Typography>
+                <Typography variant="body1"><strong>{t('common.score')}:</strong> {quizAnswer.score} / {(() => {
+                    if (!correctQuizData || !correctQuizData.questions) return 'N/A';
+                    let maxTotalScore = 0;
+                    correctQuizData.questions.forEach(q => {
+                        maxTotalScore += 0.5; // For artist
+                        maxTotalScore += 0.5; // For song
+                        if (q.extra && q.extra.trim() !== '') {
+                            maxTotalScore += 0.5; // For extra question
+                        }
+                    });
+                    return maxTotalScore;
+                })()}</Typography>
 
                 {/* Moved Auto-Calculate button here */}
                 {canSelfAssess && !quizAnswer.isCompleted && (
@@ -394,10 +427,10 @@ const AnswerDetails = () => {
                                     <Paper // This is the Paper for each individual guess item
                                         elevation={0}
                                         sx={{
-                                            p: { xs: 1, sm: 2 },
+                                            p: { xs: 2, sm: 2.5 }, // Increased padding
                                             width: '100%',
                                             backgroundColor: 'transparent', // Individual guess items are also transparent
-                                            boxShadow: 'none',
+                                            boxShadow: 'none', // No shadow for individual items if parent has gradient
                                             // border: `1px solid ${theme.palette.divider}`, // Keep border for individual items
                                             // borderRadius: theme.shape.borderRadius,
                                         }}
@@ -414,6 +447,7 @@ const AnswerDetails = () => {
                                             value={guess.artist || ''}
                                             disabled // Keep disabled prop
                                             InputLabelProps={{ shrink: true }}
+                                            // Adjusted sx for disabled state for better visibility if needed
                                             sx={{
                                                 '& .MuiInputBase-input.Mui-disabled': {
                                                     WebkitTextFillColor: theme.palette.text.secondary, // Ensures text color is applied correctly in WebKit browsers
@@ -425,6 +459,7 @@ const AnswerDetails = () => {
                                                 '& .MuiInputBase-root.Mui-disabled': {
                                                     backgroundColor: theme.palette.action.disabledBackground, // Subtle background change
                                                 },
+                                                mb: 1.5, // Added margin-bottom
                                             }}
                                         />
                                         <TextField
@@ -437,6 +472,7 @@ const AnswerDetails = () => {
                                             value={guess.songName || ''}
                                             disabled // Keep disabled prop
                                             InputLabelProps={{ shrink: true }}
+                                            // Adjusted sx for disabled state
                                             sx={{
                                                 '& .MuiInputBase-input.Mui-disabled': {
                                                     WebkitTextFillColor: theme.palette.text.secondary,
@@ -447,17 +483,18 @@ const AnswerDetails = () => {
                                                 },
                                                 '& .MuiInputBase-root.Mui-disabled': {
                                                     backgroundColor: theme.palette.action.disabledBackground,
-                                                }
+                                                },
+                                                mb: 1.5, // Added margin-bottom
                                             }}
                                         />
                                         {/* Display Extra Question and Answer if it exists */}
                                         {correctQuizData?.questions?.[index]?.extra && (
                                             <>
-                                                <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium', textAlign: 'left' }}>
+                                                {/* <Typography variant="body2" sx={{ mt: 1, mb: 0.5, fontWeight: 'medium', textAlign: 'left' }}>
                                                     {t('answerQuizPage.extraAnswerLabel', 'Extra Question')}: {correctQuizData.questions[index].extra}
-                                                </Typography>
+                                                </Typography> */}
                                                 <TextField
-                                                    label={t('answerQuizPage.extraAnswerLabel', 'Your Answer to Extra Question')}
+                                                    label={capitalizeFirstLetter(correctQuizData.questions[index].extra)}
                                                     id={`guess-extraAnswer-${index}`}
                                                     variant="outlined"
                                                     fullWidth
@@ -465,6 +502,7 @@ const AnswerDetails = () => {
                                                     value={guess.extraAnswer || ''}
                                                     disabled
                                                     InputLabelProps={{ shrink: true }}
+                                                    // Adjusted sx for disabled state
                                                     sx={{
                                                         '& .MuiInputBase-input.Mui-disabled': {
                                                             WebkitTextFillColor: theme.palette.text.secondary,
@@ -475,20 +513,27 @@ const AnswerDetails = () => {
                                                         },
                                                         '& .MuiInputBase-root.Mui-disabled': {
                                                             backgroundColor: theme.palette.action.disabledBackground,
-                                                        }
+                                                        },
+                                                        mb: 1.5, // Added margin-bottom
                                                     }}
                                                 />
                                             </>
                                         )}
                                         {/* Correct answer display can be added here if needed, using Typography and MUI Link */}
-                                        <FormControl fullWidth margin="dense" variant="outlined" className="manual-score-input" sx={{ mt: 1 }}>
+                                        <FormControl fullWidth margin="dense" variant="outlined" className="manual-score-input" sx={{ mt: 1.5, maxWidth: '150px', alignSelf: 'center' }}>
                                             {(() => {
                                                 // Determine the maximum score for this specific quiz, defaulting to 1 if not specified
-                                                const maxScoreForThisQuiz = (typeof correctQuizData?.maxScorePerSong === 'number' && correctQuizData.maxScorePerSong > 0)
-                                                    ? correctQuizData.maxScorePerSong
-                                                    : 1; // Default max score if not found or invalid
+                                                const currentQuestionData = correctQuizData?.questions?.[index];
+                                                let maxScoreForThisSong = 0;
+                                                if (currentQuestionData) {
+                                                    maxScoreForThisSong += 0.5; // Artist
+                                                    maxScoreForThisSong += 0.5; // Song
+                                                    if (currentQuestionData.extra && currentQuestionData.extra.trim() !== '') {
+                                                        maxScoreForThisSong += 0.5; // Extra
+                                                    }
+                                                }
                                                 const scoreOptions = [];
-                                                for (let i = 0; i <= maxScoreForThisQuiz; i += 0.5) {
+                                                for (let i = 0; i <= maxScoreForThisSong; i += 0.5) {
                                                     scoreOptions.push(i);
                                                 }
 
@@ -568,6 +613,29 @@ const AnswerDetails = () => {
                         {isCompleting ? t('answerDetailsPage.completing') : t('answerDetailsPage.saveAndComplete')}
                     </Button>
                     <Button component={RouterLink} to="/my-answers" variant="text" className="back-link">{t('common.cancel')}</Button>
+                    {/* Confirmation Dialog */}
+                    <Dialog
+                        open={confirmationOpen}
+                        onClose={() => setConfirmationOpen(false)}
+                        aria-labelledby="alert-dialog-title"
+                        aria-describedby="alert-dialog-description"
+                    >
+                        <DialogTitle id="alert-dialog-title">{t('common.confirmation', 'Confirmation')}</DialogTitle>
+                        {/* Use a translation key for the content */}
+                        {/* Removed HTML tags */}
+                        <DialogContent>
+                            <Typography>{t('answerDetailsPage.confirmCompleteMessage', 'Are you sure you want to mark this assessment as completed?')}</Typography>
+                        </DialogContent>
+
+                        <DialogActions>
+                            <Button onClick={() => setConfirmationOpen(false)} color="primary">
+                                {t('common.cancel', 'Cancel')}
+                            </Button>
+                            <Button onClick={confirmSaveAndComplete} color="primary" autoFocus>
+                                {t('answerDetailsPage.complete')}
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
                 </Box>
             )}
             {/* Snackbar for Rating Feedback */}
