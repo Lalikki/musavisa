@@ -60,7 +60,8 @@
         "notFound": "Not Found.",
         "dragToReorder": "Drag to reorder",
         "enabled": "Enabled",
-        "disabled": "Disabled"
+        "disabled": "Disabled",
+        "done": "Done"
     },
     "editAnswerPage": {
         "pageTitle": "Edit Your Answers for: {{quizTitle}}",

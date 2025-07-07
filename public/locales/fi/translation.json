@@ -67,7 +67,9 @@
         "answer": "Vastaus",
         "confirmation": "Vahvistus",
         "enabled": "Käytössä",
-        "disabled": "Ei käytössä"
+        "disabled": "Ei käytössä",
+        "done": "Valmis"
+
     },
     "editAnswerPage": {
         "pageTitle": "{{quizTitle}}",

@@ -214,13 +214,18 @@ const Quiz = () => {
     const [startTime, setStartTime] = useState(new Date(question.startTime * 1000 || 0)); // Initialize with question's startTime or 0
     const [player, setPlayer] = useState(null); // Initialize with value or empty string
     const checked = editQuestions?.includes(index);
+    const totalSeconds = getMinutes(startTime) * 60 + getSeconds(startTime); // Convert to total seconds
 
-    console.log('starttime', startTime);
     const handleEditQuestion = () => {
+      const playerSeconds = Math.round(player?.playerInfo?.currentTime);
       setEditQuestions(prevQ => {
         if (prevQ.includes(index)) {
+          handleTimeChange(new Date(playerSeconds)); // Reset start time in the state
           return prevQ.filter(q => q !== index); // Remove index if already in edit mode
         } else {
+          if (player) {
+            player.seekTo(totalSeconds, true); // Seek to the new start time in the player
+          } 
           return [...prevQ, index]; // Add index to edit mode
         }
       });
@@ -232,23 +237,21 @@ const Quiz = () => {
     };
 
     const onPlayerReady = event => {
-      setPlayer(event.target); // Store the player instance
       if (startTime) {
-        event.target.seekTo(parseFloat(startTime), true); // Seek to the start time if provided
+        console.log(totalSeconds);
+        event.target.seekTo(totalSeconds, true); // Seek to the start time if provided
       }
+      setPlayer(event.target); // Store the player instance
     };
 
-    const handleStartTimeChange = value => {
-      setStartTime(value); // Update the local state with the new value
-      // const seconds = getSeconds(value);
-      // const minutes = getMinutes(value);
-      // const totalSeconds = minutesToSeconds(minutes) + seconds; // Convert to total seconds
-      // console.log('Total seconds:', totalSeconds);
-      // handleQuestionChange(index, 'startTime', totalSeconds); // Update the question's startTime
-      // if (player) {
-      //   player.seekTo(totalSeconds, true); // Seek to the new start time in the player
-      // }
-    };
+    const handleTimeChange = value => {
+      setStartTime(value);
+      const seconds = getSeconds(value) + getMinutes(value) * 60; // Convert to total seconds
+      handleQuestionChange(index, 'startTime', seconds); // Update the question's startTime
+      if (player) {
+        player.seekTo(seconds, true); // Seek to the new start time in the player
+      }
+    }
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -268,7 +271,7 @@ const Quiz = () => {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DemoContainer components={['TimeField']}>
-              <TimeField label="Format with seconds" value={startTime} onChange={value => handleStartTimeChange(value)} format="mm:ss" />
+              <TimeField label="Format with seconds" value={startTime} onChange={value => handleTimeChange(value)} format="mm:ss" />
             </DemoContainer>
           </LocalizationProvider>
           <Button variant="outlined" color={checked ? 'success' : 'primary'} sx={{ ml: 1 }} onClick={handleEditQuestion}>
