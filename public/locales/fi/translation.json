@@ -192,7 +192,8 @@
         "loadingError": "Ennätysten lataus epäonnistui.",
         "noHighscores": "Ennätyksiä ei ole vielä saatavilla.",
         "quizzesAnswered": "Vastatut visat",
-        "overallAccuracy": "KokonaisTarkkuus",
+        "overallAccuracy": "Kokonaistarkkuus",
+        "musaScore": "Musapisteet",
         "correctAnswers": "oikein"
     },
     "shareQuizModal": {
