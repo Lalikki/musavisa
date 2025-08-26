@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 import CustomTable from './components/CustomTable';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 const Highscores = () => {
   // const [highscores, setHighscores] = useState([]); // Old state
@@ -17,9 +18,13 @@ const Highscores = () => {
   const headers = [
     { value: t('common.rank') },
     { value: t('common.player') },
-    { value: t('highscoresPage.quizzesAnswered'), align: 'center' },
-    { value: t('highscoresPage.overallAccuracy'), align: 'center' },
+    { value: t('highscoresPage.quizzesAnswered') },
+    { value: t('highscoresPage.musaScore'), },
+    { value: t('highscoresPage.overallAccuracy'), align: 'right' },
   ]; // Define the headers for the web table
+
+  const trophyColors = ['#FFD700', '#C0C0C0', '#CD7F32']; // Gold, Silver, Bronze colors
+
   const rows = data => {
     return (
       data &&
@@ -27,7 +32,13 @@ const Highscores = () => {
         const rank = ++index;
         const overallPercentage = d.overallPercentage ? `${d.overallPercentage.toFixed(2)}%` : '0%'; // Format percentage
         const overallPercentageSubText = `${d.totalCorrectAnswers}/${d.totalPossibleAnswers} ${t('highscoresPage.correctAnswers')}`;
-        return [{ value: rank }, { value: d.userName }, { value: d.quizzesAnsweredCount, align: 'center' }, { value: overallPercentage, subValue: overallPercentageSubText, align: 'center' }];
+        return [
+          { value: (rank <= 3 && <EmojiEventsIcon sx={{ color: trophyColors[rank - 1] }} />) || rank }, // Gold, silver and bronze medals for top 3
+          { value: d.userName },
+          { value: d.quizzesAnsweredCount },
+          { value: d.musaScore.toFixed(2) },
+          { value: overallPercentage, subValue: overallPercentageSubText, align: 'right' },
+        ];
       })
     ); // Define the rows for the web table
   };
@@ -62,6 +73,7 @@ const Highscores = () => {
               quizzesAnsweredCount: 0,
               totalCorrectAnswers: 0,
               totalPossibleAnswers: 0,
+              quizPoints: 0,
             };
           }
 
@@ -69,6 +81,8 @@ const Highscores = () => {
           stats[userId].totalCorrectAnswers += answer.score;
           // Assuming each question is 1 point, and answer.answers.length is the number of questions
           stats[userId].totalPossibleAnswers += answer.answers ? answer.answers.length * 1 : 0;
+          stats[userId].averageQuizAnswerAmount = stats[userId].totalPossibleAnswers / stats[userId].quizzesAnsweredCount;
+          stats[userId].averageCorrectAnswerAmount = stats[userId].totalCorrectAnswers / stats[userId].quizzesAnsweredCount;
         });
 
         // Convert stats object to an array and calculate percentages
@@ -76,10 +90,14 @@ const Highscores = () => {
           userId,
           ...data,
           overallPercentage: data.totalPossibleAnswers > 0 ? (data.totalCorrectAnswers / data.totalPossibleAnswers) * 100 : 0,
+          musaScore:
+            data.totalPossibleAnswers > 0
+              ? data.totalCorrectAnswers / data.totalPossibleAnswers + (data.averageQuizAnswerAmount + data.averageCorrectAnswerAmount / 100) * (data.quizzesAnsweredCount / 100)
+              : 0,
         }));
 
         // Sort by overall percentage descending, then by quizzes answered
-        statsArray.sort((a, b) => b.overallPercentage - a.overallPercentage || b.quizzesAnsweredCount - a.quizzesAnsweredCount);
+        statsArray.sort((a, b) => b.musaScore - a.musaScore || b.overallPercentage - a.overallPercentage || b.quizzesAnsweredCount - a.quizzesAnsweredCount);
 
         setUserStats(statsArray);
       } catch (err) {
