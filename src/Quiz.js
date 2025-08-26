@@ -12,17 +12,17 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
-import { Tune as TuneIcon, Done as DoneIcon } from '@mui/icons-material';
+import { Tune as TuneIcon, Done as DoneIcon, WidthFull } from '@mui/icons-material';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import { InputLabel } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
-import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { DemoContainer, DemoItem } from '@mui/x-date-pickers/internals/demo';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { TimeField } from '@mui/x-date-pickers/TimeField';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { getSeconds, getMinutes, minutesToSeconds, getMilliseconds } from 'date-fns';
 import YTSearch from './components/YTSearch';
 import YouTube from 'react-youtube';
@@ -35,14 +35,14 @@ const Quiz = () => {
   const [user, setUser] = useState(null);
   const [title, setTitle] = useState('');
   const [rules, setRules] = useState('');
-  const [amount, setAmount] = useState('');
+  const [songAmount, setSongAmount] = useState(1);
   const [maxScorePerSong, setMaxScorePerSong] = useState('1'); // Will be dynamically set
   const [success, setSuccess] = useState('');
   const [isReady, setIsReady] = useState(false); // New state for isReady, defaults to false
   const [error, setError] = useState('');
   const [enableExtraQuestions, setEnableExtraQuestions] = useState(false); // State for enabling extra questions
   const [questions, setQuestions] = useState([emptyQuestion]);
-  const [editQuestions, setEditQuestions] = useState([]); // State to track which song is being edited
+  const [startTimeEdit, setStartTimeEdit] = useState([]); // State to track which song is being edited
 
   const isYTLink = link => /(youtube|youtu\.be)/i.test(link);
   useEffect(() => {
@@ -102,26 +102,25 @@ const Quiz = () => {
   const addQuestion = () => {
     const newQuestions = [...questions, emptyQuestion];
     setQuestions(newQuestions);
-    setAmount(String(newQuestions.length)); // Update the amount field to reflect the new total
+    setSongAmount(newQuestions.length); // Update the songAmount field to reflect the new total
   };
 
   useEffect(() => {
-    const numAmount = Number(amount);
     // Only adjust if numAmount is a positive number
-    if (!isNaN(numAmount) && numAmount > 0) {
+    if (songAmount > 0) {
       const currentLength = questions.length;
-      if (numAmount > currentLength) {
+      if (songAmount > currentLength) {
         // Add new empty question objects
-        const newQuestionsToAdd = Array(numAmount - currentLength)
+        const newQuestionsToAdd = Array(songAmount - currentLength)
           .fill(null)
           .map(() => emptyQuestion);
         setQuestions(prevQuestions => [...prevQuestions, ...newQuestionsToAdd]);
-      } else if (numAmount < currentLength) {
+      } else if (songAmount < currentLength) {
         // Remove questions from the end
-        setQuestions(prevQuestions => prevQuestions.slice(0, numAmount));
+        setQuestions(prevQuestions => prevQuestions.slice(0, songAmount));
       }
-    } else if (amount === '' && questions.length > 0) {
-      // Optional: If amount is cleared, you might want to reset to 1 question or do nothing.
+    } else if (songAmount === '' && questions.length > 0) {
+      // Optional: If songAmount is cleared, you might want to reset to 1 question or do nothing.
       // For now, let's reset to one question if the field is cleared and there were questions.
       // If you prefer it to do nothing, you can remove this else-if block.
       if (questions.length !== 1) {
@@ -129,12 +128,12 @@ const Quiz = () => {
         setQuestions([emptyQuestion]);
       }
     }
-  }, [amount, questions.length]); // Rerun this effect when the 'amount' state changes
+  }, [songAmount, questions.length]); // Rerun this effect when the 'songAmount' state changes
 
   const removeQuestion = index => {
     const updatedQuestions = questions.filter((_, i) => i !== index);
     setQuestions(updatedQuestions);
-    setAmount(String(updatedQuestions.length)); // Update the amount field
+    setSongAmount(updatedQuestions.length); // Update the songAmount field
   };
 
   const handleSubmit = async e => {
@@ -149,7 +148,7 @@ const Quiz = () => {
       setError(t('common.error') + ': ' + t('createNewQuizPage.rulesOptionalLabel').replace('(Optional)', '').trim() + ' ' + t('common.isRequired', 'is required'));
       return;
     }
-    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+    if (!songAmount || isNaN(songAmount) || Number(songAmount) <= 0) {
       setError(t('common.error') + ': ' + t('createNewQuizPage.amountOfSongsLabel') + ' ' + t('common.mustBePositive', 'must be a positive number'));
       return;
     }
@@ -157,8 +156,8 @@ const Quiz = () => {
       setError(t('common.error') + ': ' + t('createNewQuizPage.maxScorePerSongLabel', 'Max score per song') + ' ' + t('common.mustBePositive', 'must be a positive number')); // Add new translation key
       return;
     }
-    if (questions.length !== Number(amount)) {
-      setError(t('common.error') + ': ' + t('createNewQuizPage.songEntriesErrorMismatch', { count: questions.length, amount: amount }));
+    if (questions.length !== Number(songAmount)) {
+      setError(t('common.error') + ': ' + t('createNewQuizPage.songEntriesErrorMismatch', { count: questions.length, songAmount: songAmount }));
       return;
     }
     // Optional: Add validation for empty fields within questions
@@ -183,7 +182,7 @@ const Quiz = () => {
       await addDoc(collection(db, 'quizzes'), {
         title,
         rules, // Changed from description
-        amount: Number(amount),
+        songAmount: songAmount,
         createdBy: user ? user.uid : 'unknown', // Handle case where user might be null briefly
         maxScorePerSong: Number(maxScorePerSong), // Save the max score per song
         creatorName: user ? user.displayName : t('common.unnamedUser', 'Unknown'), // Store display name
@@ -194,16 +193,6 @@ const Quiz = () => {
         calculatedMaxScore,
       });
       setSuccess(t('createNewQuizPage.createQuizSuccess'));
-      // Instead of resetting fields, navigate to My Quizzes page
-      // Fields will naturally reset when the component unmounts or re-mounts on next visit
-      // Or you can keep the resets if you prefer, but navigation will happen quickly
-      // setTitle('');
-      // setRules('');
-      // setAmount('');
-      // setMaxScorePerSong('1'); // Reset to initial default
-      // setQuestions([emptyQuestion]);
-      // setIsReady(false);
-      // setEnableExtraQuestions(false); // Reset if needed
       navigate('/my-quizzes'); // Redirect to My Quizzes page
     } catch (err) {
       setError(t('createNewQuizPage.createQuizError') + ': ' + err.message);
@@ -213,19 +202,20 @@ const Quiz = () => {
   const SongStartTimeEditor = ({ index, question }) => {
     const [startTime, setStartTime] = useState(new Date(question.startTime * 1000 || 0)); // Initialize with question's startTime or 0
     const [player, setPlayer] = useState(null); // Initialize with value or empty string
-    const checked = editQuestions?.includes(index);
+    const checked = startTimeEdit?.includes(index);
     const totalSeconds = getMinutes(startTime) * 60 + getSeconds(startTime); // Convert to total seconds
 
     const handleEditQuestion = () => {
-      const playerSeconds = Math.round(player?.playerInfo?.currentTime);
-      setEditQuestions(prevQ => {
+      setStartTimeEdit(prevQ => {
         if (prevQ.includes(index)) {
-          handleTimeChange(new Date(playerSeconds)); // Reset start time in the state
+          const playerSeconds = Math.round(player?.playerInfo?.currentTime);
+          handleQuestionChange(index, 'startTime', playerSeconds); // Update the question's startTime in seconds
           return prevQ.filter(q => q !== index); // Remove index if already in edit mode
         } else {
+          handleQuestionChange(index, 'startTime', totalSeconds); // Update the question's startTime in seconds
           if (player) {
             player.seekTo(totalSeconds, true); // Seek to the new start time in the player
-          } 
+          }
           return [...prevQ, index]; // Add index to edit mode
         }
       });
@@ -245,40 +235,40 @@ const Quiz = () => {
     };
 
     const handleTimeChange = value => {
+      console.log('value', value);
       setStartTime(value);
       const seconds = getSeconds(value) + getMinutes(value) * 60; // Convert to total seconds
-      handleQuestionChange(index, 'startTime', seconds); // Update the question's startTime
       if (player) {
         player.seekTo(seconds, true); // Seek to the new start time in the player
       }
-    }
+    };
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         {checked && (
-          <YouTube
-            videoId={videoId(question.songLink)}
-            opts={{
-              playerVars: {
-                autoplay: 0,
+            <YouTube
+              videoId={videoId(question.songLink)}
+              opts={{
+                playerVars: {
+                  autoplay: 0,
+                },
                 width: '100%',
                 height: '100%',
-              },
-            }}
-            onReady={onPlayerReady}
-          />
+              }}
+              onReady={onPlayerReady}
+            />
         )}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
+        <Box sx={{ display: 'flex' }}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DemoContainer components={['TimeField']}>
-              <TimeField label="Format with seconds" value={startTime} onChange={value => handleTimeChange(value)} format="mm:ss" />
+              <DemoItem>
+                <TimePicker label={t('createNewQuizPage.startTimeLabel')} views={['minutes', 'seconds']} format="mm:ss" value={startTime} onChange={value => handleTimeChange(value)} />
+              </DemoItem>
             </DemoContainer>
           </LocalizationProvider>
-          <Button variant="outlined" color={checked ? 'success' : 'primary'} sx={{ ml: 1 }} onClick={handleEditQuestion}>
+          <Button variant="outlined" color={checked ? 'success' : 'primary'} onClick={handleEditQuestion} sx={{ mt: 1, ml: 1 }}>
             {checked ? <DoneIcon /> : <TuneIcon />}
-            <Typography variant="button" sx={{ ml: 1 }}>
-              {checked ? t('common.done') : t('common.edit')}
-            </Typography>
+            <Typography variant="button">{checked ? t('common.done') : t('common.edit')}</Typography>
           </Button>
         </Box>
       </Box>
@@ -326,17 +316,6 @@ const Quiz = () => {
             required
             slotProps={{ inputLabel: { shrink: true } }}
           />
-          <TextField
-            label={t('createNewQuizPage.amountOfSongsLabel')}
-            type="number"
-            variant="outlined"
-            fullWidth
-            margin="dense" // Changed from normal to dense
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            required
-            slotProps={{ inputLabel: { shrink: true }, inputProps: { min: 1 } }}
-          />
           <FormControl fullWidth margin="dense" required className="form-input-full-width">
             <InputLabel id="max-score-per-song-label" shrink>
               {t('createNewQuizPage.maxScorePerSongLabel', 'Max Score Per Song')}
@@ -373,7 +352,7 @@ const Quiz = () => {
             InputProps={{ readOnly: true }} // Make it read-only
             slotProps={{ inputLabel: { shrink: true } }}
           />
-          {Number(amount) > 0 && (
+          {songAmount > 0 && (
             <Box sx={{ mt: 1, mb: 1 }}>
               {' '}
               {/* Reduced top margin */}
@@ -415,18 +394,6 @@ const Quiz = () => {
                                 slotProps={{ inputLabel: { shrink: true } }}
                               />
                               {isYTLink(q.songLink) && <SongStartTimeEditor index={index} question={q} />}
-                              {Number(maxScorePerSong) >= 1.5 && (
-                                <TextField
-                                  type="text"
-                                  label={t('createNewQuizPage.extraLabel', 'Extra Question (Optional)')}
-                                  variant="outlined"
-                                  fullWidth
-                                  margin="dense"
-                                  value={q.extra || ''} // Ensure value is controlled
-                                  onChange={e => handleQuestionChange(index, 'extra', e.target.value)}
-                                  slotProps={{ inputLabel: { shrink: true } }}
-                                />
-                              )}
                               {enableExtraQuestions && (
                                 <div>
                                   <TextField
@@ -476,18 +443,18 @@ const Quiz = () => {
                   )}
                 </Droppable>
               </DragDropContext>
-              <Button variant="outlined" startIcon={<AddCircleOutlineIcon />} onClick={addQuestion} className="button-add-question" sx={{ mt: 1, mb: 2 }}>
-                {t('createNewQuizPage.addSongEntry')}
-              </Button>
             </Box>
           )}
+          <Button variant="outlined" startIcon={<AddCircleOutlineIcon />} onClick={addQuestion} className="button-add-question" sx={{ mt: 1, mb: 2 }}>
+            {t('createNewQuizPage.addSongEntry')}
+          </Button>
           <FormControlLabel
             control={<Checkbox checked={isReady} onChange={e => setIsReady(e.target.checked)} id="isReadyCheckbox" />}
             label={t('createNewQuizPage.markAsReadyLabel')}
             sx={{ display: 'block', mt: 1, mb: 1 }} // Reduced margins
           />
           <Button type="submit" variant="contained" color="primary" fullWidth>
-            {t('createNewQuizPage.createQuizButton')}
+            {t('createNewQuizPage.saveQuizButton')}
           </Button>
           {success && (
             <Typography color="success.main" sx={{ mt: 2 }}>

@@ -138,6 +138,7 @@
         "enableExtraQuestionsLabel": "Lisäkysymykset",
         "markAsReadyLabel": "Merkitse valmiiksi",
         "createQuizButton": "Luo visa",
+        "saveQuizButton": "Tallenna visa",
         "creatingQuiz": "Luodaan visaa...",
         "createQuizError": "Visan luonti epäonnistui",
         "createQuizSuccess": "Visa luotu onnistuneesti!",

@@ -122,6 +122,7 @@
         "maxScorePerSongLabel": "Max score per song",
         "markAsReadyLabel": "Mark as Ready",
         "createQuizButton": "Create Quiz",
+        "saveQuizButton": "Save Quiz",
         "creatingQuiz": "Creating quiz...",
         "createQuizError": "Failed to create quiz",
         "createQuizSuccess": "Quiz created successfully!",
